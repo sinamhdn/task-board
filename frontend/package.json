@@ -10,8 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "bourbon": "^7.3.0",
+    "bourbon-neat": "^4.0.0",
+    "history": "^5.3.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "react-redux": "^9.3.0",
+    "react-router": "^8.0.1",
+    "redux": "^5.0.1",
+    "redux-simple-router": "^2.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
