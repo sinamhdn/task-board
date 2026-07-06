@@ -1,0 +1,72 @@
+my_fastapi_project/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── dependencies.py       # dependency injection functions
+│   ├── routers/
+│   │   ├── __init__.py
+│   │   ├── items.py
+│   │   └── users.py
+│   ├── models/               # Pydantic models (schemas)
+│   │   ├── __init__.py
+│   │   └── item.py
+│   ├── crud/                 # database CRUD operations
+│   │   ├── __init__.py
+│   │   └── item.py
+│   └── database.py           # database connection logic
+├── tests/                    # unit tests
+│   ├── __init__.py
+│   └── test_main.py
+├── .env                      # environment variables
+├── requirements.txt
+└── README.md
+
+fastapi-project/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── security.py
+│   │   ├── database.py
+│   │   └── dependencies.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   └── base.py
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   └── token.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── v1/
+│   │   │   ├── __init__.py
+│   │   │   ├── router.py
+│   │   │   └── endpoints/
+│   │   │       ├── __init__.py
+│   │   │       ├── auth.py
+│   │   │       └── users.py
+│   │   └── deps.py
+│   ├── crud/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   └── user.py
+│   └── utils/
+│       ├── __init__.py
+│       └── exceptions.py
+├── alembic/
+│   └── versions/
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
+│   └── test_auth.py
+├── .env
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
+├── requirements.txt
+├── pyproject.toml
+└── alembic.ini
