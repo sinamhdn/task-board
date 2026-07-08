@@ -1,0 +1,15 @@
+[project]
+name = "trello-clone"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi==0.138.1",
+    "uvicorn==0.49.0",
+    "sqlmodel==0.0.39",
+    "passlib==1.7.4",
+    "alembic==1.18.5",
+    "pymysql==1.2.0",
+    "python-dotenv==1.2.2",
+]
