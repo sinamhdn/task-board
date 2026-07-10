@@ -1,0 +1,61 @@
+from __future__ import annotations
+
+import uuid
+from datetime import datetime, timezone
+from typing import Optional
+
+from passlib.context import CryptContext
+from pydantic import EmailStr, field_validator
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlmodel import Field, SQLModel
+
+from ..utils.db import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    uid: Mapped[uuid.UUID] = mapped_column(
+        uuid.UUID(as_uuid=True), unique=True, default=uuid.uuid4, index=True
+    )
+    first_name: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    last_name: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    email: Mapped[str] = mapped_column(
+        String(120), unique=True, index=True, nullable=False
+    )
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    image_file: Mapped[Optional[str]] = mapped_column(
+        String(200), nullable=True, default=None
+    )
+    is_active: Mapped[bool] = mapped_column(default=True)
+    is_verified: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_users_email_lower", func.lower(email)
+        ),  # Optional: case-insensitive email index
+    )
+
+    @property
+    def full_name(self) -> str:
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.first_name or self.last_name or "Anonymous"
+
+    @property
+    def image_path(self) -> str:
+        if self.image_file:
+            return f"/media/profile_pics/{self.image_file}"
+        return "/static/profile_pics/default.jpg"
+
+    def __repr__(self) -> str:
+        return f"<User(id={self.id}, email={self.email})>"

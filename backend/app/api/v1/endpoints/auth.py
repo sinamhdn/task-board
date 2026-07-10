@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session
 from utils.db import get_session
-from schemas.user import UserResponse, UserCreate
-from crud.user import UserCRUD
+from app.schemas.users import UserResponse, UserCreate
+from app.crud.users import UserCRUD
 
 router = APIRouter(prefix="/authentication", tags=["users"])
 

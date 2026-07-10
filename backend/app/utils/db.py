@@ -1,8 +1,8 @@
-from sqlmodel import SQLModel, create_engine, Session
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
 import os
+
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 # Sync database
 DATABASE_URL = os.getenv(
@@ -31,16 +31,27 @@ class Base(DeclarativeBase):
 
 def create_tables():
     """Create all tables"""
-    SQLModel.metadata.create_all(engine)
+    Base.metadata.create_all(engine)
 
 
-def get_session():
+async def create_tables_async():
+    """Create all tables"""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+async def dispose_engine():
+    """Dispose engine"""
+    await engine.dispose()
+
+
+def get_db_session():
     """Get database session"""
     with Session(engine) as session:
         yield session
 
 
-async def get_async_session():
+async def get_async_db_session():
     """Get async database session"""
     async with AsyncSessionLocal() as session:
         yield session

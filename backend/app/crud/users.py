@@ -1,8 +1,8 @@
 from sqlmodel import Session, select
 from typing import Optional, List
 import uuid
-from ..models.user import User
-from ..schemas.user import UserCreate, UserUpdate
+from ..models.users import User
+from ..schemas.users import UserCreate, UserUpdate
 
 
 class UserCRUD:

@@ -4,8 +4,8 @@ from sqlmodel import Session
 from typing import List
 import uuid
 from utils.db import get_session
-from schemas.user import UserResponse, UserCreate, UserUpdate
-from crud.user import UserCRUD
+from app.schemas.users import UserResponse, UserCreate, UserUpdate
+from app.crud.users import UserCRUD
 
 router = APIRouter(prefix="/users", tags=["users"])
 
