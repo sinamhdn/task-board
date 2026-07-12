@@ -1,11 +1,9 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, field_validator
-from sqlmodel import Field, SQLModel
-
-from ..models.users import UserBase
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+from sqlmodel import Field
 
 
 class UserBase(BaseModel):
@@ -19,9 +17,8 @@ class UserCreate(UserBase):
 
     password: str = Field(min_length=8, max_length=100)
 
-    @field_validator
-    @classmethod
-    def validate_password(cls, v):
+    @field_validator("password")
+    def validate_password(cls, v: str):
         """validate password complexity"""
         if not any(char.isdigit() for char in v):
             raise ValueError("Password must contain at least one digit")
@@ -39,18 +36,21 @@ class UserUpdate(BaseModel):
     last_name: Optional[str] = Field(default=None, max_length=100)
     email: Optional[EmailStr] = Field(default=None, max_length=255)
     password: Optional[str] = Field(default=None, min_length=8, max_length=100)
+    image_file: Optional[str] = Field(default=None, min_length=1, max_length=200)
 
 
 class UserPublicResponse(BaseModel):
     """Schema for returning user data (excludes sensitive info)"""
 
-    id: uuid.UUID
+    id: int
+    uid: uuid.UUID
     full_name: str
     image_file: str | None
     image_path: str | None
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat(), uuid.UUID: lambda v: str(v)}
+    # model_config = ConfigDict(
+    #     json_encoders={datetime: lambda v: v.isoformat(), uuid.UUID: lambda v: str(v)}
+    # )
 
 
 class UserPrivateResponse(UserPublicResponse):
@@ -58,3 +58,10 @@ class UserPrivateResponse(UserPublicResponse):
     is_verified: bool
     created_at: datetime
     updated_at: Optional[datetime]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

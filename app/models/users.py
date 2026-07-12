@@ -4,11 +4,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from passlib.context import CryptContext
-from pydantic import EmailStr, field_validator
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlmodel import Field, SQLModel
+from sqlalchemy import Index, Integer, String, Uuid, func
+from sqlalchemy.orm import Mapped, mapped_column
 
 from ..utils.db import Base
 
@@ -18,7 +15,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     uid: Mapped[uuid.UUID] = mapped_column(
-        uuid.UUID(as_uuid=True), unique=True, default=uuid.uuid4, index=True
+        Uuid(as_uuid=True), unique=True, default=uuid.uuid4, index=True
     )
     first_name: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     last_name: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)

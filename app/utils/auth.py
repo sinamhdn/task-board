@@ -15,12 +15,13 @@ pwd_hash = PasswordHash.recommended()
 oath2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")
 
 
-def set_password(self, password: str) -> None:
-    self.hashed_password = pwd_hash.hash(password)
+def set_password(user: User, password: str) -> None:
+    user.hashed_password = pwd_hash.hash(password)
 
 
-def verify_password(self, password: str) -> bool:
-    return pwd_hash.verify(password, self.hashed_password)
+def verify_password(user: User, password: str) -> bool:
+
+    return pwd_hash.verify(password, user.hashed_password)
 
 
 def create_access_token(data: dict, expiration_delta: timedelta | None = None):

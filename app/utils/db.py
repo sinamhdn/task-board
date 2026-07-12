@@ -1,8 +1,8 @@
 import os
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, Session
 
 # Sync database
 DATABASE_URL = os.getenv(
@@ -20,7 +20,7 @@ ASYNC_DATABASE_URL = os.getenv(
 async_engine = create_async_engine(
     ASYNC_DATABASE_URL, echo=True, connect_args={"check_same_thread": False}
 )
-AsyncSessionLocal = sessionmaker(
+AsyncSessionLocal = async_sessionmaker(
     async_engine, class_=AsyncSession, expire_on_commit=False
 )
 
@@ -36,13 +36,13 @@ def create_tables():
 
 async def create_tables_async():
     """Create all tables"""
-    async with engine.begin() as conn:
+    async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
 async def dispose_engine():
     """Dispose engine"""
-    await engine.dispose()
+    await async_engine.dispose()
 
 
 def get_db_session():

@@ -7,8 +7,8 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from .api.v1.endpoints.auth import router as auth_router
-from .api.v1.endpoints.users import router as users_router
+from .routers.auth import router as auth_router
+from .routers.users import router as users_router
 from .utils.db import create_tables_async, dispose_engine
 
 static_dir = os.path.join(os.path.dirname(__file__), "../static")
