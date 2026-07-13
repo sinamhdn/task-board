@@ -1,24 +1,26 @@
-import os
+# import os
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Session
 
+from .settings import settings
+
 # Sync database
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:password@localhost:5432/test_db"
-)
+# DATABASE_URL = os.getenv(
+#     "DATABASE_URL", "postgresql://postgres:password@localhost:5432/test_db"
+# )
 engine = create_engine(
-    DATABASE_URL, echo=True, connect_args={"check_same_thread": False}
+    settings.database_url, echo=True, connect_args={"check_same_thread": False}
 )
 
 # Async database
-ASYNC_DATABASE_URL = os.getenv(
-    "ASYNC_DATABASE_URL",
-    "postgresql+asyncpg://postgres:password@localhost:5432/test_db",
-)
+# ASYNC_DATABASE_URL = os.getenv(
+#     "DATABASE_ASYNC_URL",
+#     "postgresql+asyncpg://postgres:password@localhost:5432/test_db",
+# )
 async_engine = create_async_engine(
-    ASYNC_DATABASE_URL, echo=True, connect_args={"check_same_thread": False}
+    settings.database_url_async, echo=True, connect_args={"check_same_thread": False}
 )
 AsyncSessionLocal = async_sessionmaker(
     async_engine, class_=AsyncSession, expire_on_commit=False

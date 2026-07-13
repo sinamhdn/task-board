@@ -28,11 +28,9 @@ class User(Base):
     )
     is_active: Mapped[bool] = mapped_column(default=True)
     is_verified: Mapped[bool] = mapped_column(default=False)
-    created_at: Mapped[datetime] = mapped_column(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
     updated_at: Mapped[Optional[datetime]] = mapped_column(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default=datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
 

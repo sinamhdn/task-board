@@ -8,7 +8,7 @@ from pwdlib import PasswordHash
 from sqlalchemy import select
 
 from ..models.users import User
-from .config import settings
+from .settings import settings
 from .db import AsyncSession, get_async_db_session
 
 pwd_hash = PasswordHash.recommended()

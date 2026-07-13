@@ -14,4 +14,5 @@ dependencies = [
     "python-dotenv==1.2.2",
     "pwdlib[argon2]>=0.3.0",
     "pyjwt>=2.13.0",
+    "aiosqlite>=0.22.1",
 ]

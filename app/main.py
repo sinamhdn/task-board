@@ -2,7 +2,7 @@ import mimetypes
 import os
 from contextlib import asynccontextmanager
 
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,10 +11,13 @@ from .routers.auth import router as auth_router
 from .routers.users import router as users_router
 from .utils.db import create_tables_async, dispose_engine
 
+# from pathlib import Path
+
+
 static_dir = os.path.join(os.path.dirname(__file__), "../static")
 media_dir = os.path.join(os.path.dirname(__file__), "../media")
 
-load_dotenv()
+# load_dotenv(Path(os.path.join(os.path.dirname(os.path.abspath(__file__))), "../.env"))
 
 
 @asynccontextmanager
@@ -50,7 +53,7 @@ app.mount("/frontend", StaticFiles(directory=frontend_dir, html=False), name="fr
 
 @app.get("/{full_path:path}")
 async def frontend(full_path: str):
-    frontend_dir = "/ui/dist"
+    frontend_dir = "../ui/dist"
 
     # Handle local dev paths
     if os.getenv("IS_LOCAL_STATIC_DIR") == "true":

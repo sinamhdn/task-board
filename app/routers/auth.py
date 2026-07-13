@@ -11,7 +11,7 @@ from app.schemas.users import Token, UserCreate
 
 from ..schemas.users import UserPrivateResponse
 from ..utils.auth import create_access_token
-from ..utils.config import settings
+from ..utils.settings import settings
 from ..utils.db import get_async_db_session
 
 router = APIRouter(prefix="/authentication", tags=["users"])
