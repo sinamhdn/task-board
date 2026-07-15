@@ -54,6 +54,7 @@ class UserPublicResponse(BaseModel):
 
 
 class UserPrivateResponse(UserPublicResponse):
+    email: str
     is_active: bool
     is_verified: bool
     created_at: datetime

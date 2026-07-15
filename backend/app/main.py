@@ -28,7 +28,7 @@ media_dir = os.path.join(os.path.dirname(__file__), "../media")
 async def lifespan(_app: FastAPI):
     # Startup
     await create_tables_async()
-    cleanup_task = await asyncio.create_task(periodic_cleanup(interval_minutes=30))
+    cleanup_task = asyncio.create_task(periodic_cleanup(interval_minutes=30))
     yield
     # Shutdown
     await dispose_engine()
@@ -67,11 +67,11 @@ PROJECT_BASE = Path(__file__).resolve().parent.parent
 
 @app.get("/{full_path:path}")
 def frontend(full_path: str):
-    frontend_dir = PROJECT_BASE / "ui/dist"
+    frontend_dir = PROJECT_BASE / "templates"
 
     # Handle local dev paths
     if settings.is_local_static_dir == "true":
-        frontend_dir = PROJECT_BASE / "ui/dist"
+        frontend_dir = PROJECT_BASE / "templates"
 
     return get_file_response_or_404(
         os.path.join(frontend_dir, full_path),  # Try to serve the specific file
