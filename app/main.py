@@ -1,3 +1,4 @@
+import asyncio
 import mimetypes
 import os
 from contextlib import asynccontextmanager
@@ -12,6 +13,7 @@ from .routers.auth import router as auth_router
 from .routers.users import router as users_router
 from .utils.db import create_tables_async, dispose_engine
 from .utils.settings import settings
+from .utils.token_blacklist import periodic_cleanup
 
 # from pathlib import Path
 
@@ -26,9 +28,11 @@ media_dir = os.path.join(os.path.dirname(__file__), "../media")
 async def lifespan(_app: FastAPI):
     # Startup
     await create_tables_async()
+    cleanup_task = await asyncio.create_task(periodic_cleanup(interval_minutes=30))
     yield
     # Shutdown
     await dispose_engine()
+    cleanup_task.cancel()
 
 
 app = FastAPI(

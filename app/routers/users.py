@@ -1,12 +1,9 @@
-import asyncio
 import logging
-import uuid
-from datetime import datetime, timedelta
-from typing import Annotated, Dict, List
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.users import UserCRUD
@@ -19,60 +16,10 @@ from app.schemas.users import (
 from ..models.users import User
 from ..utils.auth import CurrentUser, oath2_scheme
 from ..utils.db import get_async_db_session
+from ..utils.token_blacklist import add_to_blacklist
 
 router = APIRouter(prefix="", tags=["users"])
 logger = logging.getLogger(__name__)
-
-
-# In-memory token blacklist with expiration
-TOKEN_BLACKLIST: Dict[str, datetime] = {}  # token -> expiration_time
-
-
-def add_to_blacklist(token: str, expires_in: int = 3600) -> None:
-    """Add token to blacklist with expiration time"""
-    expiration_time = datetime.utcnow() + timedelta(seconds=expires_in)
-    TOKEN_BLACKLIST[token] = expiration_time
-
-
-def is_token_blacklisted(token: str) -> bool:
-    """Check if token is blacklisted and not expired"""
-    if token not in TOKEN_BLACKLIST:
-        return False
-
-    expiration_time = TOKEN_BLACKLIST[token]
-    if datetime.utcnow() > expiration_time:
-        # Token expired, remove from blacklist
-        del TOKEN_BLACKLIST[token]
-        return False
-
-    return True
-
-
-def cleanup_expired_tokens() -> None:
-    """Remove expired tokens from blacklist"""
-    current_time = datetime.utcnow()
-    expired_tokens = [
-        token for token, exp_time in TOKEN_BLACKLIST.items() if current_time > exp_time
-    ]
-    for token in expired_tokens:
-        del TOKEN_BLACKLIST[token]
-
-    if expired_tokens:
-        logger.info(f"Cleaned up {len(expired_tokens)} expired tokens from blacklist")
-
-
-# Background task to periodically clean up expired tokens
-async def periodic_cleanup(interval_minutes: int = 60):
-    """Run cleanup every specified minutes"""
-    while True:
-        await asyncio.sleep(interval_minutes * 60)
-        cleanup_expired_tokens()
-
-
-# Start the background task when the app starts
-@router.on_event("startup")
-async def startup_event():
-    asyncio.create_task(periodic_cleanup(interval_minutes=30))
 
 
 @router.get("/me", response_model=UserPrivateResponse)
