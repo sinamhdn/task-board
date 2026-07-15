@@ -1,6 +1,7 @@
 import mimetypes
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 # from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, status
@@ -10,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from .routers.auth import router as auth_router
 from .routers.users import router as users_router
 from .utils.db import create_tables_async, dispose_engine
+from .utils.settings import settings
 
 # from pathlib import Path
 
@@ -36,6 +38,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/media", StaticFiles(directory=media_dir), name="media")
+
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(users_router, prefix="/api/users", tags=["users"])
+
 """ Static Assets Frontend Serving"""
 """
 # Determine the path to the built frontend
@@ -50,14 +58,16 @@ app.mount("/frontend", StaticFiles(directory=frontend_dir, html=False), name="fr
 
 """ SPA Routing Frontend Serving"""
 
+PROJECT_BASE = Path(__file__).resolve().parent.parent
+
 
 @app.get("/{full_path:path}")
-async def frontend(full_path: str):
-    frontend_dir = "../ui/dist"
+def frontend(full_path: str):
+    frontend_dir = PROJECT_BASE / "ui/dist"
 
     # Handle local dev paths
-    if os.getenv("IS_LOCAL_STATIC_DIR") == "true":
-        frontend_dir = "../ui/dist"
+    if settings.is_local_static_dir == "true":
+        frontend_dir = PROJECT_BASE / "ui/dist"
 
     return get_file_response_or_404(
         os.path.join(frontend_dir, full_path),  # Try to serve the specific file
@@ -96,10 +106,3 @@ def get_file_response_or_404(
 
 
 """ SPA Routing Frontend Serving"""
-
-
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
-app.mount("/media", StaticFiles(directory=media_dir), name="media")
-
-app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
-app.include_router(users_router, prefix="/api/user", tags=["users"])

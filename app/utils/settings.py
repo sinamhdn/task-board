@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     jwt_secret_key: SecretStr
     jwt_algorithm: str
     jwt_expire_delta_minutes: int = 30
+    is_local_static_dir: bool
 
 
 settings = Settings()

@@ -8,11 +8,11 @@ from pwdlib import PasswordHash
 from sqlalchemy import select
 
 from ..models.users import User
-from .settings import settings
 from .db import AsyncSession, get_async_db_session
+from .settings import settings
 
 pwd_hash = PasswordHash.recommended()
-oath2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")
+oath2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 
 def set_password(user: User, password: str) -> None:
@@ -59,22 +59,22 @@ async def get_current_user(
     token: Annotated[str, Depends(oath2_scheme)],
     db: Annotated[AsyncSession, Depends(get_async_db_session)],
 ) -> User:
-    user_id = verify_access_token(token)
-    if user_id is None:
+    user_id_str = verify_access_token(token)
+    if user_id_str is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired access token.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # try:
-    #     user_id_int = int(user_id)
-    # except (TypeError, ValueError):
-    #     raise HTTPException(
-    #         status_code=status.HTTP_401_UNAUTHORIZED,
-    #         detail="Invalid or expired token",
-    #         headers={"WWW-Authenticate": "Bearer"},
-    #     )
+    try:
+        user_id = int(user_id_str)
+    except TypeError, ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()

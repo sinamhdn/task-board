@@ -4,17 +4,16 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import Session
 
 from app.crud.users import UserCRUD
 from app.schemas.users import Token, UserCreate
 
 from ..schemas.users import UserPrivateResponse
 from ..utils.auth import create_access_token
-from ..utils.settings import settings
 from ..utils.db import get_async_db_session
+from ..utils.settings import settings
 
-router = APIRouter(prefix="/authentication", tags=["users"])
+router = APIRouter(prefix="", tags=["users"])
 
 
 @router.post("/login", response_model=Token)
