@@ -1,14 +1,16 @@
 import { configureStore } from "@reduxjs/toolkit";
-import rootReducer from "./reducer";
+import sessionSlice from "./sessionSlice";
 
 export const store = configureStore({
-  reducer: rootReducer,
-  middleware: (GetDefaultMiddleware) =>
-    GetDefaultMiddleware({
+  reducer: { session: sessionSlice },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
       thunk: true,
-      serializableCheck: { ignoredActions: ["pesist/PERSIST"] },
+      serializableCheck: {
+        ignoredActions: ["pesist/PERSIST", "session/setSocket"],
+      },
     }),
-  devTools: process.env.NODE_ENV !== "production",
+  // devTools: process.env.NODE_ENV !== "production",
 });
 
 export type RootState = ReturnType<typeof store.getState>;
