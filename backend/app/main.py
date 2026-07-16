@@ -20,6 +20,8 @@ from .utils.token_blacklist import periodic_cleanup
 
 static_dir = os.path.join(os.path.dirname(__file__), "../static")
 media_dir = os.path.join(os.path.dirname(__file__), "../media")
+os.makedirs(static_dir, exist_ok=True)
+os.makedirs(media_dir, exist_ok=True)
 
 # load_dotenv(Path(os.path.join(os.path.dirname(os.path.abspath(__file__))), "../.env"))
 
