@@ -1,5 +1,7 @@
 function Header() {
-  return <header className="header-component"></header>;
+  return <header className="header-component">
+    <div className="main-logo"></div>
+  </header>;
 }
 
 export default Header;

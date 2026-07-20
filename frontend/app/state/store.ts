@@ -1,8 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
-import userSlice from "./userSlice";
+import sessionSlice from "./sessionSlice";
 
 export const store = configureStore({
-  reducer: { user: userSlice },
+  reducer: { user: sessionSlice },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       thunk: true,

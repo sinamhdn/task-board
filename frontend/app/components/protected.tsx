@@ -3,7 +3,7 @@ import type { Route } from "./+types/protected";
 import { getCurrentUser } from "~/utils/auth";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
-import { setCurrentUser } from "~/state/userSlice";
+import { setCurrentUser } from "~/state/sessionSlice";
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const token = localStorage.getItem("jwt");
