@@ -1,22 +1,21 @@
 import logging
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import Response
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.crud.users import UserCRUD
 from app.schemas.users import (
     UserPrivateResponse,
     UserPublicResponse,
     UserUpdate,
 )
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.users import User
 from ..utils.auth import CurrentUser, oath2_scheme
 from ..utils.db import get_async_db_session
-from ..utils.token_blacklist import add_to_blacklist
+from ..utils.utilities import add_to_blacklist
 
 router = APIRouter(prefix="", tags=["users"])
 logger = logging.getLogger(__name__)
@@ -27,14 +26,15 @@ async def get_current_user(current_user: CurrentUser):
     return current_user
 
 
-@router.get("", response_model=List[UserPublicResponse])
+@router.get("/", response_model=List[UserPublicResponse])
 async def get_all_users(
     session: Annotated[AsyncSession, Depends(get_async_db_session)],
     skip: int = 0,
     limit: int = 100,
+    order: str = "updated_at",
 ):
     """Get all users (admin only)"""
-    users = await UserCRUD.get_users(session, skip=skip, limit=limit)
+    users = await UserCRUD.get_users(session, skip=skip, limit=limit, order=order)
     return users
 
 

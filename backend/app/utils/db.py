@@ -10,6 +10,7 @@ from .settings import settings
 # DATABASE_URL = os.getenv(
 #     "DATABASE_URL", "postgresql://postgres:password@localhost:5432/test_db"
 # )
+
 engine = create_engine(
     settings.database_url, echo=True, connect_args={"check_same_thread": False}
 )
@@ -19,6 +20,8 @@ engine = create_engine(
 #     "DATABASE_ASYNC_URL",
 #     "postgresql+asyncpg://postgres:password@localhost:5432/test_db",
 # )
+
+# "check_same_thread": Fals ---> this arg is for sqlite
 async_engine = create_async_engine(
     settings.database_url_async, echo=True, connect_args={"check_same_thread": False}
 )

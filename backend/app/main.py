@@ -13,7 +13,7 @@ from .routers.auth import router as auth_router
 from .routers.users import router as users_router
 from .utils.db import create_tables_async, dispose_engine
 from .utils.settings import settings
-from .utils.token_blacklist import periodic_cleanup
+from .utils.utilities import periodic_cleanup
 
 # from pathlib import Path
 

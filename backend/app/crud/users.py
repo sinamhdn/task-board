@@ -9,6 +9,7 @@ from sqlmodel import Session, select
 from ..models.users import User
 from ..schemas.users import UserCreate, UserUpdate
 from ..utils.auth import set_password, verify_password
+from ..utils.utilities import get_order_column
 
 
 class UserCRUD:
@@ -33,22 +34,6 @@ class UserCRUD:
         limit: int = 100,
     ) -> List[User]:
         """Get all users with pagination"""
-
-        def get_order_column(model, order_by: str = "updated_at"):
-            # Handle optional descending prefix (e.g., "-created_at")
-            if order_by.startswith("-"):
-                col_name = order_by[1:]
-                descending = True
-            else:
-                col_name = order_by
-                descending = False
-
-            if not hasattr(model, col_name):
-                raise ValueError(f"Invalid column: {col_name}")
-
-            column = getattr(model, col_name)
-            return column.desc() if descending else column
-
         result = await session.execute(
             select(User)
             .order_by(get_order_column(User, order))

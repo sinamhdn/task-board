@@ -4,6 +4,10 @@ import logging
 from datetime import UTC, datetime, timedelta
 from typing import Dict
 
+from sqlalchemy import asc, desc
+
+from ..models.users import User
+
 TOKEN_BLACKLIST: Dict[str, datetime] = {}  # token -> expiration_time
 logger = logging.getLogger(__name__)
 
@@ -34,6 +38,7 @@ def cleanup_expired_tokens() -> None:
     expired_tokens = [
         token for token, exp_time in TOKEN_BLACKLIST.items() if current_time > exp_time
     ]
+
     for token in expired_tokens:
         del TOKEN_BLACKLIST[token]
 
@@ -47,6 +52,22 @@ async def periodic_cleanup(interval_minutes: int = 60):
     while True:
         await asyncio.sleep(interval_minutes * 60)
         cleanup_expired_tokens()
+
+
+def get_order_column(model, order_by: str = "updated_at"):
+    # Handle optional descending prefix (e.g., "-created_at")
+    if order_by.startswith("-"):
+        col_name = order_by[1:]
+        descending = True
+    else:
+        col_name = order_by
+        descending = False
+
+    if not hasattr(model, col_name):
+        raise ValueError(f"Invalid column: {col_name}")
+
+    column = getattr(model, col_name)
+    return desc(column) if descending else asc(column)
 
 
 # Start the background task when the app starts
