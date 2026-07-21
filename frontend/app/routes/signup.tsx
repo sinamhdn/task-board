@@ -1,77 +1,173 @@
-import { useDispatch } from "react-redux";
 import type { Route } from "./+types/signup";
 import { useRef, useState } from "react";
 import { signupUser } from "~/state/sessionSlice";
+import { useAppDispatch } from "~/state/hooks";
 
-export function meta({ }: Route.MetaArgs) {
+export function meta({}: Route.MetaArgs) {
   return [{ title: "Signup" }, { name: "description", content: "Signup!" }];
 }
 
 function Signup() {
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    password: '',
-    password_comfirm: ''
+    first_name: "",
+    last_name: "",
+    email: "",
+    password: "",
+    password_confirm: "",
   });
 
-  // use Ref instead of use State to prevent rerender on every input change
+  const [errors, setErrors] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    password: "",
+    password_confirm: "",
+  });
+
+  // let passwordsMatch = false;
+  // formData.password === formData.password_confirm;
+
+  // use Ref instead of State to prevent rerender on every input change
   const firstNameRef = useRef<HTMLInputElement>(null);
   const lastNameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const passRef = useRef<HTMLInputElement>(null);
   const passConfirmRef = useRef<HTMLInputElement>(null);
   const refData = {
-    first_name: firstNameRef.current?.value || '',
-    last_name: lastNameRef.current?.value || '',
-    email: emailRef.current?.value || '',
-    password: passRef.current?.value || '',
-    password_confirm: passConfirmRef.current?.value || '',
-  }
+    first_name: firstNameRef.current?.value || "",
+    last_name: lastNameRef.current?.value || "",
+    email: emailRef.current?.value || "",
+    password: passRef.current?.value || "",
+    password_confirm: passConfirmRef.current?.value || "",
+  };
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(state => ({
-      ...state, [name]: value
-    }));
+    setFormData((state) => {
+      const newstate = {
+        ...state,
+        [name]: value,
+      };
+
+      if (
+        newstate.password &&
+        newstate.password_confirm &&
+        newstate.password != newstate.password_confirm
+      ) {
+        setErrors((errors) => ({
+          ...errors,
+          password_confirm: "Passwords don't match.",
+        }));
+      } else {
+        setErrors({
+          ...errors,
+          password_confirm: "",
+        });
+      }
+
+      return newstate;
+    });
   };
 
   const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
-    console.log('Form data:', formData);
-    dispatch(signupUser(formData))
-  }
+    dispatch(
+      signupUser({
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        password: formData.password,
+      }),
+    );
+  };
 
-  return <div className="signup-component">
-    <form className="signup-form" onSubmit={handleSubmit}>
-      <div className="input-field">
-        <label htmlFor="first-name-input">First Name</label>
-        <input id="first-name-input" type="text" name="first_name" value={formData.first_name} onChange={handleChange} ref={firstNameRef} />
-      </div>
-      <div className="input-field">
-        <label htmlFor="last-name-input">Last Name</label>
-        <input id="last-name-input" type="text" name="last_name" value={formData.last_name} onChange={handleChange} ref={lastNameRef} />
-      </div>
-      <div className="input-field">
-        <label htmlFor="email-input">Email</label>
-        <input id="email-input" type="text" name="email" value={formData.email} onChange={handleChange} ref={emailRef} />
-      </div>
-      <div className="input-field">
-        <label htmlFor="password-input">Password</label>
-        <input id="password-input" type="text" name="password" value={formData.password} onChange={handleChange} ref={passRef} />
-      </div>
-      <div className="input-field">
-        <label htmlFor="password_comfirm-input">Confirm Password</label>
-        <input id="password_comfirm-input" type="text" name="password_comfirm" value={formData.password_comfirm} onChange={handleChange} ref={passConfirmRef} />
-      </div>
-      <div className="submit-button">
-        <button type="submit">Register</button>
-      </div>
-    </form>
-  </div>;
+  return (
+    <div className="signup-component">
+      <form className="signup-form" onSubmit={handleSubmit}>
+        <div className="input-field">
+          <label htmlFor="first-name-input">First Name</label>
+          <input
+            id="first-name-input"
+            type="text"
+            name="first_name"
+            value={formData.first_name}
+            onChange={handleChange}
+            ref={firstNameRef}
+          />
+          {errors.first_name && errors.first_name.length != 0 && (
+            <p className="form-error first_name-field-error">
+              {errors.first_name}
+            </p>
+          )}
+        </div>
+        <div className="input-field">
+          <label htmlFor="last-name-input">Last Name</label>
+          <input
+            id="last-name-input"
+            type="text"
+            name="last_name"
+            value={formData.last_name}
+            onChange={handleChange}
+            ref={lastNameRef}
+          />
+          {errors.last_name && errors.last_name.length != 0 && (
+            <p className="form-error last_name-field-error">
+              {errors.last_name}
+            </p>
+          )}
+        </div>
+        <div className="input-field">
+          <label htmlFor="email-input">Email</label>
+          <input
+            id="email-input"
+            type="text"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            ref={emailRef}
+          />
+          {errors.email && errors.email.length != 0 && (
+            <p className="form-error email-field-error">{errors.email}</p>
+          )}
+        </div>
+        <div className="input-field">
+          <label htmlFor="password-input">Password</label>
+          <input
+            id="password-input"
+            type="text"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            ref={passRef}
+          />
+          {errors.password && errors.password.length != 0 && (
+            <p className="form-error password-field-error">{errors.password}</p>
+          )}
+        </div>
+        <div className="input-field">
+          <label htmlFor="password_confirm-input">Confirm Password</label>
+          <input
+            id="password_confirm-input"
+            type="text"
+            name="password_confirm"
+            value={formData.password_confirm}
+            onChange={handleChange}
+            ref={passConfirmRef}
+          />
+          {errors.password_confirm && errors.password_confirm.length != 0 && (
+            <p className="form-error password-confirm-field-error">
+              {errors.password_confirm}
+            </p>
+          )}
+        </div>
+        <div className="submit-button">
+          <button type="submit">Register</button>
+        </div>
+      </form>
+    </div>
+  );
 }
 
 export default Signup;
