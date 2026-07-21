@@ -6,6 +6,8 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
+  // Handle static assets first
+  route("*", "routes/_assets.tsx"),
   layout("components/layout.tsx", [
     layout("components/protected.tsx", [
       index("routes/boardall.tsx"),

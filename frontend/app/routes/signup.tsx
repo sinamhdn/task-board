@@ -1,7 +1,9 @@
 import type { Route } from "./+types/signup";
 import { useRef, useState } from "react";
-import { signupUser } from "~/state/sessionSlice";
+import { useSelector } from "react-redux";
+import { LoadingStatus, signupUser } from "~/state/sessionSlice";
 import { useAppDispatch } from "~/state/hooks";
+import type { RootState } from "~/state/store";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Signup" }, { name: "description", content: "Signup!" }];
@@ -22,7 +24,10 @@ function Signup() {
     email: "",
     password: "",
     password_confirm: "",
+    server_error: "",
   });
+
+  const loadingState = useSelector((state: RootState) => state.user.status);
 
   // let passwordsMatch = false;
   // formData.password === formData.password_confirm;
@@ -71,21 +76,42 @@ function Signup() {
     });
   };
 
-  const handleSubmit = (e: React.SubmitEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    dispatch(
-      signupUser({
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        email: formData.email,
-        password: formData.password,
-      }),
-    );
+    try {
+      const result = await dispatch(
+        signupUser({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          password: formData.password,
+        }),
+      ).unwrap();
+      console.log("Success:", result);
+      // Navigate or show success message
+    } catch (error: any) {
+      // Display the error message
+      if (typeof error === "string") {
+        setErrors((errors) => ({ ...errors, server_error: error }));
+      } else if (error?.message) {
+        setErrors((errors) => ({ ...errors, server_error: error.message }));
+      } else {
+        setErrors((errors) => ({
+          ...errors,
+          server_error: "An unknown error occurred",
+        }));
+      }
+    }
   };
 
   return (
     <div className="signup-component">
       <form className="signup-form" onSubmit={handleSubmit}>
+        {errors.server_error && (
+          <div className="error-message" style={{ color: "red" }}>
+            {errors.server_error}
+          </div>
+        )}
         <div className="input-field">
           <label htmlFor="first-name-input">First Name</label>
           <input
@@ -163,7 +189,11 @@ function Signup() {
           )}
         </div>
         <div className="submit-button">
-          <button type="submit">Register</button>
+          <button type="submit">
+            {loadingState === LoadingStatus.pending
+              ? "Signing up..."
+              : "Register"}
+          </button>
         </div>
       </form>
     </div>

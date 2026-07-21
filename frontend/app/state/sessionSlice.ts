@@ -1,9 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { error } from "console";
 
-const LoadingStatus = {
+export const LoadingStatus = {
   fulfiled: "fulfiled",
   pending: "pending",
   rejected: "rejected",
@@ -114,24 +113,28 @@ export const signinUser = createAsyncThunk(
 
 export const signupUser = createAsyncThunk(
   "session/signup",
-  async (credentials: {
-    first_name: string;
-    last_name: string;
-    email: string;
-    password: string;
-  }) => {
+  async (
+    credentials: {
+      first_name: string;
+      last_name: string;
+      email: string;
+      password: string;
+    },
+    { rejectWithValue },
+  ) => {
     try {
-      console.log(credentials);
       const response = await axios.post(
         "http://127.0.0.1:8000/api/auth/register",
         credentials,
       );
-      return response;
+      console.log(response);
+      return response.data;
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        console.log(err);
+        console.log("WHAT IS THE ERROR", err.response?.data.detail);
+        return rejectWithValue(err.response?.data.detail || err.message);
       }
-      return err;
+      return rejectWithValue("Unknown error");
     }
   },
 );

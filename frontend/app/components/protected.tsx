@@ -7,6 +7,7 @@ import { setCurrentUser } from "~/state/sessionSlice";
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const token = localStorage.getItem("jwt");
+  console.log("IS TOKEN ALIVE", token);
 
   if (!token) {
     throw redirect("/signup");
