@@ -1,7 +1,7 @@
 import type { Route } from "./+types/signup";
 import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { LoadingStatus, signupUser } from "~/state/sessionSlice";
+import { LoadingStatus, setError, signupUser } from "~/state/sessionSlice";
 import { useAppDispatch } from "~/state/hooks";
 import type { RootState } from "~/state/store";
 
@@ -18,16 +18,17 @@ function Signup() {
     password_confirm: "",
   });
 
-  const [errors, setErrors] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    password: "",
-    password_confirm: "",
-    server_error: "",
-  });
+  // const [errors, setErrors] = useState({
+  //   first_name: "",
+  //   last_name: "",
+  //   email: "",
+  //   password: "",
+  //   password_confirm: "",
+  //   server_error: "",
+  // });
 
   const loadingState = useSelector((state: RootState) => state.user.status);
+  const errors = useSelector((errors: RootState) => errors.user.errors);
 
   // let passwordsMatch = false;
   // formData.password === formData.password_confirm;
@@ -61,15 +62,19 @@ function Signup() {
         newstate.password_confirm &&
         newstate.password != newstate.password_confirm
       ) {
-        setErrors((errors) => ({
-          ...errors,
-          password_confirm: "Passwords don't match.",
-        }));
+        dispatch(
+          setError({
+            ...errors,
+            password_confirm: "Passwords don't match.",
+          }),
+        );
       } else {
-        setErrors({
-          ...errors,
-          password_confirm: "",
-        });
+        dispatch(
+          setError({
+            ...errors,
+            password_confirm: "",
+          }),
+        );
       }
 
       return newstate;
@@ -92,14 +97,16 @@ function Signup() {
     } catch (error: any) {
       // Display the error message
       if (typeof error === "string") {
-        setErrors((errors) => ({ ...errors, server_error: error }));
+        dispatch(setError({ ...errors, server_error: error }));
       } else if (error?.message) {
-        setErrors((errors) => ({ ...errors, server_error: error.message }));
+        dispatch(setError({ ...errors, server_error: error.message }));
       } else {
-        setErrors((errors) => ({
-          ...errors,
-          server_error: "An unknown error occurred",
-        }));
+        dispatch(
+          setError({
+            ...errors,
+            server_error: "An unknown error occurred",
+          }),
+        );
       }
     }
   };
