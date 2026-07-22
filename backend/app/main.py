@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import mimetypes
 import os
 from contextlib import asynccontextmanager
@@ -15,6 +16,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .routers.auth import router as auth_router
 from .routers.users import router as users_router
+from .tests.exceptions import router as test_router
 from .utils.db import create_tables_async, dispose_engine
 from .utils.settings import settings
 from .utils.utilities import periodic_cleanup
@@ -29,6 +31,8 @@ os.makedirs(static_dir, exist_ok=True)
 os.makedirs(media_dir, exist_ok=True)
 
 # load_dotenv(Path(os.path.join(os.path.dirname(os.path.abspath(__file__))), "../.env"))
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -64,6 +68,7 @@ app.mount("/media", StaticFiles(directory=media_dir), name="media")
 
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(users_router, prefix="/api/users", tags=["users"])
+app.include_router(test_router, prefix="/api/test", tags=["users"])
 
 """ Static Assets Frontend Serving"""
 """
@@ -82,18 +87,18 @@ app.mount("/frontend", StaticFiles(directory=frontend_dir, html=False), name="fr
 PROJECT_BASE = Path(__file__).resolve().parent.parent
 
 
-@app.get("/{full_path:path}")
-def frontend(full_path: str):
-    frontend_dir = PROJECT_BASE / "templates"
+# @app.get("/{full_path:path}")
+# def frontend(full_path: str):
+#     frontend_dir = PROJECT_BASE / "templates"
 
-    # Handle local dev paths
-    if settings.is_local_static_dir == "true":
-        frontend_dir = PROJECT_BASE / "templates"
+#     # Handle local dev paths
+#     if settings.is_local_static_dir == "true":
+#         frontend_dir = PROJECT_BASE / "templates"
 
-    return get_file_response_or_404(
-        os.path.join(frontend_dir, full_path),  # Try to serve the specific file
-        os.path.join(frontend_dir, "index.html"),  # Fallback to index.html
-    )
+#     return get_file_response_or_404(
+#         os.path.join(frontend_dir, full_path),  # Try to serve the specific file
+#         os.path.join(frontend_dir, "index.html"),  # Fallback to index.html
+#     )
 
 
 def get_file_response_or_404(
@@ -137,12 +142,18 @@ def general_http_exception_handler(request: Request, exception: StarletteHTTPExc
         if exception.detail
         else "An error occurred. Please check your request and try again."
     )
-    print(exception.detail)
+
+    print(
+        JSONResponse(
+            status_code=exception.status_code,
+            content={"detail": [{"field": "server_error", "msg": message}]},
+        )
+    )
 
     if request.url.path.startswith("/api"):
         return JSONResponse(
             status_code=exception.status_code,
-            content={"detail": message},
+            content={"detail": [{"field": "server_error", "msg": message}]},
         )
 
     return templates.TemplateResponse(
@@ -166,7 +177,7 @@ def validation_exception_handler(request: Request, exception: RequestValidationE
         error_item = (
             {"field": error["loc"][-1], "msg": error["msg"]}
             if error["loc"] and error["msg"]
-            else {"detail": "Unknown Validation Error"}
+            else {"field": "server_error", "msg": "Unknown Validation Error"}
         )
         request_validation_errors.append(error_item)
 
@@ -185,4 +196,28 @@ def validation_exception_handler(request: Request, exception: RequestValidationE
             "message": "Invalid request. Please check your input and try again.",
         },
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+    )
+
+
+@app.exception_handler(Exception)
+def unhandled_exception_handler(request: Request, exception: Exception):
+    logger.exception("Unhandled exception", exc_info=exception)
+
+    if request.url.path.startswith("/api"):
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": [{"field": "server_error", "msg": "Internal server error"}]
+            },
+        )
+
+    return templates.TemplateResponse(
+        request,
+        "error.html",
+        {
+            "status_code": 500,
+            "title": 500,
+            "message": "Something went wrong. Please try again later.",
+        },
+        status_code=500,
     )

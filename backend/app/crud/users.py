@@ -94,7 +94,7 @@ class UserCRUD:
             if existing_user:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email already exists.",
+                    detail=[{"field": "email", "msg": "Email already registered"}],
                 )
 
         if user_data.email is not None:
