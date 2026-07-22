@@ -5,10 +5,13 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 # from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .routers.auth import router as auth_router
 from .routers.users import router as users_router
@@ -18,6 +21,7 @@ from .utils.utilities import periodic_cleanup
 
 # from pathlib import Path
 
+templates = Jinja2Templates(directory="templates")
 
 static_dir = os.path.join(os.path.dirname(__file__), "../static")
 media_dir = os.path.join(os.path.dirname(__file__), "../media")
@@ -123,3 +127,62 @@ def get_file_response_or_404(
 
 
 """ SPA Routing Frontend Serving"""
+
+
+# fix pydantic error return format to be consistant
+@app.exception_handler(StarletteHTTPException)
+def general_http_exception_handler(request: Request, exception: StarletteHTTPException):
+    message = (
+        exception.detail
+        if exception.detail
+        else "An error occurred. Please check your request and try again."
+    )
+    print(exception.detail)
+
+    if request.url.path.startswith("/api"):
+        return JSONResponse(
+            status_code=exception.status_code,
+            content={"detail": message},
+        )
+
+    return templates.TemplateResponse(
+        request,
+        "error.html",
+        {
+            "status_code": exception.status_code,
+            "title": exception.status_code,
+            "message": message,
+        },
+        status_code=exception.status_code,
+    )
+
+
+@app.exception_handler(RequestValidationError)
+def validation_exception_handler(request: Request, exception: RequestValidationError):
+    print("SHOW EXCEPTIONS ", exception.errors())
+
+    request_validation_errors = []
+    for error in exception.errors():
+        error_item = (
+            {"field": error["loc"][-1], "msg": error["msg"]}
+            if error["loc"] and error["msg"]
+            else {"detail": "Unknown Validation Error"}
+        )
+        request_validation_errors.append(error_item)
+
+    if request.url.path.startswith("/api"):
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            content={"detail": request_validation_errors},
+        )
+
+    return templates.TemplateResponse(
+        request,
+        "error.html",
+        {
+            "status_code": status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "title": status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "message": "Invalid request. Please check your input and try again.",
+        },
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+    )

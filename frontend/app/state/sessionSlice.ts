@@ -31,9 +31,8 @@ export interface SessionState {
 }
 
 interface BackendValidationError {
-  loc: string[];
+  field: string;
   msg: string;
-  type: string;
 }
 
 export const LoadingStatus = {
@@ -95,16 +94,15 @@ const sessionSlice = createSlice({
       })
       .addCase(signupUser.rejected, (state, action) => {
         state.status = LoadingStatus.rejected;
-        console.log(action.payload);
+        // console.log(action.payload);
         if (action.payload) {
           action.payload.forEach((error) => {
-            const field = error.loc[1]; //["body", "email"]
+            const field = error.field; //["body", "email"]
             if (field in state.errors) {
               state.errors[field as keyof SessionErrors] = error.msg;
             } else {
               state.errors.server_error = error.msg;
             }
-            console.log(state.errors.server_error);
           });
         }
       });
@@ -167,12 +165,13 @@ export const signupUser = createAsyncThunk<
       //   err.response?.data.detail
       //     ?.map((error: { msg: string }) => error.msg)
       //     .join("\n") || err.message;
-
       const errorMessage = err.response?.data.detail || [];
+      console.log(err.response?.data.detail);
 
       // return rejectWithValue(errorMessageString);
       return rejectWithValue(errorMessage);
     }
+
     // return rejectWithValue("Unknown error");
     return rejectWithValue([]);
   }

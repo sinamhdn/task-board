@@ -1,12 +1,11 @@
 from datetime import timedelta
 from typing import Annotated
 
+from app.crud.users import UserCRUD
+from app.schemas.users import Token, UserCreate
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.crud.users import UserCRUD
-from app.schemas.users import Token, UserCreate
 
 from ..schemas.users import UserPrivateResponse
 from ..utils.auth import create_access_token
@@ -31,7 +30,7 @@ async def login_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail=[{"field": "server_error", "msg": "Incorrect email or password"}],
             headers={"WWW-Authenticate": "Bearer"},
         )
     # Create access token with user id as subject
