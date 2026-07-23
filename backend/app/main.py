@@ -143,13 +143,6 @@ def general_http_exception_handler(request: Request, exception: StarletteHTTPExc
         else "An error occurred. Please check your request and try again."
     )
 
-    print(
-        JSONResponse(
-            status_code=exception.status_code,
-            content={"detail": [{"field": "server_error", "msg": message}]},
-        )
-    )
-
     if request.url.path.startswith("/api"):
         return JSONResponse(
             status_code=exception.status_code,
