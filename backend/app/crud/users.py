@@ -62,7 +62,7 @@ class UserCRUD:
         if existing.scalars().first():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=[{"field": "email", "msg": "Email already registered"}],
+                detail={"field": "email", "msg": "Email already registered"},
             )
 
         # Create user
@@ -94,7 +94,7 @@ class UserCRUD:
             if existing_user:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=[{"field": "email", "msg": "Email already registered"}],
+                    detail={"field": "email", "msg": "Email already registered"},
                 )
 
         if user_data.email is not None:

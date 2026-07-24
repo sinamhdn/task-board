@@ -30,7 +30,7 @@ async def login_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=[{"field": "server_error", "msg": "Incorrect email or password"}],
+            detail={"field": "server_error", "msg": "Incorrect email or password"},
             headers={"WWW-Authenticate": "Bearer"},
         )
     # Create access token with user id as subject
@@ -53,4 +53,7 @@ async def register_user(
         # return UserPrivateResponse(**user.model_dump())
         # return UserPrivateResponse.model_validate(user)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"field": "server_error", "msg": str(e)},
+        )

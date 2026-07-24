@@ -39,6 +39,8 @@ export const Input = ({
 
   const inputError = findInputError(formStateErrors, name);
   const isInvalid = isFormInvalid(inputError);
+  const hasSessionErrors = !!sessionErrors[name];
+  const shouldShowError = isInvalid || hasSessionErrors;
 
   return (
     <div className="input-field flex flex-col w-full gap-2">
@@ -55,7 +57,7 @@ export const Input = ({
         />
       </div>
       <AnimatePresence mode="wait" initial={false}>
-        {isInvalid && (
+        {shouldShowError && (
           <InputError
             field={name}
             sessionErrors={sessionErrors}

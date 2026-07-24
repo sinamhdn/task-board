@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import sessionSlice from "./sessionSlice";
 
 export const store = configureStore({
-  reducer: { user: sessionSlice },
+  reducer: { session: sessionSlice },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       thunk: true,

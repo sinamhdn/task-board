@@ -63,9 +63,7 @@ async def get_current_user(
     if user_id_str is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=[
-                {"field": "server_error", "msg": "Invalid or expired access token."}
-            ],
+            detail={"field": "server_error", "msg": "Invalid or expired access token."},
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -74,9 +72,7 @@ async def get_current_user(
     except TypeError, ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=[
-                {"field": "server_error", "msg": "Invalid or expired access token."}
-            ],
+            detail={"field": "server_error", "msg": "Invalid or expired access token."},
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -85,7 +81,7 @@ async def get_current_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=[{"field": "server_error", "msg": "User not found."}],
+            detail={"field": "server_error", "msg": "User not found."},
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user

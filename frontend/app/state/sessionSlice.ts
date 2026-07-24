@@ -19,7 +19,7 @@ export interface SessionErrors {
   last_name: string;
   email: string;
   password: string;
-  password_confirm: string;
+  confirm: string;
   server_error: string;
 }
 
@@ -49,7 +49,7 @@ const initialState: SessionState = {
     last_name: "",
     email: "",
     password: "",
-    password_confirm: "",
+    confirm: "",
     server_error: "",
   },
   status: null,
@@ -66,10 +66,20 @@ const sessionSlice = createSlice({
       state.socket = action.payload;
     },
     setError: (state, action) => {
-      state.errors = action.payload;
+      state.errors = {
+        ...state.errors,
+        ...action.payload,
+      };
     },
     clearError: (state) => {
-      state.errors = initialState.errors;
+      state.errors = {
+        first_name: "",
+        last_name: "",
+        email: "",
+        password: "",
+        confirm: "",
+        server_error: "",
+      };
     },
   },
   extraReducers: (builder) => {
@@ -98,6 +108,7 @@ const sessionSlice = createSlice({
         if (action.payload) {
           action.payload.forEach((error) => {
             const field = error.field; //["body", "email"]
+            console.log(action.payload);
             if (field in state.errors) {
               state.errors[field as keyof SessionErrors] = error.msg;
             } else {
@@ -105,6 +116,12 @@ const sessionSlice = createSlice({
             }
           });
         }
+        console.log("first_name", state.errors.first_name);
+        console.log("last_name", state.errors.last_name);
+        console.log("email", state.errors.email);
+        console.log("password", state.errors.password);
+        console.log("confirm", state.errors.confirm);
+        console.log("server_error", state.errors.server_error);
       });
   },
 });

@@ -19,8 +19,10 @@ export function meta({}: Route.MetaArgs) {
 }
 
 function Signup() {
-  const loadingState = useSelector((state: RootState) => state.user.status);
-  const sessionErrors = useSelector((errors: RootState) => errors.user.errors);
+  const loadingState = useSelector((state: RootState) => state.session.status);
+  const sessionErrors = useSelector(
+    (errors: RootState) => errors.session.errors,
+  );
   const dispatch = useAppDispatch();
 
   interface FormValues {
@@ -60,11 +62,6 @@ function Signup() {
     <div className="signup-page">
       <FormProvider {...methods}>
         <form className="signup-form" noValidate onSubmit={onSubmit}>
-          {sessionErrors.server_error && (
-            <div className="error-message" style={{ color: "red" }}>
-              {sessionErrors.server_error}
-            </div>
-          )}
           <div className="grid gap-5 md:grid-cols-2">
             <Input {...first_name_validation} sessionErrors={sessionErrors} />
             <Input {...last_name_validation} sessionErrors={sessionErrors} />

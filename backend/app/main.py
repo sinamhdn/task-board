@@ -128,7 +128,10 @@ def get_file_response_or_404(
         mime_type, _ = mimetypes.guess_type(fallback_file_path)
         return FileResponse(fallback_file_path, media_type=mime_type)
 
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail={"field": "server_error", "msg": error_message},
+    )
 
 
 """ SPA Routing Frontend Serving"""
@@ -146,7 +149,7 @@ def general_http_exception_handler(request: Request, exception: StarletteHTTPExc
     if request.url.path.startswith("/api"):
         return JSONResponse(
             status_code=exception.status_code,
-            content={"detail": [{"field": "server_error", "msg": message}]},
+            content={"detail": [{"field": message["field"], "msg": message["msg"]}]},
         )
 
     return templates.TemplateResponse(
@@ -173,7 +176,7 @@ def validation_exception_handler(request: Request, exception: RequestValidationE
             else {"field": "server_error", "msg": "Unknown Validation Error"}
         )
         request_validation_errors.append(error_item)
-
+    print("request_validation_error", request_validation_errors)
     if request.url.path.startswith("/api"):
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

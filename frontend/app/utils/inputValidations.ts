@@ -66,7 +66,7 @@ export const password_validation = {
     },
     minLength: {
       value: 6,
-      message: "min 6 characters",
+      message: "min 8 characters",
     },
   },
 };

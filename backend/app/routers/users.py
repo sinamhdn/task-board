@@ -46,7 +46,10 @@ async def get_user(
     user = result.scalars().first()
     if user:
         return user
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail={"field": "server_error", "msg": "User not found."},
+    )
 
 
 @router.patch("/{user_id}", response_model=UserPublicResponse)
@@ -64,16 +67,17 @@ async def update_user(
     if user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=[
-                {"field": "server_error", "msg": "Not authorized to update this user."}
-            ],
+            detail={
+                "field": "server_error",
+                "msg": "Not authorized to update this user.",
+            },
         )
     result = await session.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=[{"field": "server_error", "msg": "User not found."}],
+            detail={"field": "server_error", "msg": "User not found."},
         )
     user = await UserCRUD.update_user(session=session, user=user, user_data=user_update)
     return user
@@ -98,7 +102,7 @@ async def delete_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=[{"field": "server_error", "msg": "User not found."}],
+            detail={"field": "server_error", "msg": "User not found."},
         )
     await UserCRUD.delete_user(session=session, user=user)
 
