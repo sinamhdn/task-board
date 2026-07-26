@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { MdError } from "react-icons/md";
 import type { SessionErrors } from "~/state/sessionSlice";
 import { findInputError, isFormInvalid } from "~/utils";
+import cn from "classnames";
 
 type InputPropsType = {
   id: string;
@@ -12,6 +13,8 @@ type InputPropsType = {
   label: string;
   validation: any;
   placeholder?: string;
+  multiline?: boolean;
+  className?: string;
   sessionErrors: SessionErrors;
 };
 
@@ -30,6 +33,8 @@ export const Input = ({
   label,
   placeholder,
   validation,
+  multiline = false,
+  className,
   sessionErrors,
 }: InputPropsType) => {
   const {
@@ -41,20 +46,34 @@ export const Input = ({
   const isInvalid = isFormInvalid(inputError);
   const hasSessionErrors = !!sessionErrors[name];
   const shouldShowError = isInvalid || hasSessionErrors;
+  const input_tailwind =
+    "p-5 font-medium rounded-md w-full border border-slate-300 placeholder:opacity-60";
 
   return (
-    <div className="input-field flex flex-col w-full gap-2">
+    <div className={cn("input-field flex flex-col w-full gap-2", className)}>
       <div className="flex justify-between">
         <label htmlFor={id} className="font-semibold capitalize">
           {label}
         </label>
-        <input
-          className="w-full p-5 font-medium border rounded-md border-slate-300 placeholder:opacity-60"
-          id={id}
-          type={type}
-          placeholder={placeholder}
-          {...register(name, validation)}
-        />
+        {multiline ? (
+          <textarea
+            id={id}
+            className={cn(
+              input_tailwind,
+              "min-h-[10rem] max-h-[20rem] resize-y",
+            )}
+            placeholder={placeholder}
+            {...register(`${name}`, validation)}
+          ></textarea>
+        ) : (
+          <input
+            className="w-full p-5 font-medium border rounded-md border-slate-300 placeholder:opacity-60"
+            id={id}
+            type={type}
+            placeholder={placeholder}
+            {...register(name, validation)}
+          />
+        )}
       </div>
       <AnimatePresence mode="wait" initial={false}>
         {shouldShowError && (

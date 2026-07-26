@@ -1,30 +1,26 @@
-import type { Route } from "./+types/signup";
-import { useSelector } from "react-redux";
-import { useForm, FormProvider } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { GrMail } from "react-icons/gr";
-import { LoadingStatus, setError, signupUser } from "~/state/sessionSlice";
-import { useAppDispatch } from "~/state/hooks";
-import type { RootState } from "~/state/store";
+import { useSelector } from "react-redux";
+import { Link } from "react-router";
 import { Input } from "~/components/input";
+import { useAppDispatch } from "~/state/hooks";
+import { LoadingStatus, signupUser } from "~/state/sessionSlice";
+import type { RootState } from "~/state/store";
+import { useNavigate } from "react-router";
 import {
+  confirm_validation,
+  email_validation,
   first_name_validation,
   last_name_validation,
-  email_validation,
   password_validation,
-  confirm_validation,
 } from "~/utils/inputValidations";
+import type { Route } from "./+types/signup";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Signup" }, { name: "description", content: "Signup!" }];
 }
 
 function Signup() {
-  const loadingState = useSelector((state: RootState) => state.session.status);
-  const sessionErrors = useSelector(
-    (errors: RootState) => errors.session.errors,
-  );
-  const dispatch = useAppDispatch();
-
   interface FormValues {
     first_name: string;
     last_name: string;
@@ -32,7 +28,12 @@ function Signup() {
     password: string;
     confirm: string;
   }
-
+  const loadingState = useSelector((state: RootState) => state.session.status);
+  const sessionErrors = useSelector(
+    (errors: RootState) => errors.session.errors,
+  );
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const methods = useForm<FormValues>({
     defaultValues: {
       first_name: "",
@@ -45,14 +46,19 @@ function Signup() {
   });
 
   const handleSubmitCallback = async (data: FormValues) => {
-    await dispatch(
-      signupUser({
-        first_name: data.first_name,
-        last_name: data.last_name,
-        email: data.email,
-        password: data.password,
-      }),
-    );
+    try {
+      await dispatch(
+        signupUser({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          password: data.password,
+        }),
+      ).unwrap();
+      throw navigate("/signin");
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const onSubmit = methods.handleSubmit(handleSubmitCallback);
@@ -89,6 +95,7 @@ function Signup() {
             </button>
           </div>
         </form>
+        <Link to="/signin">Login</Link>
       </FormProvider>
     </div>
   );

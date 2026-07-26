@@ -1,5 +1,5 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 export interface User {
@@ -81,6 +81,9 @@ const sessionSlice = createSlice({
         server_error: "",
       };
     },
+    clearStatus: (state) => {
+      state.status = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -126,37 +129,40 @@ const sessionSlice = createSlice({
   },
 });
 
-export const signinUser = createAsyncThunk(
-  "session/signin",
-  async (
-    credentials: { email: string; password: string },
-    { rejectWithValue },
-  ) => {
-    try {
-      const form = new URLSearchParams();
-
-      form.append("username", credentials.email);
-      form.append("password", credentials.password);
-
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/auth/login",
-        form,
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        },
-      );
-
-      return response.data;
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        return rejectWithValue(err.response?.data);
-      }
-      return rejectWithValue("Unknown error");
-    }
+export const signinUser = createAsyncThunk<
+  User,
+  {
+    email: string;
+    password: string;
   },
-);
+  {
+    rejectValue: BackendValidationError[];
+  }
+>("session/signin", async (credentials, { rejectWithValue }) => {
+  try {
+    const form = new URLSearchParams();
+
+    form.append("username", credentials.email);
+    form.append("password", credentials.password);
+
+    const response = await axios.post(
+      "http://127.0.0.1:8000/api/auth/login",
+      form,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      },
+    );
+
+    return response.data;
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      return rejectWithValue(err.response?.data);
+    }
+    return rejectWithValue("Unknown error");
+  }
+});
 
 export const signupUser = createAsyncThunk<
   User,
@@ -194,7 +200,7 @@ export const signupUser = createAsyncThunk<
   }
 });
 
-export const { setCurrentUser, setSocket, setError, clearError } =
+export const { setCurrentUser, setSocket, setError, clearError, clearStatus } =
   sessionSlice.actions;
 
 export default sessionSlice.reducer;
