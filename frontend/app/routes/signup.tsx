@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router";
 import { Input } from "~/components/input";
 import { useAppDispatch } from "~/state/hooks";
-import { LoadingStatus, signupUser } from "~/state/sessionSlice";
+import { LoadingStatus, signupUser, clearError } from "~/state/sessionSlice";
 import type { RootState } from "~/state/store";
 import { useNavigate } from "react-router";
 import {
@@ -55,6 +55,7 @@ function Signup() {
           password: data.password,
         }),
       ).unwrap();
+      dispatch(clearError());
       throw navigate("/signin");
     } catch (err) {
       console.log(err);

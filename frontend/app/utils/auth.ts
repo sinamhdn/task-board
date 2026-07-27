@@ -19,6 +19,8 @@ export async function getCurrentUser(token: string) {
     return currentUser;
   }
 
+  
+
   fetchPromise = (async () => {
     try {
       const response = await fetch("/api/users/me", {

@@ -1,7 +1,7 @@
 import { Outlet, redirect, useLoaderData } from "react-router";
 import type { Route } from "./+types/protected";
-import { getCurrentUser } from "~/utils/auth";
-import { useDispatch } from "react-redux";
+import { getCurrentUser } from "~/state/sessionSlice";
+import { useAppDispatch } from "~/state/hooks";
 import { useEffect } from "react";
 import { setCurrentUser } from "~/state/sessionSlice";
 
@@ -13,9 +13,9 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
     throw redirect("/signup");
   }
 
-  let current_user = await getCurrentUser(token);
+  // let current_user = await getCurrentUser(token);
 
-  return { token, current_user };
+  return { token /*current_user*/ };
 }
 
 clientLoader.hydrate = true as const;
@@ -31,13 +31,15 @@ export function HydrateFallback() {
 }
 
 export default function ProtectedLayout() {
-  const { token, current_user } = useLoaderData<typeof clientLoader>();
-  const dispatch = useDispatch();
-  useEffect(() => {
-    if (current_user) {
-      dispatch(setCurrentUser(current_user));
-    }
-  });
+  const { token } = useLoaderData<typeof clientLoader>();
+  const dispatch = useAppDispatch();
+  dispatch(getCurrentUser(token));
+
+  // useEffect(() => {
+  //   if (current_user) {
+  //     dispatch(setCurrentUser(current_user));
+  //   }
+  // });
   // undefined until clientLoader resolves
   // if (!data) {
   //   return <div>Loading...</div>; // or spinner

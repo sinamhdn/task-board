@@ -3,14 +3,15 @@ import { useSelector } from "react-redux";
 import type { RootState } from "~/state/store";
 import { useForm, FormProvider } from "react-hook-form";
 import { GrMail } from "react-icons/gr";
-import { LoadingStatus, signinUser } from "~/state/sessionSlice";
+import { LoadingStatus, signinUser, clearError } from "~/state/sessionSlice";
 import { Input } from "~/components/input";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useAppDispatch } from "~/state/hooks";
 import {
   email_validation,
   password_validation,
 } from "~/utils/inputValidations";
+import { setToken } from "~/utils/auth";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Signin" }, { name: "description", content: "Signin!" }];
@@ -19,6 +20,7 @@ export function meta({}: Route.MetaArgs) {
 function Signin() {
   const loadingState = useSelector((state: RootState) => state.session.status);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   interface FormValues {
     email: string;
@@ -34,12 +36,19 @@ function Signin() {
   });
 
   const handleSubmitCallback = async (data: FormValues) => {
-    await dispatch(
-      signinUser({
-        email: data.email,
-        password: data.password,
-      }),
-    );
+    try {
+      const result = await dispatch(
+        signinUser({
+          email: data.email,
+          password: data.password,
+        }),
+      ).unwrap();
+      setToken(result.access_token);
+      dispatch(clearError());
+      throw navigate("/");
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const sessionErrors = useSelector(
@@ -63,12 +72,12 @@ function Signin() {
             >
               <GrMail />
               {loadingState === LoadingStatus.pending
-                ? "Signing up..."
-                : "Register"}
+                ? "Signing in..."
+                : "Login"}
             </button>
           </div>
         </form>
-        <Link to="/signup">Login</Link>
+        <Link to="/signup">Register</Link>
       </FormProvider>
     </div>
   );

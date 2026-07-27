@@ -14,6 +14,11 @@ export interface User {
   created_at: string;
   updated_at: string;
 }
+
+export interface Token {
+  access_token: string;
+  token_type: string;
+}
 export interface SessionErrors {
   first_name: string;
   last_name: string;
@@ -89,18 +94,36 @@ const sessionSlice = createSlice({
     builder
       .addCase(signinUser.fulfilled, (state, action) => {
         state.status = LoadingStatus.fulfiled;
-        state.currentUser = action.payload.user;
+        // state.currentUser = action.payload as User;
+        console.log(
+          "WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
+          action.payload,
+        );
       })
       .addCase(signinUser.pending, (state) => {
         state.status = LoadingStatus.pending;
       })
       .addCase(signinUser.rejected, (state, action) => {
         state.status = LoadingStatus.rejected;
-        state.errors.server_error = action.error.message || "Login Failed!";
+        if (action.payload) {
+          action.payload.forEach((error) => {
+            const field = error.field; //["body", "email"]
+            console.log(action.payload);
+            if (field in state.errors) {
+              state.errors[field as keyof SessionErrors] = error.msg;
+            } else {
+              state.errors.server_error = error.msg;
+            }
+          });
+        }
       })
       .addCase(signupUser.fulfilled, (state, action) => {
         state.status = LoadingStatus.fulfiled;
-        state.currentUser = action.payload as User;
+        // state.currentUser = action.payload as User;
+        console.log(
+          "WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER?",
+          action.payload,
+        );
       })
       .addCase(signupUser.pending, (state) => {
         state.status = LoadingStatus.pending;
@@ -125,12 +148,41 @@ const sessionSlice = createSlice({
         console.log("password", state.errors.password);
         console.log("confirm", state.errors.confirm);
         console.log("server_error", state.errors.server_error);
+      })
+      .addCase(getCurrentUser.fulfilled, (state, action) => {
+        state.status = LoadingStatus.fulfiled;
+        state.currentUser = action.payload as User;
+        console.log(
+          "WHAT DOES SUCCESSUFUL STATE RETURNS IN GETCURRENTUSER?",
+          action.payload,
+        );
+        console.log(
+          "WHAT IS CURRENTUSER STATE AFTER SUCCESSUFUL GETCURRENTUSER?",
+          action.payload,
+        );
+      })
+      .addCase(getCurrentUser.pending, (state) => {
+        state.status = LoadingStatus.pending;
+      })
+      .addCase(getCurrentUser.rejected, (state, action) => {
+        state.status = LoadingStatus.rejected;
+        if (action.payload) {
+          action.payload.forEach((error) => {
+            const field = error.field; //["body", "email"]
+            console.log(action.payload);
+            if (field in state.errors) {
+              state.errors[field as keyof SessionErrors] = error.msg;
+            } else {
+              state.errors.server_error = error.msg;
+            }
+          });
+        }
       });
   },
 });
 
 export const signinUser = createAsyncThunk<
-  User,
+  Token,
   {
     email: string;
     password: string;
@@ -144,8 +196,9 @@ export const signinUser = createAsyncThunk<
 
     form.append("username", credentials.email);
     form.append("password", credentials.password);
+    form.append("grant_type", "password");
 
-    const response = await axios.post(
+    const tokenResponse = await axios.post(
       "http://127.0.0.1:8000/api/auth/login",
       form,
       {
@@ -155,12 +208,17 @@ export const signinUser = createAsyncThunk<
       },
     );
 
-    return response.data;
+    console.log(
+      "WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER? TOKENRESPONSE",
+      tokenResponse.data.access_token,
+    );
+
+    return tokenResponse.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      return rejectWithValue(err.response?.data);
+      return rejectWithValue(err.response?.data.detail || []);
     }
-    return rejectWithValue("Unknown error");
+    return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
   }
 });
 
@@ -196,7 +254,42 @@ export const signupUser = createAsyncThunk<
     }
 
     // return rejectWithValue("Unknown error");
-    return rejectWithValue([]);
+    return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
+  }
+});
+
+export const getCurrentUser = createAsyncThunk<
+  User,
+  string,
+  {
+    rejectValue: BackendValidationError[];
+  }
+>("session/getcurrentuser", async (token, { rejectWithValue }) => {
+  // if (!getToken()) {
+  //   return rejectWithValue([
+  //     { field: "server_error", msg: "Not authenticated." },
+  //   ]);
+  // }
+  try {
+    const response = await axios.get("http://127.0.0.1:8000/api/users/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log(
+      "WHAT DOES RESPONSE>DATA RETURNS IN GETCURRENTUSER",
+      response.data,
+    );
+    return response.data;
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const errorMessage = err.response?.data.detail || [];
+      console.log(err.response?.data.detail);
+      return rejectWithValue(errorMessage);
+    }
+
+    // return rejectWithValue("Unknown error");
+    return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
   }
 });
 
