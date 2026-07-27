@@ -14,7 +14,7 @@ function MainLayout() {
   dispatch(clearStatus());
   return (
     <div className="main-layout-component">
-      <div className="main-error-toast">
+      <div className="main-error-toast fixed rounded-full">
         {sessionErrors?.server_error && (
           <div className="error-message" style={{ color: "red" }}>
             {sessionErrors.server_error}
