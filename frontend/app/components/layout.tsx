@@ -4,47 +4,119 @@ import Header from "./header";
 import type { RootState } from "~/state/store";
 import { LoadingStatus } from "~/state/sessionSlice";
 import { useAppDispatch } from "~/state/hooks";
-import { clearStatus } from "~/state/sessionSlice";
+import { clearStatus, clearError } from "~/state/sessionSlice";
+import { useEffect, useState } from "react";
 
 function MainLayout() {
   const dispatch = useAppDispatch();
   const sessionErrors = useSelector(
     (errors: RootState) => errors.session.errors,
   );
-  dispatch(clearStatus());
+  const [showError, setShowError] = useState(false);
+
+  useEffect(() => {
+    if (sessionErrors?.server_error) {
+      setShowError(true);
+      const timer = setTimeout(() => {
+        setShowError(false);
+        dispatch(clearError());
+        dispatch(clearStatus());
+      }, 5000); // 5 seconds
+      return () => clearTimeout(timer); // Cleanup timeout if component unmounts
+    }
+  }, [sessionErrors, dispatch]);
+
   return (
     <div className="main-layout-component">
+      <Header />
       <div className="main-error-toast fixed rounded-full">
-        {sessionErrors?.server_error && (
+        {showError && sessionErrors?.server_error && (
           <div className="error-message" style={{ color: "red" }}>
             {sessionErrors.server_error}
+            <button
+              onClick={() => {
+                setShowError(false);
+                dispatch(clearError());
+              }}
+              style={{ background: "none", border: "none", cursor: "pointer" }}
+            >
+              ✕
+            </button>
           </div>
         )}
-        <FormSubmissionState />
       </div>
-      <Header />
+      <FormSubmissionState />
       <Outlet />
     </div>
   );
 }
 
 function FormSubmissionState() {
+  const [formSubmitState, setFormSubmitState] = useState("");
+  const dispatch = useAppDispatch();
   const loadingState = useSelector((state: RootState) => state.session.status);
-  if (loadingState === LoadingStatus.fulfiled) {
+
+  useEffect(() => {
+    if (loadingState === LoadingStatus.fulfiled) {
+      setFormSubmitState("fulfilled");
+      const timer = setTimeout(() => {
+        setFormSubmitState("");
+        dispatch(clearError());
+        dispatch(clearStatus());
+      }, 5000); // 5 seconds
+      return () => clearTimeout(timer); // Cleanup timeout if component unmounts
+    }
+
+    if (loadingState === LoadingStatus.rejected) {
+      setFormSubmitState("rejected");
+      const timer = setTimeout(() => {
+        setFormSubmitState("");
+        dispatch(clearError());
+        dispatch(clearStatus());
+      }, 5000); // 5 seconds
+      return () => clearTimeout(timer); // Cleanup timeout if component unmounts
+    }
+
+    return;
+  }, [loadingState, dispatch]);
+
+  if (formSubmitState === "fulfilled") {
     return (
       <div className="success-message" style={{ color: "green" }}>
-        Form submitted succesufully.
+        <p>Form submitted succesufully.</p>
+        <button
+          onClick={() => {
+            setFormSubmitState("");
+            dispatch(clearError());
+            dispatch(clearStatus());
+          }}
+          style={{ background: "none", border: "none", cursor: "pointer" }}
+        >
+          ✕
+        </button>
       </div>
     );
   }
 
-  if (loadingState === LoadingStatus.rejected) {
+  if (formSubmitState === "rejected") {
     return (
       <div className="fail-message" style={{ color: "red" }}>
-        Form submission failed.
+        <p>Form submission failed.</p>
+        <button
+          onClick={() => {
+            setFormSubmitState("");
+            dispatch(clearError());
+            dispatch(clearStatus());
+          }}
+          style={{ background: "none", border: "none", cursor: "pointer" }}
+        >
+          ✕
+        </button>
       </div>
     );
   }
+
+  return null;
 }
 
 export default MainLayout;

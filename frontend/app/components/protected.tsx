@@ -2,8 +2,8 @@ import { Outlet, redirect, useLoaderData } from "react-router";
 import type { Route } from "./+types/protected";
 import { getCurrentUser } from "~/state/sessionSlice";
 import { useAppDispatch } from "~/state/hooks";
-import { useEffect } from "react";
-import { setCurrentUser } from "~/state/sessionSlice";
+// import { useEffect } from "react";
+// import { setCurrentUser } from "~/state/sessionSlice";
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const token = localStorage.getItem("jwt");

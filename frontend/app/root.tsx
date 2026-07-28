@@ -10,6 +10,7 @@ import {
 import type { Route } from "./+types/root";
 import { Provider } from "react-redux";
 import { store } from "./state/store.ts";
+import { ThemeProvider } from "~/components/theme.tsx";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -48,10 +49,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         {/* Preconnect for Google Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
         {/* Custom Font */}
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
-          rel="stylesheet" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
+          rel="stylesheet"
+        />
         <Links />
       </head>
       <body>
@@ -66,7 +73,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <Provider store={store}>
-      <Outlet /> {/* This is where your MainLayout will render */}
+      <ThemeProvider>
+        <Outlet /> {/* This is where your MainLayout will render */}
+      </ThemeProvider>
     </Provider>
   );
 }

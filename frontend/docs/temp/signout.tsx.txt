@@ -1,0 +1,24 @@
+import type { Route } from "../../app/routes/+types/signout";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
+import { useAppDispatch } from "~/state/hooks";
+import { clearCurrentUser } from "~/state/sessionSlice";
+
+function Signout() {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    localStorage.removeItem("jwt");
+    dispatch(clearCurrentUser());
+    navigate("/");
+  }, [dispatch, navigate]);
+
+  useEffect(() => {
+    navigate("/");
+  }, [navigate]);
+
+  return <></>;
+}
+
+export default Signout;

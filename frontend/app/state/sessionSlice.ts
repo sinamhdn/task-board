@@ -67,6 +67,9 @@ const sessionSlice = createSlice({
     setCurrentUser: (state, action: PayloadAction<User | null>) => {
       state.currentUser = action.payload;
     },
+    clearCurrentUser: (state) => {
+      state.currentUser = null;
+    },
     setSocket: (state, action) => {
       state.socket = action.payload;
     },
@@ -199,7 +202,7 @@ export const signinUser = createAsyncThunk<
     form.append("grant_type", "password");
 
     const tokenResponse = await axios.post(
-      "http://127.0.0.1:8000/api/auth/login",
+      `${import.meta.env.VITE_API_URL}/api/auth/login`,
       form,
       {
         headers: {
@@ -236,7 +239,7 @@ export const signupUser = createAsyncThunk<
 >("session/signup", async (credentials, { rejectWithValue }) => {
   try {
     const response = await axios.post(
-      "http://127.0.0.1:8000/api/auth/register",
+      `${import.meta.env.VITE_API_URL}/api/auth/register`,
       credentials,
     );
     return response.data;
@@ -271,11 +274,14 @@ export const getCurrentUser = createAsyncThunk<
   //   ]);
   // }
   try {
-    const response = await axios.get("http://127.0.0.1:8000/api/users/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/users/me`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
     console.log(
       "WHAT DOES RESPONSE>DATA RETURNS IN GETCURRENTUSER",
       response.data,
@@ -293,7 +299,13 @@ export const getCurrentUser = createAsyncThunk<
   }
 });
 
-export const { setCurrentUser, setSocket, setError, clearError, clearStatus } =
-  sessionSlice.actions;
+export const {
+  setCurrentUser,
+  clearCurrentUser,
+  setSocket,
+  setError,
+  clearError,
+  clearStatus,
+} = sessionSlice.actions;
 
 export default sessionSlice.reducer;

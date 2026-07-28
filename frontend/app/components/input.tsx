@@ -51,7 +51,7 @@ export const Input = ({
 
   return (
     <div className={cn("input-field flex flex-col w-full gap-2", className)}>
-      <div className="flex justify-between">
+      <div className=" text-left">
         <label htmlFor={id} className="font-semibold capitalize">
           {label}
         </label>
@@ -67,7 +67,7 @@ export const Input = ({
           ></textarea>
         ) : (
           <input
-            className="w-full p-5 font-medium border rounded-md border-slate-300 placeholder:opacity-60"
+            className="w-full p-4 font-medium border rounded-md border-slate-300 placeholder:opacity-60 mb-2 mt-2"
             id={id}
             type={type}
             placeholder={placeholder}

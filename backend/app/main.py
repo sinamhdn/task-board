@@ -88,17 +88,17 @@ PROJECT_BASE = Path(__file__).resolve().parent.parent
 
 
 # @app.get("/{full_path:path}")
-# def frontend(full_path: str):
-#     frontend_dir = PROJECT_BASE / "templates"
+def frontend(full_path: str):
+    frontend_dir = PROJECT_BASE / "templates"
 
-#     # Handle local dev paths
-#     if settings.is_local_static_dir == "true":
-#         frontend_dir = PROJECT_BASE / "templates"
+    # Handle local dev paths
+    if settings.is_local_static_dir == "true":
+        frontend_dir = PROJECT_BASE / "templates"
 
-#     return get_file_response_or_404(
-#         os.path.join(frontend_dir, full_path),  # Try to serve the specific file
-#         os.path.join(frontend_dir, "index.html"),  # Fallback to index.html
-#     )
+    return get_file_response_or_404(
+        os.path.join(frontend_dir, full_path),  # Try to serve the specific file
+        os.path.join(frontend_dir, "index.html"),  # Fallback to index.html
+    )
 
 
 def get_file_response_or_404(

@@ -7,8 +7,8 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-function BoardsAll() {
+function BoardAll() {
   return <div className="all-boards-component"></div>;
 }
 
-export default BoardsAll;
+export default BoardAll;

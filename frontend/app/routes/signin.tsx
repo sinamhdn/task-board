@@ -58,17 +58,21 @@ function Signin() {
   const onSubmit = methods.handleSubmit(handleSubmitCallback);
 
   return (
-    <div className="signin-component">
+    <div className="signin-component p-10">
       <FormProvider {...methods}>
-        <form className="signup-form" noValidate onSubmit={onSubmit}>
-          <div className="grid gap-5 md:grid-cols-2">
+        <form
+          className="signup-form w-1/4 mx-auto text-center"
+          noValidate
+          onSubmit={onSubmit}
+        >
+          <div className="grid gap-5">
             <Input {...email_validation} sessionErrors={sessionErrors} />
             <Input {...password_validation} sessionErrors={sessionErrors} />
           </div>
-          <div className="submit-button mt-5">
+          <div className="submit-button mt-5 mb-5">
             <button
               type="submit"
-              className="flex items-center gap-1 p-5 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-800"
+              className="flex items-center justify-center gap-1 p-5 mx-auto font-semibold w-48 text-center text-white bg-blue-600 rounded-md hover:bg-blue-800"
             >
               <GrMail />
               {loadingState === LoadingStatus.pending
@@ -76,8 +80,8 @@ function Signin() {
                 : "Login"}
             </button>
           </div>
+          <Link to="/signup">Register</Link>
         </form>
-        <Link to="/signup">Register</Link>
       </FormProvider>
     </div>
   );

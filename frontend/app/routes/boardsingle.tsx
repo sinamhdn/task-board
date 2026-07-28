@@ -7,8 +7,8 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-function BoardsSingle() {
+function BoardSingle() {
   return <div className="single-board-component"></div>;
 }
 
-export default BoardsSingle;
+export default BoardSingle;
