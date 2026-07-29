@@ -32,7 +32,8 @@ export interface SessionState {
   currentUser: User | null;
   socket: WebSocket | null;
   errors: SessionErrors;
-  status: string | null;
+  authStatus: string | null;
+  userStatus: string | null;
 }
 
 interface BackendValidationError {
@@ -41,7 +42,7 @@ interface BackendValidationError {
 }
 
 export const LoadingStatus = {
-  fulfiled: "fulfiled",
+  fulfilled: "fulfilled",
   pending: "pending",
   rejected: "rejected",
 };
@@ -57,7 +58,8 @@ const initialState: SessionState = {
     confirm: "",
     server_error: "",
   },
-  status: null,
+  authStatus: null,
+  userStatus: null,
 };
 
 const sessionSlice = createSlice({
@@ -90,13 +92,14 @@ const sessionSlice = createSlice({
       };
     },
     clearStatus: (state) => {
-      state.status = null;
+      state.authStatus = null;
+      state.userStatus = null;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(signinUser.fulfilled, (state, action) => {
-        state.status = LoadingStatus.fulfiled;
+        state.authStatus = LoadingStatus.fulfilled;
         // state.currentUser = action.payload as User;
         console.log(
           "WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
@@ -104,10 +107,10 @@ const sessionSlice = createSlice({
         );
       })
       .addCase(signinUser.pending, (state) => {
-        state.status = LoadingStatus.pending;
+        state.authStatus = LoadingStatus.pending;
       })
       .addCase(signinUser.rejected, (state, action) => {
-        state.status = LoadingStatus.rejected;
+        state.authStatus = LoadingStatus.rejected;
         if (action.payload) {
           action.payload.forEach((error) => {
             const field = error.field; //["body", "email"]
@@ -121,7 +124,7 @@ const sessionSlice = createSlice({
         }
       })
       .addCase(signupUser.fulfilled, (state, action) => {
-        state.status = LoadingStatus.fulfiled;
+        state.authStatus = LoadingStatus.fulfilled;
         // state.currentUser = action.payload as User;
         console.log(
           "WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER?",
@@ -129,10 +132,10 @@ const sessionSlice = createSlice({
         );
       })
       .addCase(signupUser.pending, (state) => {
-        state.status = LoadingStatus.pending;
+        state.authStatus = LoadingStatus.pending;
       })
       .addCase(signupUser.rejected, (state, action) => {
-        state.status = LoadingStatus.rejected;
+        state.authStatus = LoadingStatus.rejected;
         // console.log(action.payload);
         if (action.payload) {
           action.payload.forEach((error) => {
@@ -153,7 +156,7 @@ const sessionSlice = createSlice({
         console.log("server_error", state.errors.server_error);
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
-        state.status = LoadingStatus.fulfiled;
+        state.userStatus = LoadingStatus.fulfilled;
         state.currentUser = action.payload as User;
         console.log(
           "WHAT DOES SUCCESSUFUL STATE RETURNS IN GETCURRENTUSER?",
@@ -165,10 +168,10 @@ const sessionSlice = createSlice({
         );
       })
       .addCase(getCurrentUser.pending, (state) => {
-        state.status = LoadingStatus.pending;
+        state.userStatus = LoadingStatus.pending;
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
-        state.status = LoadingStatus.rejected;
+        state.userStatus = LoadingStatus.rejected;
         if (action.payload) {
           action.payload.forEach((error) => {
             const field = error.field; //["body", "email"]

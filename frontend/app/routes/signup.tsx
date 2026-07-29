@@ -28,7 +28,9 @@ function Signup() {
     password: string;
     confirm: string;
   }
-  const loadingState = useSelector((state: RootState) => state.session.status);
+  const loadingState = useSelector(
+    (state: RootState) => state.session.authStatus,
+  );
   const sessionErrors = useSelector(
     (errors: RootState) => errors.session.errors,
   );
@@ -69,7 +71,7 @@ function Signup() {
     <div className="signup-page p-10">
       <FormProvider {...methods}>
         <form
-          className="signup-form w-1/4 mx-auto text-center"
+          className="signup-form xl:w-1/4 lg:w-1/2 sm:w-full mx-auto text-center"
           noValidate
           onSubmit={onSubmit}
         >

@@ -54,10 +54,12 @@ function MainLayout() {
 function FormSubmissionState() {
   const [formSubmitState, setFormSubmitState] = useState("");
   const dispatch = useAppDispatch();
-  const loadingState = useSelector((state: RootState) => state.session.status);
+  const loadingState = useSelector(
+    (state: RootState) => state.session.authStatus,
+  );
 
   useEffect(() => {
-    if (loadingState === LoadingStatus.fulfiled) {
+    if (loadingState === LoadingStatus.fulfilled) {
       setFormSubmitState("fulfilled");
       const timer = setTimeout(() => {
         setFormSubmitState("");
