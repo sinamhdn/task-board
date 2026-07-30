@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import mimetypes
 import os
@@ -6,7 +7,14 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 # from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -15,24 +23,18 @@ from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .routers.auth import router as auth_router
+from .routers.boards import router as boards_router
+from .routers.tests import router as tests_router
 from .routers.users import router as users_router
-from .tests.exceptions import router as test_router
+from .utils.auth import verify_access_token
 from .utils.db import create_tables_async, dispose_engine
 from .utils.settings import settings
+from .utils.socket import ConnectionManager
 from .utils.utilities import periodic_cleanup
 
 # from pathlib import Path
 
-templates = Jinja2Templates(directory="templates")
-
-static_dir = os.path.join(os.path.dirname(__file__), "../static")
-media_dir = os.path.join(os.path.dirname(__file__), "../media")
-os.makedirs(static_dir, exist_ok=True)
-os.makedirs(media_dir, exist_ok=True)
-
 # load_dotenv(Path(os.path.join(os.path.dirname(os.path.abspath(__file__))), "../.env"))
-
-logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -52,8 +54,14 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
-
-origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+origins = ["http://localhost:5173", "http://127.0.0.1:5173", "*"]
+templates = Jinja2Templates(directory="templates")
+static_dir = os.path.join(os.path.dirname(__file__), "../static")
+media_dir = os.path.join(os.path.dirname(__file__), "../media")
+os.makedirs(static_dir, exist_ok=True)
+os.makedirs(media_dir, exist_ok=True)
+logger = logging.getLogger(__name__)
+connection_manager = ConnectionManager()
 
 app.add_middleware(
     CORSMiddleware,
@@ -68,7 +76,77 @@ app.mount("/media", StaticFiles(directory=media_dir), name="media")
 
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(users_router, prefix="/api/users", tags=["users"])
-app.include_router(test_router, prefix="/api/test", tags=["users"])
+app.include_router(boards_router, prefix="/api/boards", tags=["boards"])
+app.include_router(tests_router, prefix="/api/tests", tags=["tests"])
+
+
+# client side message examples
+# {"action": "subscribe", "channel": "board_123"}
+# {"action": "broadcast", "channel": "board_123", "message": "Hello everyone!"}
+@app.websocket("/api/socket")
+async def socket(websocket: WebSocket):
+    await connection_manager.connect(websocket)
+    token = websocket.query_params.get("access_token")
+    if not token:  # handles None or empty string
+        await websocket.send_json(
+            {"field": "server_error", "msg": "Missing access token"}
+        )
+        await websocket.close(code=1008)
+        return
+    user = verify_access_token(token)
+    print(f"RECIEVED TOKEN {token}")
+    if not user:
+        await connection_manager.send_personal_message(
+            {"field": "server_error", "msg": "Not Authenticated."}, websocket
+        )
+        await websocket.close(code=1008)
+        return
+    try:
+        while True:
+            payload = await websocket.receive_json()
+            try:
+                action = payload.get("action")
+                channel = payload.get("channel")
+                message = payload.get("message")
+            except json.JSONDecodeError:
+                await connection_manager.send_personal_message(
+                    {"field": "server_error", "msg": "Invalid JSON format"}, websocket
+                )
+                continue
+            if action == "subscribe":
+                connection_manager.subscribe(websocket, channel)
+                await connection_manager.send_personal_message(
+                    {
+                        "field": "server_error",
+                        "msg": f"Subscribed to channel: {channel}",
+                    },
+                    websocket,
+                )
+            elif action == "unsubscribe" and channel:
+                connection_manager.unsubscribe(websocket, channel)
+                await connection_manager.send_personal_message(
+                    {
+                        "field": "server_error",
+                        "msg": f"Unsubscribed from channel: {channel}",
+                    },
+                    websocket,
+                )
+            elif action == "broadcast" and channel and message:
+                # Client wants to broadcast a message to a specific channel
+                await connection_manager.broadcast_channel(
+                    channel, {"sender": "user", "content": message}
+                )
+            else:
+                await connection_manager.send_personal_message(
+                    {
+                        "field": "server_error",
+                        "msg": "Unknown action or missing fields",
+                    },
+                    websocket,
+                )
+    except WebSocketDisconnect:
+        connection_manager.disconnect(websocket)
+
 
 """ Static Assets Frontend Serving"""
 """

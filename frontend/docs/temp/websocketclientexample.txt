@@ -1,0 +1,21 @@
+const ws = new WebSocket("ws://localhost:8000/api/socket");
+
+ws.onopen = () => {
+  // Subscribe to the board channel
+  ws.send(JSON.stringify({ action: "subscribe", channel: "board_123" }));
+};
+
+// When you want to send a message to the channel:
+function sendMessage(text) {
+  ws.send(JSON.stringify({
+    action: "broadcast",
+    channel: "board_123",
+    message: text
+  }));
+}
+
+// Receive messages from the channel
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log("Channel message:", data);
+};

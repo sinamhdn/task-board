@@ -1,0 +1,31 @@
+import re
+
+from pydantic import BaseModel, Field, validator
+
+# Allowed channel prefixes or a set of valid names
+ALLOWED_CHANNELS = {"boards:", "users:"}  # prefix whitelist
+
+
+class WebSocketMessage(BaseModel):
+    action: str = Field(
+        ..., description="Action to perform: subscribe, unsubscribe, broadcast"
+    )
+    channel: str = Field(..., min_length=3, max_length=50)
+    message: str | None = Field(
+        None, description="Optional message for broadcast action"
+    )
+
+    @validator("channel")
+    def validate_channel(cls, v):
+        # Allow only channels that start with one of the allowed prefixes
+        if not any(v.startswith(prefix) for prefix in ALLOWED_CHANNELS):
+            raise ValueError(f"Channel name must start with one of {ALLOWED_CHANNELS}")
+        # You can also use a regex pattern, e.g., r'^[a-zA-Z0-9_\-]+$'
+        return v
+
+    @validator("action")
+    def validate_action(cls, v):
+        allowed_actions = {"subscribe", "unsubscribe", "broadcast"}
+        if v not in allowed_actions:
+            raise ValueError(f"Action must be one of {allowed_actions}")
+        return v

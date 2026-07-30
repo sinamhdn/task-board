@@ -1,3 +1,4 @@
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
@@ -11,6 +12,7 @@ from ..models.users import User
 from .db import AsyncSession, get_async_db_session
 from .settings import settings
 
+logger = logging.getLogger(__name__)
 pwd_hash = PasswordHash.recommended()
 oath2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
@@ -49,7 +51,14 @@ def verify_access_token(token: str) -> str | None:
             algorithms=[settings.jwt_algorithm],
             options={"require": ["exp", "sub"]},
         )
-    except jwt.InvalidTokenError:
+    except jwt.ExpiredSignatureError:
+        logger.warning("Token expired")
+        return None
+    except jwt.InvalidSignatureError:
+        logger.warning("Invalid signature")
+        return None
+    except jwt.InvalidTokenError as e:
+        logger.warning(f"Other JWT error: {e}")
         return None
     else:
         return payload.get("sub")
