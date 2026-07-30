@@ -24,7 +24,7 @@ class ConnectionManager:
 
     async def broadcast_channel(self, channel: str, message: Dict):
         if channel in self.channels:
-            for connection in self.active_connections:
+            for connection in self.channels[channel]:
                 await connection.send_json(message)
 
     async def broadcast_global(self, message: Dict):
