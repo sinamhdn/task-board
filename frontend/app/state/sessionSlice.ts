@@ -36,7 +36,7 @@ export interface SessionState {
   userStatus: string | null;
 }
 
-interface BackendValidationError {
+export interface BackendValidationError {
   field: string;
   msg: string;
 }

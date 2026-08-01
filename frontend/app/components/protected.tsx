@@ -2,6 +2,7 @@ import { Outlet, redirect, useLoaderData } from "react-router";
 import type { Route } from "./+types/protected";
 import { getCurrentUser } from "~/state/sessionSlice";
 import { useAppDispatch } from "~/state/hooks";
+import { wsmanager } from "~/socket/";
 // import { useEffect } from "react";
 // import { setCurrentUser } from "~/state/sessionSlice";
 
@@ -34,6 +35,7 @@ export default function ProtectedLayout() {
   const { token } = useLoaderData<typeof clientLoader>();
   const dispatch = useAppDispatch();
   dispatch(getCurrentUser(token));
+  wsmanager.socketConnect(token);
 
   // useEffect(() => {
   //   if (current_user) {

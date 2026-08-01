@@ -13,7 +13,7 @@ import {
   first_name_validation,
   last_name_validation,
   password_validation,
-} from "~/utils/inputValidations";
+} from "~/utils/input/inputValidations";
 import type { Route } from "./+types/signup";
 
 export function meta({}: Route.MetaArgs) {

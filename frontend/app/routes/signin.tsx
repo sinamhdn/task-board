@@ -10,7 +10,7 @@ import { useAppDispatch } from "~/state/hooks";
 import {
   email_validation,
   password_validation,
-} from "~/utils/inputValidations";
+} from "~/utils/input/inputValidations";
 import { setToken } from "~/utils/auth";
 
 export function meta({}: Route.MetaArgs) {
