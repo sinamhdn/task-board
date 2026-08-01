@@ -1,14 +1,19 @@
 import json
+from typing import Annotated
 
 from fastapi import (
     APIRouter,
+    Depends,
     WebSocket,
     WebSocketDisconnect,
     WebSocketException,
     status,
 )
 
+from ..crud.users import UserCRUD
+from ..schemas.ws import adapter
 from ..utils.auth import verify_access_token
+from ..utils.db import AsyncSession, get_async_db_session
 from ..utils.ws import ConnectionManager
 
 router = APIRouter(prefix="", tags=["ws"])
@@ -19,7 +24,10 @@ connection_manager = ConnectionManager()
 # {"action": "subscribe", "channel": "board:123"}
 # {"action": "broadcast", "channel": "board:123", "message": "Hello everyone!"}
 @router.websocket("")
-async def socket(websocket: WebSocket):
+async def socket(
+    websocket: WebSocket,
+    session: Annotated[AsyncSession, Depends(get_async_db_session)],
+):
     token = websocket.query_params.get("access_token")
 
     await connection_manager.connect(websocket)
@@ -33,11 +41,9 @@ async def socket(websocket: WebSocket):
         )
         return
 
-    user = verify_access_token(token)
+    user_id = verify_access_token(token)
 
-    print(f"RECIEVED TOKEN {token}")
-
-    if not user:
+    if not user_id:
         # await connection_manager.send_personal_message(
         #     {"field": "server_error", "msg": "Not Authenticated."}, websocket
         # )
@@ -46,10 +52,18 @@ async def socket(websocket: WebSocket):
         )
         return
 
+    user = await UserCRUD.get_user_by_id(session, int(user_id))
+
+    if user:
+        user_email = user.email
+
+    print(f"RECIEVED USER {user_email}")
+
     try:
         while True:
             try:
                 payload = await websocket.receive_json()
+                payload = adapter.validate_python(payload)
 
                 # FOR TESTING
                 await connection_manager.send_personal_message(payload, websocket)
@@ -67,12 +81,12 @@ async def socket(websocket: WebSocket):
                 raise WebSocketException(
                     status.HTTP_400_BAD_REQUEST, reason="Invalid JSON format."
                 )
-            
+
             if action == "subscribe":
                 connection_manager.subscribe(websocket, channel)
                 await connection_manager.send_personal_message(
                     {
-                        "field": "server_error",
+                        "type": "server_notification",
                         "msg": f"Subscribed to channel: {channel}",
                     },
                     websocket,
@@ -81,7 +95,7 @@ async def socket(websocket: WebSocket):
                 connection_manager.unsubscribe(websocket, channel)
                 await connection_manager.send_personal_message(
                     {
-                        "field": "server_error",
+                        "type": "server_notification",
                         "msg": f"Unsubscribed from channel: {channel}",
                     },
                     websocket,
@@ -89,12 +103,12 @@ async def socket(websocket: WebSocket):
             elif action == "broadcast" and channel and message:
                 # Client wants to broadcast a message to a specific channel
                 await connection_manager.broadcast_channel(
-                    channel, {"sender": "user", "content": message}
+                    channel, {"sender": user, "content": message}
                 )
             else:
                 await connection_manager.send_personal_message(
                     {
-                        "field": "server_error",
+                        "type": "server_notification",
                         "msg": "Unknown action or missing fields",
                     },
                     websocket,
