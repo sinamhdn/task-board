@@ -3,16 +3,20 @@ import type { Route } from "./+types/protected";
 import { getCurrentUser } from "~/state/sessionSlice";
 import { useAppDispatch } from "~/state/hooks";
 import { wsmanager } from "~/socket/";
+import { getToken } from "~/utils";
+import { useEffect } from "react";
 // import { useEffect } from "react";
 // import { setCurrentUser } from "~/state/sessionSlice";
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
-  const token = localStorage.getItem("jwt");
+  const token = getToken();
   console.log("IS TOKEN ALIVE", token);
 
   if (!token) {
-    throw redirect("/signup");
+    throw redirect("/signin");
   }
+
+  wsmanager.socketConnect(token);
 
   // let current_user = await getCurrentUser(token);
 
@@ -34,8 +38,10 @@ export function HydrateFallback() {
 export default function ProtectedLayout() {
   const { token } = useLoaderData<typeof clientLoader>();
   const dispatch = useAppDispatch();
-  dispatch(getCurrentUser(token));
-  wsmanager.socketConnect(token);
+
+  useEffect(() => {
+    dispatch(getCurrentUser(token));
+  }, [dispatch, token]);
 
   // useEffect(() => {
   //   if (current_user) {

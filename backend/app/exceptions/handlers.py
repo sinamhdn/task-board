@@ -11,7 +11,7 @@ from starlette.responses import Response
 
 logger = logging.getLogger(__name__)
 templates = Jinja2Templates(
-    directory=os.path.join(os.path.dirname(__file__), "../templates")
+    directory=os.path.join(os.path.dirname(__file__), "../../templates")
 )
 
 

@@ -1,9 +1,9 @@
+// import { useSelector } from "react-redux";
 import { FormProvider, useForm } from "react-hook-form";
 import { GrMail } from "react-icons/gr";
-import { useSelector } from "react-redux";
 import { Link } from "react-router";
 import { Input } from "~/components/input";
-import { useAppDispatch } from "~/state/hooks";
+import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { LoadingStatus, signupUser, clearError } from "~/state/sessionSlice";
 import type { RootState } from "~/state/store";
 import { useNavigate } from "react-router";
@@ -28,10 +28,10 @@ function Signup() {
     password: string;
     confirm: string;
   }
-  const loadingState = useSelector(
+  const loadingState = useAppSelector(
     (state: RootState) => state.session.authStatus,
   );
-  const sessionErrors = useSelector(
+  const sessionErrors = useAppSelector(
     (errors: RootState) => errors.session.errors,
   );
   const navigate = useNavigate();

@@ -16,4 +16,5 @@ dependencies = [
     "pyjwt>=2.13.0",
     "aiosqlite>=0.22.1",
     "websockets>=16.1",
+    "python-socketio[asgi]>=5.16.3",
 ]

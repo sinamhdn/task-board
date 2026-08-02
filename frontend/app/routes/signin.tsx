@@ -1,12 +1,12 @@
+// import { useSelector } from "react-redux";
 import type { Route } from "./+types/signin";
-import { useSelector } from "react-redux";
 import type { RootState } from "~/state/store";
 import { useForm, FormProvider } from "react-hook-form";
 import { GrMail } from "react-icons/gr";
 import { LoadingStatus, signinUser, clearError } from "~/state/sessionSlice";
 import { Input } from "~/components/input";
 import { Link, useNavigate } from "react-router";
-import { useAppDispatch } from "~/state/hooks";
+import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import {
   email_validation,
   password_validation,
@@ -18,7 +18,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 function Signin() {
-  const loadingState = useSelector(
+  const loadingState = useAppSelector(
     (state: RootState) => state.session.authStatus,
   );
   const dispatch = useAppDispatch();
@@ -53,7 +53,7 @@ function Signin() {
     }
   };
 
-  const sessionErrors = useSelector(
+  const sessionErrors = useAppSelector(
     (errors: RootState) => errors.session.errors,
   );
 
