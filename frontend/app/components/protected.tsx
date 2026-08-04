@@ -2,7 +2,7 @@ import { Outlet, redirect, useLoaderData } from "react-router";
 import type { Route } from "./+types/protected";
 import { getCurrentUser } from "~/state/sessionSlice";
 import { useAppDispatch } from "~/state/hooks";
-import { wsmanager } from "~/socket/";
+import { socketioManager } from "~/socketio";
 import { getToken } from "~/utils";
 import { useEffect } from "react";
 // import { useEffect } from "react";
@@ -16,7 +16,7 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
     throw redirect("/signin");
   }
 
-  wsmanager.socketConnect(token);
+  socketioManager.socketConnect(token);
 
   // let current_user = await getCurrentUser(token);
 
