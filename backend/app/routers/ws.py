@@ -17,7 +17,7 @@ from ..utils.db import AsyncSession, get_async_db_session
 from ..utils.ws import ConnectionManager
 
 router = APIRouter(prefix="", tags=["ws"])
-connection_manager = ConnectionManager()
+ws_manager = ConnectionManager()
 
 
 # client side message examples
@@ -28,36 +28,8 @@ async def socket(
     websocket: WebSocket,
     session: Annotated[AsyncSession, Depends(get_async_db_session)],
 ):
-    token = websocket.query_params.get("access_token")
-
-    await connection_manager.connect(websocket)
-
-    if not token:  # handles None or empty string
-        # await websocket.send_json(
-        #     {"field": "server_error", "msg": "Missing access token"}
-        # )
-        await websocket.close(
-            code=status.WS_1008_POLICY_VIOLATION, reason="Authentication Required."
-        )
-        return
-
-    user_id = verify_access_token(token)
-
-    if not user_id:
-        # await connection_manager.send_personal_message(
-        #     {"field": "server_error", "msg": "Not Authenticated."}, websocket
-        # )
-        await websocket.close(
-            code=status.WS_1008_POLICY_VIOLATION, reason="User not exists."
-        )
-        return
-
-    user = await UserCRUD.get_user_by_id(session, int(user_id))
-
-    if user:
-        user_email = user.email
-
-    print(f"RECIEVED USER {user_email}")
+    # user = await ws_manager.authenticateUser(websocket=websocket, session=session)
+    await ws_manager.connect(websocket)
 
     try:
         while True:
@@ -66,7 +38,7 @@ async def socket(
                 payload = adapter.validate_python(payload)
 
                 # FOR TESTING
-                await connection_manager.send_personal_message(payload, websocket)
+                await ws_manager.send_personal_message(payload, websocket)
                 # FOR TESTING
 
                 action = payload.get("action")
@@ -74,7 +46,7 @@ async def socket(
                 message = payload.get("message")
 
             except json.JSONDecodeError:
-                # await connection_manager.send_personal_message(
+                # await ws_manager.send_personal_message(
                 #     {"field": "server_error", "msg": "Invalid JSON format"}, websocket
                 # )
                 # continue
@@ -83,8 +55,8 @@ async def socket(
                 )
 
             if action == "subscribe":
-                connection_manager.subscribe(websocket, channel)
-                await connection_manager.send_personal_message(
+                ws_manager.subscribe(websocket, channel)
+                await ws_manager.send_personal_message(
                     {
                         "type": "server_notification",
                         "msg": f"Subscribed to channel: {channel}",
@@ -92,21 +64,21 @@ async def socket(
                     websocket,
                 )
             elif action == "unsubscribe" and channel:
-                connection_manager.unsubscribe(websocket, channel)
-                await connection_manager.send_personal_message(
+                await ws_manager.unsubscribe(websocket, channel)
+                await ws_manager.send_personal_message(
                     {
                         "type": "server_notification",
                         "msg": f"Unsubscribed from channel: {channel}",
                     },
                     websocket,
                 )
-            elif action == "broadcast" and channel and message:
+            elif action == "broadcast_channel" and channel and message:
                 # Client wants to broadcast a message to a specific channel
-                await connection_manager.broadcast_channel(
+                await ws_manager.broadcast_channel(
                     channel, {"sender": user, "content": message}
                 )
             else:
-                await connection_manager.send_personal_message(
+                await ws_manager.send_personal_message(
                     {
                         "type": "server_notification",
                         "msg": "Unknown action or missing fields",
@@ -114,7 +86,7 @@ async def socket(
                     websocket,
                 )
     except WebSocketDisconnect:
-        connection_manager.disconnect(websocket)
+        ws_manager.disconnect(websocket)
     except Exception as e:
         print("WebSocket exception:", repr(e))
-        connection_manager.disconnect(websocket)
+        ws_manager.disconnect(websocket)

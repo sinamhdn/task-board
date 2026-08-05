@@ -4,16 +4,16 @@ import json
 import os
 from contextlib import asynccontextmanager
 
-import socketio
-import uvicorn
+# import socketio
 from fastapi import (
     FastAPI,
 )
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from socketio import events
-from socketio.server import sio
+
+# from socketio import events
+# from socketio.server import sio
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .exceptions.handlers import (
@@ -28,6 +28,7 @@ from .routers.tests import router as tests_router
 from .routers.users import router as users_router
 from .routers.ws import router as websocket_router
 from .utils.db import create_tables_async, dispose_engine
+from .utils.settings import settings
 from .utils.utilities import periodic_cleanup
 
 # from pathlib import Path
@@ -53,7 +54,8 @@ app = FastAPI(
 )
 
 
-origins = json.loads(os.getenv("FRONT_END_ORIGINS", "[]"))
+# origins = json.loads(os.getenv("FRONT_END_ORIGINS", "[]"))
+origins = settings.front_end_origins
 static_dir = os.path.join(os.path.dirname(__file__), "../static")
 media_dir = os.path.join(os.path.dirname(__file__), "../media")
 os.makedirs(static_dir, exist_ok=True)
@@ -81,8 +83,4 @@ app.add_exception_handler(StarletteHTTPException, general_http_exception_handler
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
-socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
-
-
-if __name__ == "__main__":
-    uvicorn.run("main:socket_app", host="127.0.0.1", port=8000, reload=True)
+# socket_app = socketio.ASGIApp(sio, other_asgi_app=app)

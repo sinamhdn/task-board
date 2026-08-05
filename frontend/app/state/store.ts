@@ -1,8 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit";
 import sessionSlice from "./sessionSlice";
+import socketSlice from "./socketSlice";
 
 export const store = configureStore({
-  reducer: { session: sessionSlice },
+  reducer: { session: sessionSlice, socket: socketSlice },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       thunk: true,
