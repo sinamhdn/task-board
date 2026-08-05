@@ -1,6 +1,5 @@
-import type { PayloadAction } from "@reduxjs/toolkit";
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createSlice } from "@reduxjs/toolkit";
+
 
 export interface SocketError {
   type: string;
@@ -8,10 +7,9 @@ export interface SocketError {
 }
 
 export interface SocketState {
-  socket: WebSocket | null;
-  error: SocketError;
-  authStatus: string | null;
-  userStatus: string | null;
+  data: object | null;
+  error: SocketError | null;
+  status: string | null;
 }
 
 export interface BackendValidationError {
@@ -19,267 +17,56 @@ export interface BackendValidationError {
   msg: string;
 }
 
-export const LoadingStatus = {
-  fulfilled: "fulfilled",
-  pending: "pending",
-  rejected: "rejected",
+export const socketStatus = {
+  open: "open",
+  connecting: "connecting",
+  close: "close",
 };
 
 const initialState: SocketState = {
-  currentUser: null,
-  socket: null,
+  data: null,
   error: null,
-  authStatus: null,
-  userStatus: null,
+  status: null,
 };
 
-const sessionSlice = createSlice({
+const socketSlice = createSlice({
   name: "session",
   initialState: initialState,
   reducers: {
-    setCurrentUser: (state, action: PayloadAction<User | null>) => {
-      state.currentUser = action.payload;
+    setData:(state,action){
+      state.data = {
+        ...state.data,
+        ...action.payload
+      }
     },
-    clearCurrentUser: (state) => {
-      state.currentUser = null;
-    },
-    setSocket: (state, action) => {
-      state.socket = action.payload;
+    clearData:(state)=>{
+      state.data = null;
     },
     setError: (state, action) => {
-      state.errors = {
-        ...state.errors,
+      state.error = {
+        ...state.error,
         ...action.payload,
       };
     },
     clearError: (state) => {
-      state.errors = {
-        first_name: "",
-        last_name: "",
-        email: "",
-        password: "",
-        confirm: "",
-        server_error: "",
-      };
+      state.error = null;
+    },
+    setStatus: (state,action) => {
+      state.status = action.payload;
     },
     clearStatus: (state) => {
-      state.authStatus = null;
-      state.userStatus = null;
+      state.status = null;
     },
   },
-  extraReducers: (builder) => {
-    builder
-      .addCase(signinUser.fulfilled, (state, action) => {
-        state.authStatus = LoadingStatus.fulfilled;
-        // state.currentUser = action.payload as User;
-        console.log(
-          "WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
-          action.payload,
-        );
-      })
-      .addCase(signinUser.pending, (state) => {
-        state.authStatus = LoadingStatus.pending;
-      })
-      .addCase(signinUser.rejected, (state, action) => {
-        state.authStatus = LoadingStatus.rejected;
-        if (action.payload) {
-          action.payload.forEach((error) => {
-            const field = error.field; //["body", "email"]
-            console.log(action.payload);
-            if (field in state.errors) {
-              state.errors[field as keyof SessionErrors] = error.msg;
-            } else {
-              state.errors.server_error = error.msg;
-            }
-          });
-        }
-      })
-      .addCase(signupUser.fulfilled, (state, action) => {
-        state.authStatus = LoadingStatus.fulfilled;
-        // state.currentUser = action.payload as User;
-        console.log(
-          "WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER?",
-          action.payload,
-        );
-      })
-      .addCase(signupUser.pending, (state) => {
-        state.authStatus = LoadingStatus.pending;
-      })
-      .addCase(signupUser.rejected, (state, action) => {
-        state.authStatus = LoadingStatus.rejected;
-        // console.log(action.payload);
-        if (action.payload) {
-          action.payload.forEach((error) => {
-            const field = error.field; //["body", "email"]
-            console.log(action.payload);
-            if (field in state.errors) {
-              state.errors[field as keyof SessionErrors] = error.msg;
-            } else {
-              state.errors.server_error = error.msg;
-            }
-          });
-        }
-        console.log("first_name", state.errors.first_name);
-        console.log("last_name", state.errors.last_name);
-        console.log("email", state.errors.email);
-        console.log("password", state.errors.password);
-        console.log("confirm", state.errors.confirm);
-        console.log("server_error", state.errors.server_error);
-      })
-      .addCase(getCurrentUser.fulfilled, (state, action) => {
-        state.userStatus = LoadingStatus.fulfilled;
-        state.currentUser = action.payload as User;
-        console.log(
-          "WHAT DOES SUCCESSUFUL STATE RETURNS IN GETCURRENTUSER?",
-          action.payload,
-        );
-        console.log(
-          "WHAT IS CURRENTUSER STATE AFTER SUCCESSUFUL GETCURRENTUSER?",
-          action.payload,
-        );
-      })
-      .addCase(getCurrentUser.pending, (state) => {
-        state.userStatus = LoadingStatus.pending;
-      })
-      .addCase(getCurrentUser.rejected, (state, action) => {
-        state.userStatus = LoadingStatus.rejected;
-        if (action.payload) {
-          action.payload.forEach((error) => {
-            const field = error.field; //["body", "email"]
-            console.log(action.payload);
-            if (field in state.errors) {
-              state.errors[field as keyof SessionErrors] = error.msg;
-            } else {
-              state.errors.server_error = error.msg;
-            }
-          });
-        }
-      });
-  },
-});
-
-export const signinUser = createAsyncThunk<
-  Token,
-  {
-    email: string;
-    password: string;
-  },
-  {
-    rejectValue: BackendValidationError[];
-  }
->("session/signin", async (credentials, { rejectWithValue }) => {
-  try {
-    const form = new URLSearchParams();
-
-    form.append("username", credentials.email);
-    form.append("password", credentials.password);
-    form.append("grant_type", "password");
-
-    const tokenResponse = await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/auth/login`,
-      form,
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      },
-    );
-
-    console.log(
-      "WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER? TOKENRESPONSE",
-      tokenResponse.data.access_token,
-    );
-
-    return tokenResponse.data;
-  } catch (err) {
-    if (axios.isAxiosError(err)) {
-      return rejectWithValue(err.response?.data.detail || []);
-    }
-    return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
-  }
-});
-
-export const signupUser = createAsyncThunk<
-  User,
-  {
-    first_name: string;
-    last_name: string;
-    email: string;
-    password: string;
-  },
-  {
-    rejectValue: BackendValidationError[];
-  }
->("session/signup", async (credentials, { rejectWithValue }) => {
-  try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/auth/register`,
-      credentials,
-    );
-    return response.data;
-  } catch (err) {
-    if (axios.isAxiosError(err)) {
-      // const errorMessageString =
-      //   err.response?.data.detail
-      //     ?.map((error: { msg: string }) => error.msg)
-      //     .join("\n") || err.message;
-      const errorMessage = err.response?.data.detail || [];
-      console.log(err.response?.data.detail);
-
-      // return rejectWithValue(errorMessageString);
-      return rejectWithValue(errorMessage);
-    }
-
-    // return rejectWithValue("Unknown error");
-    return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
-  }
-});
-
-export const getCurrentUser = createAsyncThunk<
-  User,
-  string,
-  {
-    rejectValue: BackendValidationError[];
-  }
->("session/getcurrentuser", async (token, { rejectWithValue }) => {
-  // if (!getToken()) {
-  //   return rejectWithValue([
-  //     { field: "server_error", msg: "Not authenticated." },
-  //   ]);
-  // }
-  try {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/users/me`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-    console.log(
-      "WHAT DOES RESPONSE>DATA RETURNS IN GETCURRENTUSER",
-      response.data,
-    );
-    return response.data;
-  } catch (err) {
-    if (axios.isAxiosError(err)) {
-      const errorMessage = err.response?.data.detail || [];
-      console.log(err.response?.data.detail);
-      return rejectWithValue(errorMessage);
-    }
-
-    // return rejectWithValue("Unknown error");
-    return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
-  }
 });
 
 export const {
-  setCurrentUser,
-  clearCurrentUser,
-  setSocket,
-  setError,
-  clearError,
-  clearStatus,
-} = sessionSlice.actions;
+setData,
+clearData,
+setError,
+clearError,
+setStatus,
+clearStatus,
+} = socketSlice.actions;
 
-export default sessionSlice.reducer;
+export default socketSlice.reducer;

@@ -30,7 +30,6 @@ export interface SessionErrors {
 
 export interface SessionState {
   currentUser: User | null;
-  socket: WebSocket | null;
   errors: SessionErrors;
   authStatus: string | null;
   userStatus: string | null;
@@ -49,7 +48,6 @@ export const LoadingStatus = {
 
 const initialState: SessionState = {
   currentUser: null,
-  socket: null,
   errors: {
     first_name: "",
     last_name: "",
@@ -72,9 +70,6 @@ const sessionSlice = createSlice({
     clearCurrentUser: (state) => {
       state.currentUser = null;
     },
-    setSocket: (state, action) => {
-      state.socket = action.payload;
-    },
     setError: (state, action) => {
       state.errors = {
         ...state.errors,
@@ -90,6 +85,10 @@ const sessionSlice = createSlice({
         confirm: "",
         server_error: "",
       };
+    },
+    setStatus: (state, action) => {
+      state.authStatus = action.payload?.auth;
+      state.userStatus = action.payload?.user;
     },
     clearStatus: (state) => {
       state.authStatus = null;
@@ -305,9 +304,9 @@ export const getCurrentUser = createAsyncThunk<
 export const {
   setCurrentUser,
   clearCurrentUser,
-  setSocket,
   setError,
   clearError,
+  setStatus,
   clearStatus,
 } = sessionSlice.actions;
 
