@@ -28,7 +28,7 @@ async def socket(
     websocket: WebSocket,
     session: Annotated[AsyncSession, Depends(get_async_db_session)],
 ):
-    # user = await ws_manager.authenticateUser(websocket=websocket, session=session)
+    user = await ws_manager.authenticateUser(websocket=websocket, session=session)
     await ws_manager.connect(websocket)
 
     try:

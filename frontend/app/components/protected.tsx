@@ -5,6 +5,7 @@ import { useAppDispatch } from "~/state/hooks";
 import { socketioManager } from "~/socketio";
 import { getToken } from "~/utils";
 import { useEffect } from "react";
+import { useWebSocket } from "~/hooks";
 // import { useEffect } from "react";
 // import { setCurrentUser } from "~/state/sessionSlice";
 
@@ -16,9 +17,8 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
     throw redirect("/signin");
   }
 
-  socketioManager.socketConnect(token);
-
   // let current_user = await getCurrentUser(token);
+  // socketioManager.socketConnect(token);
 
   return { token /*current_user*/ };
 }
@@ -41,6 +41,9 @@ export default function ProtectedLayout() {
 
   useEffect(() => {
     dispatch(getCurrentUser(token));
+    useWebSocket({
+      wsurl: `import.meta.env.VITE_SOCKET_URL?access_token=${token}`,
+    });
   }, [dispatch, token]);
 
   // useEffect(() => {
