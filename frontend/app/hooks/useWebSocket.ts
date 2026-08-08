@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAppDispatch } from "~/state/hooks";
+import { setData, setStatus as setSocketStatus } from "~/state/socketSlice";
+import { useAppSelector } from "./../state/hooks";
 
 interface WebSocketHookInput {
   wsurl: string;
@@ -18,17 +21,20 @@ export function useWebSocket({
   retryAtempts: defaultRetryAttempts = 3,
   retryInterval = 1500,
 }: WebSocketHookInput) {
-  const [dataRecieved, setDataRecieved] =
-    useState<WebSocketDataRecieved | null>(null);
-  const [socketState, setSocketState] = useState<
-    "open" | "close" | "connecting"
-  >("close");
+  // const [dataRecieved, setDataRecieved] =
+  //   useState<WebSocketDataRecieved | null>(null);
+  // const [socketState, setSocketState] = useState<
+  //   "open" | "close" | "connecting"
+  // >("close");
   const sendCallback = useRef<SendFunction>(() => false);
   const retryCountRef = useRef(defaultRetryAttempts);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const shouldReconnectRef = useRef(true);
   const reconnectAttemptsRef = useRef(0);
+
+  const dispatch = useAppDispatch();
+  const socketState = useAppSelector((state) => state.socket.status);
 
   const connect = useCallback(() => {
     shouldReconnectRef.current = true;
@@ -38,11 +44,13 @@ export function useWebSocket({
     try {
       const ws = new WebSocket(wsurl);
       wsRef.current = ws;
-      setSocketState("connecting");
+      // setSocketState("connecting");
+      dispatch(setSocketStatus("connecting"));
 
       ws.onopen = () => {
         console.log("CONNECTED TO SOCKET");
-        setSocketState("open");
+        // setSocketState("open");
+        dispatch(setSocketStatus("open"));
         // Reset retry count on successful connection
         retryCountRef.current = defaultRetryAttempts;
         sendCallback.current = (data) => {
@@ -60,10 +68,16 @@ export function useWebSocket({
       ws.onmessage = (event) => {
         try {
           const msg = convertJSONtoObject(event.data);
-          setDataRecieved({
-            message: typeof msg === "string" ? msg : JSON.stringify(msg),
-            timestamp: getTimeStamp(),
-          });
+          // setDataRecieved({
+          //   message: typeof msg === "string" ? msg : JSON.stringify(msg),
+          //   timestamp: getTimeStamp(),
+          // });
+          dispatch(
+            setData({
+              message: typeof msg === "string" ? msg : JSON.stringify(msg),
+              timestamp: getTimeStamp(),
+            }),
+          );
         } catch (err) {
           console.error("Failed to process message:", err);
         }
@@ -71,7 +85,8 @@ export function useWebSocket({
 
       ws.onclose = () => {
         console.log("WEBSOCKET CLOSED");
-        setSocketState("close");
+        // setSocketState("close");
+        dispatch(setSocketStatus("close"));
         sendCallback.current = () => false;
         // Attempt reconnect if retries remaining
         if (!shouldReconnectRef.current) return;
@@ -85,7 +100,8 @@ export function useWebSocket({
       };
     } catch (err) {
       console.error("Failed to create WebSocket connection:", err);
-      setSocketState("close");
+      // setSocketState("close");
+      dispatch(setSocketStatus("close"));
     }
   }, [wsurl, defaultRetryAttempts, retryInterval]);
 
@@ -100,7 +116,8 @@ export function useWebSocket({
       wsRef.current.close();
       wsRef.current = null;
     }
-    setSocketState("close");
+    // setSocketState("close");
+    dispatch(setSocketStatus("close"));
     sendCallback.current = () => false;
   }, []);
 
@@ -145,8 +162,8 @@ export function useWebSocket({
   }, []);
 
   return {
-    dataRecieved,
-    socketState,
+    // dataRecieved,
+    // socketState,
     sendMessage,
     disconnect,
     isConnected: socketState === "open",

@@ -4,7 +4,8 @@ import { GrMail } from "react-icons/gr";
 import { Link } from "react-router";
 import { Input } from "~/components/input";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { LoadingStatus, signupUser, clearError } from "~/state/sessionSlice";
+import { LoadingStatus, signupUser } from "~/state/sessionSlice";
+import { clearError } from "~/state/errorSlice";
 import type { RootState } from "~/state/store";
 import { useNavigate } from "react-router";
 import {
@@ -31,9 +32,7 @@ function Signup() {
   const loadingState = useAppSelector(
     (state: RootState) => state.session.authStatus,
   );
-  const sessionErrors = useAppSelector(
-    (errors: RootState) => errors.session.errors,
-  );
+  const errors = useAppSelector((error: RootState) => error.errors);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const methods = useForm<FormValues>({
@@ -76,10 +75,10 @@ function Signup() {
           onSubmit={onSubmit}
         >
           <div className="grid gap-5">
-            <Input {...first_name_validation} sessionErrors={sessionErrors} />
-            <Input {...last_name_validation} sessionErrors={sessionErrors} />
-            <Input {...email_validation} sessionErrors={sessionErrors} />
-            <Input {...password_validation} sessionErrors={sessionErrors} />
+            <Input {...first_name_validation} errors={errors} />
+            <Input {...last_name_validation} errors={errors} />
+            <Input {...email_validation} errors={errors} />
+            <Input {...password_validation} errors={errors} />
             <Input
               {...confirm_validation}
               validation={{
@@ -87,7 +86,7 @@ function Signup() {
                 validate: (value: string) =>
                   value === pass_field || "Passwords do not match",
               }}
-              sessionErrors={sessionErrors}
+              errors={errors}
             />
           </div>
           <div className="submit-button mt-5 mb-5">

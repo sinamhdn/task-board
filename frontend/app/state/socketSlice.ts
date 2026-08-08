@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-
 export interface SocketError {
   type: string;
   msg: string;
@@ -33,13 +32,13 @@ const socketSlice = createSlice({
   name: "session",
   initialState: initialState,
   reducers: {
-    setData:(state,action){
+    setData: (state, action) => {
       state.data = {
         ...state.data,
-        ...action.payload
-      }
+        ...action.payload,
+      };
     },
-    clearData:(state)=>{
+    clearData: (state) => {
       state.data = null;
     },
     setError: (state, action) => {
@@ -51,7 +50,7 @@ const socketSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    setStatus: (state,action) => {
+    setStatus: (state, action) => {
       state.status = action.payload;
     },
     clearStatus: (state) => {
@@ -61,12 +60,12 @@ const socketSlice = createSlice({
 });
 
 export const {
-setData,
-clearData,
-setError,
-clearError,
-setStatus,
-clearStatus,
+  setData,
+  clearData,
+  setError,
+  clearError,
+  setStatus,
+  clearStatus,
 } = socketSlice.actions;
 
 export default socketSlice.reducer;

@@ -2,7 +2,7 @@ import { useFormContext } from "react-hook-form";
 import type { FieldErrors } from "react-hook-form";
 import { AnimatePresence, motion } from "framer-motion";
 import { MdError } from "react-icons/md";
-import type { SessionErrors } from "~/state/sessionSlice";
+import type { AuthFormErrorInterface, ErrorState } from "~/state/errorSlice";
 import { findInputError, isFormInvalid } from "~/utils";
 import cn from "classnames";
 
@@ -15,7 +15,7 @@ type InputPropsType = {
   placeholder?: string;
   multiline?: boolean;
   className?: string;
-  sessionErrors: SessionErrors;
+  errors: ErrorState;
 };
 
 type FormValues = {
@@ -35,7 +35,7 @@ export const Input = ({
   validation,
   multiline = false,
   className,
-  sessionErrors,
+  errors,
 }: InputPropsType) => {
   const {
     register,
@@ -44,8 +44,8 @@ export const Input = ({
 
   const inputError = findInputError(formStateErrors, name);
   const isInvalid = isFormInvalid(inputError);
-  const hasSessionErrors = !!sessionErrors[name];
-  const shouldShowError = isInvalid || hasSessionErrors;
+  const hasAuthFieldErrors = !!errors.auth_field_errors[name];
+  const shouldShowError = isInvalid || hasAuthFieldErrors;
   const input_tailwind =
     "p-5 font-medium rounded-md w-full border border-slate-300 placeholder:opacity-60";
 
@@ -79,7 +79,7 @@ export const Input = ({
         {shouldShowError && (
           <InputError
             field={name}
-            sessionErrors={sessionErrors}
+            errors={errors}
             formStateErrors={formStateErrors}
           />
         )}
@@ -90,11 +90,11 @@ export const Input = ({
 
 const InputError = ({
   field,
-  sessionErrors,
+  errors,
   formStateErrors,
 }: {
   field: keyof FormValues;
-  sessionErrors: SessionErrors;
+  errors: ErrorState;
   formStateErrors: FieldErrors<FormValues>;
 }) => (
   <div className="form-error-container">
@@ -108,9 +108,9 @@ const InputError = ({
           {formStateErrors[field]?.message}
         </p>
       ) : (
-        sessionErrors[field as keyof SessionErrors] && (
+        errors.auth_field_errors[field as keyof AuthFormErrorInterface] && (
           <p className="form-error first_name-field-error">
-            {sessionErrors[field as keyof SessionErrors]}
+            {errors.auth_field_errors[field as keyof AuthFormErrorInterface]}
           </p>
         )
       )}

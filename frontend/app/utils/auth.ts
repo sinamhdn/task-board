@@ -19,11 +19,9 @@ export async function getCurrentUser(token: string) {
     return currentUser;
   }
 
-  
-
   fetchPromise = (async () => {
     try {
-      const response = await fetch("/api/users/me", {
+      const response = await fetch("/api/v1/users/me", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

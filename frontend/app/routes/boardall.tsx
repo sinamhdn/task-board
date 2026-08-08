@@ -8,7 +8,9 @@ export function meta({}: Route.MetaArgs) {
 }
 
 function BoardAll() {
-  return <div className="all-boards-component"></div>;
+  return <div className="all-boards-component">
+    
+  </div>;
 }
 
 export default BoardAll;

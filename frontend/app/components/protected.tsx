@@ -1,4 +1,4 @@
-import { Outlet, redirect, useLoaderData } from "react-router";
+import { Outlet, redirect, useLoaderData, useNavigate } from "react-router";
 import type { Route } from "./+types/protected";
 import { getCurrentUser } from "~/state/sessionSlice";
 import { useAppDispatch } from "~/state/hooks";
@@ -13,9 +13,10 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const token = getToken();
   console.log("IS TOKEN ALIVE", token);
 
-  if (!token) {
-    throw redirect("/signin");
-  }
+  // useNavigate is better than this
+  // if (!token) {
+  //   throw redirect("/signin");
+  // }
 
   // let current_user = await getCurrentUser(token);
   // socketioManager.socketConnect(token);
@@ -38,13 +39,19 @@ export function HydrateFallback() {
 export default function ProtectedLayout() {
   const { token } = useLoaderData<typeof clientLoader>();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  useWebSocket({
+    wsurl: `import.meta.env.VITE_SOCKET_URL?access_token=${token}`,
+  });
 
   useEffect(() => {
-    dispatch(getCurrentUser(token));
-    useWebSocket({
-      wsurl: `import.meta.env.VITE_SOCKET_URL?access_token=${token}`,
-    });
-  }, [dispatch, token]);
+    if (!token) {
+      navigate("/signin", { replace: true });
+    }
+
+    if (token) dispatch(getCurrentUser(token));
+  }, [dispatch, token, navigate]);
 
   // useEffect(() => {
   //   if (current_user) {

@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Index, Integer, String, Uuid, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..utils.db import Base
+
+if TYPE_CHECKING:
+    from .boards import Board
 
 
 class User(Base):
@@ -32,6 +35,9 @@ class User(Base):
     updated_at: Mapped[Optional[datetime]] = mapped_column(
         default=datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
+    )
+    boards: Mapped[list[Board]] = relationship(
+        "Board", back_populates="user", cascade="all, delete-orphan"
     )
 
     __table_args__ = (

@@ -1,3 +1,137 @@
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+
+from ..models.boards import Board
+from ..schemas.boards import BoardCreate, BoardResponse
+from ..utils.auth import CurrentUser
+from ..utils.db import AsyncSession, get_async_db_session
+from ..utils.utilities import get_order_column
 
 router = APIRouter(prefix="", tags=["boards"])
+
+
+@router.get("", response_model=list[BoardResponse])
+async def get_all_owned_boards(
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    order: str = "updated_at",
+    skip: int = 0,
+    limit: int = 100,
+):
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "field": "server_error",
+                "msg": "Not authorized to see these boards please login.",
+            },
+        )
+
+    db_query = await db.execute(
+        select(Board).order_by(get_order_column(Board, order)).offset(skip).limit(limit)
+    )
+
+    return list(db_query.scalars().all())
+
+
+@router.get("/{board_id}", response_model=BoardResponse)
+async def get_board_by_id(
+    board_id: int, db: Annotated[AsyncSession, Depends(get_async_db_session)]
+):
+    query_db = await db.execute(
+        select(Board).options(selectinload(Board.user)).where(Board.id == board_id)
+    )
+    board = query_db.scalars().all()
+    if board:
+        return board
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail={"field": "server_error", "msg": "Board not found."},
+    )
+
+
+@router.post("", response_model=list[BoardResponse])
+async def create_owned_board(
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    board: BoardCreate,
+    status_code=status.HTTP_201_CREATED,
+    response_model=BoardResponse,
+):
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "field": "server_error",
+                "msg": "Not authorized to see these boards please login.",
+            },
+        )
+
+    new_board = Board(name=board.name)
+
+    db.add(new_board)
+    await db.commit()
+    await db.refresh(new_board, attribute_names=["user"])
+    return new_board
+
+
+@router.patch("/{board_id}", response_model=BoardResponse)
+async def update_owned_board(
+    board_id: int,
+    board_data: BoardCreate,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+):
+    query_db = await db.execute(select(Board).where(Board.id == board_id))
+    board = query_db.scalars().first()
+    if not board:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Board not found."
+        )
+    if board.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "field": "server_error",
+                "msg": "Not authorized to update this board.",
+            },
+        )
+    update_board = board_data.model_dump(exclude_unset=True)
+    for field, value in update_board.items():
+        setattr(board, field, value)
+    await db.commit()
+    await db.refresh(board, attribute_names=["user"])
+    return board
+
+
+@router.delete("/{board_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_board(
+    board_id: int,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+):
+    query_db = await db.execute(select(Board).where(Board.id == board_id))
+    board = query_db.scalars().first()
+    if not board:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "field": "server_error",
+                "msg": "Board not found",
+            },
+        )
+
+    if board.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "field": "server_error",
+                "msg": "Not authorized to delete this post",
+            },
+        )
+
+    await db.delete(board)
+    await db.commit()

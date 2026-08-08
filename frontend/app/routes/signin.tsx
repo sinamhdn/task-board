@@ -3,7 +3,8 @@ import type { Route } from "./+types/signin";
 import type { RootState } from "~/state/store";
 import { useForm, FormProvider } from "react-hook-form";
 import { GrMail } from "react-icons/gr";
-import { LoadingStatus, signinUser, clearError } from "~/state/sessionSlice";
+import { LoadingStatus, signinUser } from "~/state/sessionSlice";
+import { clearError } from "~/state/errorSlice";
 import { Input } from "~/components/input";
 import { Link, useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
@@ -53,9 +54,7 @@ function Signin() {
     }
   };
 
-  const sessionErrors = useAppSelector(
-    (errors: RootState) => errors.session.errors,
-  );
+  const errors = useAppSelector((error: RootState) => error.errors);
 
   const onSubmit = methods.handleSubmit(handleSubmitCallback);
 
@@ -68,8 +67,8 @@ function Signin() {
           onSubmit={onSubmit}
         >
           <div className="grid gap-5">
-            <Input {...email_validation} sessionErrors={sessionErrors} />
-            <Input {...password_validation} sessionErrors={sessionErrors} />
+            <Input {...email_validation} errors={errors} />
+            <Input {...password_validation} errors={errors} />
           </div>
           <div className="submit-button mt-5 mb-5">
             <button

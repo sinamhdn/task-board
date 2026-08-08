@@ -1,6 +1,7 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import { setError } from "./errorSlice";
 
 export interface User {
   id: number;
@@ -19,18 +20,9 @@ export interface Token {
   access_token: string;
   token_type: string;
 }
-export interface SessionErrors {
-  first_name: string;
-  last_name: string;
-  email: string;
-  password: string;
-  confirm: string;
-  server_error: string;
-}
 
 export interface SessionState {
   currentUser: User | null;
-  errors: SessionErrors;
   authStatus: string | null;
   userStatus: string | null;
 }
@@ -48,14 +40,6 @@ export const LoadingStatus = {
 
 const initialState: SessionState = {
   currentUser: null,
-  errors: {
-    first_name: "",
-    last_name: "",
-    email: "",
-    password: "",
-    confirm: "",
-    server_error: "",
-  },
   authStatus: null,
   userStatus: null,
 };
@@ -69,22 +53,6 @@ const sessionSlice = createSlice({
     },
     clearCurrentUser: (state) => {
       state.currentUser = null;
-    },
-    setError: (state, action) => {
-      state.errors = {
-        ...state.errors,
-        ...action.payload,
-      };
-    },
-    clearError: (state) => {
-      state.errors = {
-        first_name: "",
-        last_name: "",
-        email: "",
-        password: "",
-        confirm: "",
-        server_error: "",
-      };
     },
     setStatus: (state, action) => {
       state.authStatus = action.payload?.auth;
@@ -101,7 +69,7 @@ const sessionSlice = createSlice({
         state.authStatus = LoadingStatus.fulfilled;
         // state.currentUser = action.payload as User;
         console.log(
-          "WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
+          "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
           action.payload,
         );
       })
@@ -110,23 +78,12 @@ const sessionSlice = createSlice({
       })
       .addCase(signinUser.rejected, (state, action) => {
         state.authStatus = LoadingStatus.rejected;
-        if (action.payload) {
-          action.payload.forEach((error) => {
-            const field = error.field; //["body", "email"]
-            console.log(action.payload);
-            if (field in state.errors) {
-              state.errors[field as keyof SessionErrors] = error.msg;
-            } else {
-              state.errors.server_error = error.msg;
-            }
-          });
-        }
       })
       .addCase(signupUser.fulfilled, (state, action) => {
         state.authStatus = LoadingStatus.fulfilled;
         // state.currentUser = action.payload as User;
         console.log(
-          "WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER?",
+          "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER?",
           action.payload,
         );
       })
@@ -136,33 +93,16 @@ const sessionSlice = createSlice({
       .addCase(signupUser.rejected, (state, action) => {
         state.authStatus = LoadingStatus.rejected;
         // console.log(action.payload);
-        if (action.payload) {
-          action.payload.forEach((error) => {
-            const field = error.field; //["body", "email"]
-            console.log(action.payload);
-            if (field in state.errors) {
-              state.errors[field as keyof SessionErrors] = error.msg;
-            } else {
-              state.errors.server_error = error.msg;
-            }
-          });
-        }
-        console.log("first_name", state.errors.first_name);
-        console.log("last_name", state.errors.last_name);
-        console.log("email", state.errors.email);
-        console.log("password", state.errors.password);
-        console.log("confirm", state.errors.confirm);
-        console.log("server_error", state.errors.server_error);
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.userStatus = LoadingStatus.fulfilled;
         state.currentUser = action.payload as User;
         console.log(
-          "WHAT DOES SUCCESSUFUL STATE RETURNS IN GETCURRENTUSER?",
+          "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN GETCURRENTUSER?",
           action.payload,
         );
         console.log(
-          "WHAT IS CURRENTUSER STATE AFTER SUCCESSUFUL GETCURRENTUSER?",
+          "sessionSlice.ts:: WHAT IS CURRENTUSER STATE AFTER SUCCESSUFUL GETCURRENTUSER?",
           action.payload,
         );
       })
@@ -171,17 +111,6 @@ const sessionSlice = createSlice({
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.userStatus = LoadingStatus.rejected;
-        if (action.payload) {
-          action.payload.forEach((error) => {
-            const field = error.field; //["body", "email"]
-            console.log(action.payload);
-            if (field in state.errors) {
-              state.errors[field as keyof SessionErrors] = error.msg;
-            } else {
-              state.errors.server_error = error.msg;
-            }
-          });
-        }
       });
   },
 });
@@ -195,7 +124,7 @@ export const signinUser = createAsyncThunk<
   {
     rejectValue: BackendValidationError[];
   }
->("session/signin", async (credentials, { rejectWithValue }) => {
+>("session/signin", async (credentials, { dispatch, rejectWithValue }) => {
   try {
     const form = new URLSearchParams();
 
@@ -204,7 +133,7 @@ export const signinUser = createAsyncThunk<
     form.append("grant_type", "password");
 
     const tokenResponse = await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/auth/login`,
+      `${import.meta.env.VITE_API_URL}/api/v1/auth/login`,
       form,
       {
         headers: {
@@ -214,15 +143,17 @@ export const signinUser = createAsyncThunk<
     );
 
     console.log(
-      "WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER? TOKENRESPONSE",
+      "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER? TOKENRESPONSE",
       tokenResponse.data.access_token,
     );
 
     return tokenResponse.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      return rejectWithValue(err.response?.data.detail || []);
+      const errorMessage = err.response?.data.detail || [];
+      return rejectWithValue(errorMessage);
     }
+    dispatch(setError([{ field: "server_error", msg: "Unknown error" }]));
     return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
   }
 });
@@ -238,10 +169,10 @@ export const signupUser = createAsyncThunk<
   {
     rejectValue: BackendValidationError[];
   }
->("session/signup", async (credentials, { rejectWithValue }) => {
+>("session/signup", async (credentials, { dispatch, rejectWithValue }) => {
   try {
     const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/auth/register`,
+      `${import.meta.env.VITE_API_URL}/api/v1/auth/register`,
       credentials,
     );
     return response.data;
@@ -252,13 +183,15 @@ export const signupUser = createAsyncThunk<
       //     ?.map((error: { msg: string }) => error.msg)
       //     .join("\n") || err.message;
       const errorMessage = err.response?.data.detail || [];
-      console.log(err.response?.data.detail);
+      console.log("sessionSlice.ts::" + err.response?.data.detail);
 
       // return rejectWithValue(errorMessageString);
+      dispatch(setError(errorMessage));
       return rejectWithValue(errorMessage);
     }
 
     // return rejectWithValue("Unknown error");
+    dispatch(setError([{ field: "server_error", msg: "Unknown error" }]));
     return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
   }
 });
@@ -269,7 +202,7 @@ export const getCurrentUser = createAsyncThunk<
   {
     rejectValue: BackendValidationError[];
   }
->("session/getcurrentuser", async (token, { rejectWithValue }) => {
+>("session/getcurrentuser", async (token, { dispatch, rejectWithValue }) => {
   // if (!getToken()) {
   //   return rejectWithValue([
   //     { field: "server_error", msg: "Not authenticated." },
@@ -277,7 +210,7 @@ export const getCurrentUser = createAsyncThunk<
   // }
   try {
     const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/users/me`,
+      `${import.meta.env.VITE_API_URL}/api/v1/users/me`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -285,29 +218,25 @@ export const getCurrentUser = createAsyncThunk<
       },
     );
     console.log(
-      "WHAT DOES RESPONSE>DATA RETURNS IN GETCURRENTUSER",
+      "sessionSlice.ts:: WHAT DOES RESPONSE>DATA RETURNS IN GETCURRENTUSER",
       response.data,
     );
     return response.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
       const errorMessage = err.response?.data.detail || [];
-      console.log(err.response?.data.detail);
+      console.log("sessionSlice.ts::" + err.response?.data.detail);
+      dispatch(setError(errorMessage));
       return rejectWithValue(errorMessage);
     }
 
     // return rejectWithValue("Unknown error");
+    dispatch(setError([{ field: "server_error", msg: "Unknown error" }]));
     return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
   }
 });
 
-export const {
-  setCurrentUser,
-  clearCurrentUser,
-  setError,
-  clearError,
-  setStatus,
-  clearStatus,
-} = sessionSlice.actions;
+export const { setCurrentUser, clearCurrentUser, setStatus, clearStatus } =
+  sessionSlice.actions;
 
 export default sessionSlice.reducer;
