@@ -132,6 +132,11 @@ export const signinUser = createAsyncThunk<
     form.append("password", credentials.password);
     form.append("grant_type", "password");
 
+    console.log(
+      "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER? TOKENRESPONSE",
+      // tokenResponse.data.access_token,
+    );
+
     const tokenResponse = await axios.post(
       `${import.meta.env.VITE_API_URL}/api/v1/auth/login`,
       form,
@@ -142,15 +147,12 @@ export const signinUser = createAsyncThunk<
       },
     );
 
-    console.log(
-      "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER? TOKENRESPONSE",
-      tokenResponse.data.access_token,
-    );
-
     return tokenResponse.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
+      console.log("sessionSlice.ts:: ERROR MESSAGE", err);
       const errorMessage = err.response?.data.detail || [];
+      dispatch(setError(errorMessage));
       return rejectWithValue(errorMessage);
     }
     dispatch(setError([{ field: "server_error", msg: "Unknown error" }]));

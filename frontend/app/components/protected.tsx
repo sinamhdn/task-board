@@ -41,9 +41,9 @@ export default function ProtectedLayout() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  useWebSocket({
-    wsurl: `import.meta.env.VITE_SOCKET_URL?access_token=${token}`,
-  });
+  // useWebSocket({
+  //   wsurl: `import.meta.env.VITE_SOCKET_URL?access_token=${token}`,
+  // });
 
   useEffect(() => {
     if (!token) {

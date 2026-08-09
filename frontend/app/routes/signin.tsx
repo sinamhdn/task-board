@@ -48,7 +48,7 @@ function Signin() {
       ).unwrap();
       setToken(result.access_token);
       dispatch(clearError());
-      throw navigate("/");
+      navigate("/");
     } catch (err) {
       console.log(err);
     }

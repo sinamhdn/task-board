@@ -44,7 +44,7 @@ function ThemeSelector() {
 
       <button
         onClick={() => changeTheme("light")}
-        className="relative z-10 flex flex-1 items-center justify-center gap-2 py"
+        className="relative z-10 flex flex-1 items-center justify-center gap-2 py cursor-pointer"
       >
         <FaSun className="text-amber-600 dark:text-amber-300" />
         {/* Light */}
@@ -52,7 +52,7 @@ function ThemeSelector() {
 
       <button
         onClick={() => changeTheme("dark")}
-        className="relative z-10 flex flex-1 items-center justify-center gap-2 py-2"
+        className="relative z-10 flex flex-1 items-center justify-center gap-2 py-2 cursor-pointer"
       >
         <FaMoon className="text-mist-600 dark:text-mist-300" />
         {/* Dark */}
@@ -60,7 +60,7 @@ function ThemeSelector() {
 
       <button
         onClick={() => changeTheme("system")}
-        className="relative z-10 flex flex-1 items-center justify-center gap-2 py-2"
+        className="relative z-10 flex flex-1 items-center justify-center gap-2 py-2 cursor-pointer"
       >
         <LuEclipse className="text-blue-600 dark:text-blue-300" />
         {/* System */}

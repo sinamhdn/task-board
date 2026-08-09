@@ -59,6 +59,10 @@ export function setToken(token: string) {
   localStorage.setItem("jwt", token);
 }
 
+export function removeToken() {
+  localStorage.removeItem("jwt");
+}
+
 export function clearUserCache() {
   currentUser = null;
 }

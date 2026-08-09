@@ -4,18 +4,17 @@ import Header from "./header";
 import type { RootState } from "~/state/store";
 import { LoadingStatus } from "~/state/sessionSlice";
 import { useAppDispatch } from "~/state/hooks";
-import { clearStatus, clearError } from "~/state/sessionSlice";
+import { clearStatus } from "~/state/sessionSlice";
+import { clearError, type ErrorState } from "~/state/errorSlice";
 import { useEffect, useState } from "react";
 
 function MainLayout() {
   const dispatch = useAppDispatch();
-  const sessionErrors = useSelector(
-    (errors: RootState) => errors.session.errors,
-  );
+  const errors = useSelector((state: RootState) => state.errors);
   const [showError, setShowError] = useState(false);
 
   useEffect(() => {
-    if (sessionErrors?.server_error) {
+    if (errors?.server_error) {
       setShowError(true);
       const timer = setTimeout(() => {
         setShowError(false);
@@ -24,15 +23,14 @@ function MainLayout() {
       }, 5000); // 5 seconds
       return () => clearTimeout(timer); // Cleanup timeout if component unmounts
     }
-  }, [sessionErrors, dispatch]);
+  }, [errors, dispatch]);
 
   return (
     <div className="main-layout-component">
       <Header />
-      <div className="main-error-toast fixed rounded-full">
-        {showError && sessionErrors?.server_error && (
-          <div className="error-message" style={{ color: "red" }}>
-            {sessionErrors.server_error}
+      {showError && errors?.server_error && (
+        <div className="main-error-toast fixed rounded-sm w-100 left-1/2 -translate-x-1/2 bottom-0 p-5 bg-red-800 text-white mb-2">
+          <div className="error-message text-center">
             <button
               onClick={() => {
                 setShowError(false);
@@ -42,9 +40,10 @@ function MainLayout() {
             >
               ✕
             </button>
+            <p>{errors.server_error}</p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
       <FormSubmissionState />
       <Outlet />
     </div>
@@ -84,36 +83,38 @@ function FormSubmissionState() {
 
   if (formSubmitState === "fulfilled") {
     return (
-      <div className="success-message" style={{ color: "green" }}>
-        <p>Form submitted succesufully.</p>
+      <div className="success-message m-5 bg-green-500 text-white p-1 flex max-w-100 h-20 items-center absolute rounded-sm">
         <button
           onClick={() => {
             setFormSubmitState("");
             dispatch(clearError());
             dispatch(clearStatus());
           }}
+          className="mr-5 pl-1 self-start"
           style={{ background: "none", border: "none", cursor: "pointer" }}
         >
           ✕
         </button>
+        <p className="text-center pl-3 pr-3">Form submitted succesufully.</p>
       </div>
     );
   }
 
   if (formSubmitState === "rejected") {
     return (
-      <div className="fail-message" style={{ color: "red" }}>
-        <p>Form submission failed.</p>
+      <div className="fail-message m-5 bg-red-500 text-white p-1 flex max-w-100 h-20 items-center absolute rounded-sm">
         <button
           onClick={() => {
             setFormSubmitState("");
             dispatch(clearError());
             dispatch(clearStatus());
           }}
+          className="mr-5 pl-1 self-start"
           style={{ background: "none", border: "none", cursor: "pointer" }}
         >
           ✕
         </button>
+        <p className="text-center pl-3 pr-3">Form submission failed.</p>
       </div>
     );
   }

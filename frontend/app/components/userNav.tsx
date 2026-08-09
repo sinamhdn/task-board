@@ -6,13 +6,21 @@ import type { RootState } from "~/state/store";
 import { useNavigate } from "react-router";
 import { useAppDispatch } from "~/state/hooks";
 import { clearCurrentUser } from "~/state/sessionSlice";
+import { useEffect } from "react";
+import { removeToken } from "~/utils/auth";
 
 function UserNav() {
   const currentUser = useSelector(
     (state: RootState) => state.session.currentUser,
   );
+  const navigate = useNavigate();
 
   console.log("USER NAV CURRENT USER", currentUser);
+
+  useEffect(() => {
+    if (!currentUser) removeToken();
+    navigate("/signin", { replace: true });
+  }, []);
 
   return (
     <nav className="user-nav">

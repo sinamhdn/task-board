@@ -53,6 +53,7 @@ const errorSlice = createSlice({
           ...state,
           ...action.payload,
         };
+        console.log("ACTION PAYLOAD OF ERROR", action);
       },
     },
     clearError: (state) => {
