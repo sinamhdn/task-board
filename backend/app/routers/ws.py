@@ -58,7 +58,7 @@ async def socket(
                 ws_manager.subscribe(websocket, channel)
                 await ws_manager.send_personal_message(
                     {
-                        "type": "server_notification",
+                        "type": "ws_notif",
                         "msg": f"Subscribed to channel: {channel}",
                     },
                     websocket,
@@ -67,7 +67,7 @@ async def socket(
                 await ws_manager.unsubscribe(websocket, channel)
                 await ws_manager.send_personal_message(
                     {
-                        "type": "server_notification",
+                        "type": "ws_notif",
                         "msg": f"Unsubscribed from channel: {channel}",
                     },
                     websocket,
@@ -75,12 +75,16 @@ async def socket(
             elif action == "broadcast_channel" and channel and message:
                 # Client wants to broadcast a message to a specific channel
                 await ws_manager.broadcast_channel(
-                    channel, {"sender": user, "content": message}
+                    websocket,
+                    channel,
+                    {"sender": user, "channel": channel, "content": message},
                 )
+            elif action == "broadcast_global":
+                await ws_manager.broadcast_global(message)
             else:
                 await ws_manager.send_personal_message(
                     {
-                        "type": "server_notification",
+                        "type": "ws_notif",
                         "msg": "Unknown action or missing fields",
                     },
                     websocket,

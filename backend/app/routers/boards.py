@@ -39,8 +39,19 @@ async def get_all_owned_boards(
 
 @router.get("/{board_id}", response_model=BoardResponse)
 async def get_board_by_id(
-    board_id: int, db: Annotated[AsyncSession, Depends(get_async_db_session)]
+    board_id: int,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_async_db_session)],
 ):
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "field": "server_error",
+                "msg": "Not authorized to see this board please login.",
+            },
+        )
+
     query_db = await db.execute(
         select(Board).options(selectinload(Board.user)).where(Board.id == board_id)
     )

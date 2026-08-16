@@ -38,12 +38,26 @@ class Subscribe(WebSocketMessage):
     channel: str
 
 
-class Broadcast(WebSocketMessage):
-    action: Literal["broadcast"]
+class Unsubscribe(WebSocketMessage):
+    action: Literal["unsubscribe"]
+    channel: str
+
+
+class BroadcastChannel(WebSocketMessage):
+    action: Literal["broadcast_channel"]
     channel: str
     message: str
 
 
-Message = Annotated[Union[Subscribe, Broadcast], Field(discriminator="action")]
+class BroadcastGlobal(WebSocketMessage):
+    action: Literal["broadcast_global"]
+    channel: str
+    message: str
+
+
+Message = Annotated[
+    Union[Subscribe, Unsubscribe, BroadcastGlobal, BroadcastChannel],
+    Field(discriminator="action"),
+]
 
 adapter = TypeAdapter(Message)

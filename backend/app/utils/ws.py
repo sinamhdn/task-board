@@ -37,11 +37,8 @@ class ConnectionManager:
     async def send_personal_message(self, message: Dict, websocket: WebSocket):
         await websocket.send_json(message)
 
-    async def broadcast_to_channel(
-        self,
-        websocket: WebSocket,
-        channel: str,
-        message: Dict,
+    async def broadcast_channel(
+        self, websocket: WebSocket, channel: str, message: Dict
     ):
         if not self.is_subscribed(websocket, channel):
             await self.send_personal_message(
@@ -52,12 +49,11 @@ class ConnectionManager:
                 websocket,
             )
             return
-        await self.broadcast_channel(channel, message)
-
-    async def broadcast_channel(self, channel: str, message: Dict):
-        if channel in self.channels:
-            for connection in self.channels[channel]:
-                await connection.send_json(message)
+        for connection in self.channels[channel]:
+            await connection.send_json(message)
+        # if channel in self.channels:
+        #     for connection in self.channels[channel]:
+        #         await connection.send_json(message)
 
     async def broadcast_global(self, message: Dict):
         for connection in self.active_connections:
