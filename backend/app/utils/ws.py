@@ -21,7 +21,7 @@ class ConnectionManager:
         await self.send_personal_message(
             {
                 "field": "ws_notif",
-                "msg": "Subscribe to a channel.",
+                "msg": "Connection opened, subscribe to a channel.",
             },
             websocket,
         )
@@ -37,7 +37,7 @@ class ConnectionManager:
     async def send_personal_message(self, message: Dict, websocket: WebSocket):
         await websocket.send_json(message)
 
-    async def broadcast_to_channel_from_user(
+    async def broadcast_to_channel(
         self,
         websocket: WebSocket,
         channel: str,
