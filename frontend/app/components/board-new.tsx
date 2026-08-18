@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Route } from "./+types/boardnew";
 
 import BoardForm from "~/components/board-form";
-import BoardAdd from "~/components/board-add";
+import BoardAdd from "~/components/board-add-button";
 
 function BoardNew() {
   const [showForm, setShowForm] = useState(false);
