@@ -30,7 +30,11 @@ function MainLayout() {
     <div className="main-layout-component">
       <Header />
       <FormSubmissionStatusModal />
-      <ServerErrorModal showError={showError} errors={errors} />
+      <ServerErrorModal
+        showError={showError}
+        setShowError={setShowError}
+        errors={errors}
+      />
       <Outlet />
     </div>
   );

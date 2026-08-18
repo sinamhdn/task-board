@@ -3,7 +3,10 @@ import type { Route } from "./+types/signin";
 import type { RootState } from "~/state/store";
 import { useForm, FormProvider } from "react-hook-form";
 import { GrMail } from "react-icons/gr";
-import { LoadingStatus, signinUser } from "~/state/sessionSlice";
+import {
+  LoadingStatus as AuthLoadingStatus,
+  signinUser,
+} from "~/state/sessionSlice";
 import { clearError } from "~/state/errorSlice";
 import { Input } from "~/components/input";
 import { Link, useNavigate } from "react-router";
@@ -19,7 +22,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 function Signin() {
-  const loadingState = useAppSelector(
+  const authLoadingStatus = useAppSelector(
     (state: RootState) => state.session.authStatus,
   );
   const dispatch = useAppDispatch();
@@ -54,7 +57,7 @@ function Signin() {
     }
   };
 
-  const errors = useAppSelector((error: RootState) => error.errors);
+  const errors = useAppSelector((state: RootState) => state.errors);
 
   const onSubmit = methods.handleSubmit(handleSubmitCallback);
 
@@ -76,7 +79,7 @@ function Signin() {
               className="flex items-center justify-center gap-1 p-5 mx-auto font-semibold w-48 text-center text-white bg-blue-600 rounded-md hover:bg-blue-800"
             >
               <GrMail />
-              {loadingState === LoadingStatus.pending
+              {authLoadingStatus === AuthLoadingStatus.pending
                 ? "Signing in..."
                 : "Login"}
             </button>

@@ -1,1 +1,1 @@
-uv run python ./runn.py
+uv run python ./run.py

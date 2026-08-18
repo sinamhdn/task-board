@@ -1,12 +1,17 @@
 import type { ErrorState } from "~/state/errorSlice";
+import { clearError } from "~/state/errorSlice";
+import { useAppDispatch } from "~/state/hooks";
 
 function ServerErrorModal({
   showError,
+  setShowError,
   errors,
 }: {
   showError: boolean;
+  setShowError: (state: boolean) => void;
   errors: ErrorState;
 }) {
+  const dispatch = useAppDispatch();
   return (
     <div className="server-error-modal">
       {showError && errors?.server_error && (
