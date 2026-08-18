@@ -12,7 +12,7 @@ export default [
     layout("components/protected.tsx", [
       index("routes/board-all.tsx"),
       route("boards/:id", "routes/board-single.tsx"),
-      route("boards/new", "routes/board-new.tsx"),
+      // route("boards/new", "routes/board-new.tsx"),
       route("users/edit", "routes/useredit.tsx"),
     ]),
     route("signin", "routes/signin.tsx"),

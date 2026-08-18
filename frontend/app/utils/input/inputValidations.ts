@@ -120,3 +120,17 @@ export const num_validation = {
     },
   },
 };
+
+export const board_name_validation = {
+  name: "board_name" as const,
+  label: "board_name",
+  type: "text",
+  id: "board_name",
+  placeholder: "enter a name for your board",
+  validation: {
+    required: {
+      value: true,
+      message: "required",
+    },
+  },
+};

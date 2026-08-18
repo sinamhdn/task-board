@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 export interface ErrorState {
   auth_field_errors: { [key: string]: string | undefined };
+  board_add_field_errors: { [key: string]: string | undefined };
   server_error?: string;
   ws_error?: string;
 }
@@ -21,6 +22,9 @@ const initialState: ErrorState = {
     email: "",
     password: "",
     confirm: "",
+  },
+  board_add_field_errors: {
+    board_name: "",
   },
   server_error: "",
   ws_error: "",
