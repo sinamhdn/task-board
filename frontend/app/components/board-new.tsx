@@ -8,7 +8,7 @@ function BoardNew() {
   const { showAddNewBoardForm } = useAddNewBoardForm();
 
   return (
-    <div className="board-new">
+    <div className="board-new container mx-auto">
       {/* {showAddNewBoardForm ? <BoardAddForm /> : <BoardAddButton />} */}
       {showAddNewBoardForm && <BoardAddForm />}
     </div>

@@ -24,10 +24,12 @@ export interface BackendValidationError {
 const initialState: {
   getBoardsLoadingStatus: string | null;
   createBoardLoadingStatus: string | null;
+  deleteBoardLoadingStatus: string | null;
   boards: RecievedBoardsInterface[];
 } = {
   getBoardsLoadingStatus: null,
   createBoardLoadingStatus: null,
+  deleteBoardLoadingStatus: null,
   boards: [],
 };
 
@@ -39,6 +41,7 @@ const boardSlice = createSlice({
       state.boards = [];
       state.getBoardsLoadingStatus = null;
       state.createBoardLoadingStatus = null;
+      state.deleteBoardLoadingStatus = null;
     },
   },
   extraReducers: (builder) => {
@@ -70,6 +73,17 @@ const boardSlice = createSlice({
       })
       .addCase(createNewBoard.rejected, (state, action) => {
         state.createBoardLoadingStatus = LoadingStatus.rejected;
+      })
+      .addCase(deleteBoard.fulfilled, (state, action) => {
+        state.deleteBoardLoadingStatus = LoadingStatus.fulfilled;
+        const boardId = action.meta.arg.board_id; // from the original thunk call
+        state.boards = state.boards.filter((board) => board.id !== boardId);
+      })
+      .addCase(deleteBoard.pending, (state) => {
+        state.deleteBoardLoadingStatus = LoadingStatus.pending;
+      })
+      .addCase(deleteBoard.rejected, (state, action) => {
+        state.deleteBoardLoadingStatus = LoadingStatus.rejected;
       });
   },
 });
@@ -79,7 +93,7 @@ export const getAllBoards = createAsyncThunk<
   { skip?: number; limit?: number; order?: string; token: string },
   { rejectValue: BackendValidationError[] }
 >(
-  "board/getall",
+  "board/allboards",
   async ({ token, skip, limit, order }, { dispatch, rejectWithValue }) => {
     try {
       const response = await axios.get(
@@ -123,6 +137,36 @@ export const createNewBoard = createAsyncThunk<
         {
           name: board_name,
         },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data.detail || [];
+        console.log("boardSlice.ts::" + error);
+        dispatch(setError(errorMessage));
+        return rejectWithValue(errorMessage);
+      }
+      dispatch(setError([{ field: "server_error", msg: "Unknown error" }]));
+      return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
+    }
+  },
+);
+
+export const deleteBoard = createAsyncThunk<
+  RecievedBoardsInterface,
+  { board_id: number; token: string },
+  { rejectValue: BackendValidationError[] }
+>(
+  "board/deleteboard",
+  async ({ token, board_id }, { dispatch, rejectWithValue }) => {
+    try {
+      const response = await axios.delete(
+        `${import.meta.env.VITE_API_URL}/api/v1/boards/${board_id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

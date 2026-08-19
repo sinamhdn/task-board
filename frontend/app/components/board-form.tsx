@@ -40,6 +40,7 @@ function BoardAddForm() {
       ).unwrap();
       dispatch(clearError());
       navigate("/");
+      handleCancelAddNewBoardClick();
     } catch (err) {
       console.log(err);
     }
@@ -56,8 +57,8 @@ function BoardAddForm() {
 
   return (
     <ClickAwayListener onClickAway={handleCancelAddNewBoardClick}>
-      <div className="board-add-form-component p-4 mt-4">
-        <h4>New Board</h4>
+      <div className="board-add-form-component p-4 mt-4 bg-blue-800">
+        <h4 className="text-center mt-4 mb-4 text-3xl">New Board</h4>
         <FormProvider {...methods}>
           <form
             className="signup-form xl:w-1/4 lg:w-1/2 sm:w-full mx-auto text-center"

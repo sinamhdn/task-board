@@ -3,6 +3,7 @@ import type { Route } from "./+types/board-all";
 import { useEffect } from "react";
 import {
   getAllBoards,
+  deleteBoard,
   LoadingStatus as BoardLoadingStatusEnum,
 } from "~/state/boardSlice";
 import { getToken } from "~/utils";
@@ -62,6 +63,12 @@ function BoardAll() {
     );
   }
 
+  function handleDeleteBoard(board_id: number) {
+    if (!token) return;
+    console.log("deleteBoard value:", deleteBoard);
+    dispatch(deleteBoard({ token: token, board_id: board_id }));
+  }
+
   // Show boards
   return (
     <div className="all-boards-component container mx-auto text-center">
@@ -73,8 +80,14 @@ function BoardAll() {
           <h3 className="mt-4 mb-4 text-4xl">My boards</h3>
           <div className="my-boards-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xl">
             {boards.map((board) => (
-              <div className="board-list-item bg-fuchsia-700 pt-2 pb-2 text-center rounded-sm">
+              <div className="board-list-item bg-fuchsia-700 text-center rounded-sm flex flex-col pt-2">
                 <BoardCard key={board.id} board={board} />
+                <button
+                  className="bg-red-600 text-xs w-full rounded-b-sm mt-2"
+                  onClick={() => handleDeleteBoard(board.id)}
+                >
+                  Delete
+                </button>
               </div>
             ))}
           </div>
