@@ -22,47 +22,54 @@ export interface BackendValidationError {
 }
 
 const initialState: {
-  LoadingStatus: string | null;
+  getBoardsLoadingStatus: string | null;
+  createBoardLoadingStatus: string | null;
   boards: RecievedBoardsInterface[];
 } = {
-  LoadingStatus: null,
+  getBoardsLoadingStatus: null,
+  createBoardLoadingStatus: null,
   boards: [],
 };
 
 const boardSlice = createSlice({
   name: "board",
   initialState: initialState,
-  reducers: {},
+  reducers: {
+    resetBoards: (state) => {
+      state.boards = [];
+      state.getBoardsLoadingStatus = null;
+      state.createBoardLoadingStatus = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getAllBoards.fulfilled, (state, action) => {
-        state.LoadingStatus = LoadingStatus.fulfilled;
-        // state.currentUser = action.payload as User;
+        state.getBoardsLoadingStatus = LoadingStatus.fulfilled;
+        state.boards = action.payload;
         console.log(
           "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
           action.payload,
         );
       })
       .addCase(getAllBoards.pending, (state) => {
-        state.LoadingStatus = LoadingStatus.pending;
+        state.getBoardsLoadingStatus = LoadingStatus.pending;
       })
       .addCase(getAllBoards.rejected, (state, action) => {
-        state.LoadingStatus = LoadingStatus.rejected;
+        state.getBoardsLoadingStatus = LoadingStatus.rejected;
       })
       .addCase(createNewBoard.fulfilled, (state, action) => {
-        state.LoadingStatus = LoadingStatus.fulfilled;
-        // state.currentUser = action.payload as User;
-        state = { ...state, boards: state.boards.concat(action.payload) };
+        state.createBoardLoadingStatus = LoadingStatus.fulfilled;
+        state.boards.push(action.payload);
         console.log(
           "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
           action.payload,
         );
       })
       .addCase(createNewBoard.pending, (state) => {
-        state.LoadingStatus = LoadingStatus.pending;
+        state.createBoardLoadingStatus = LoadingStatus.pending;
       })
       .addCase(createNewBoard.rejected, (state, action) => {
-        state.LoadingStatus = LoadingStatus.rejected;
+        state.createBoardLoadingStatus = LoadingStatus.rejected;
       });
   },
 });
@@ -104,32 +111,36 @@ export const getAllBoards = createAsyncThunk<
 
 export const createNewBoard = createAsyncThunk<
   RecievedBoardsInterface,
-  { name: string; token: string },
+  { board_name: string; token: string },
   { rejectValue: BackendValidationError[] }
->("board/newboard", async ({ token, name }, { dispatch, rejectWithValue }) => {
-  try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/v1/boards`,
-      {
-        name,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+>(
+  "board/newboard",
+  async ({ token, board_name }, { dispatch, rejectWithValue }) => {
+    console.log("createNewBoard name", board_name);
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/v1/boards`,
+        {
+          name: board_name,
         },
-      },
-    );
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const errorMessage = error.response?.data.detail || [];
-      console.log("boardSlice.ts::" + error.response?.data.detail);
-      dispatch(setError(errorMessage));
-      return rejectWithValue(errorMessage);
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data.detail || [];
+        console.log("boardSlice.ts::" + error);
+        dispatch(setError(errorMessage));
+        return rejectWithValue(errorMessage);
+      }
+      dispatch(setError([{ field: "server_error", msg: "Unknown error" }]));
+      return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
     }
-    dispatch(setError([{ field: "server_error", msg: "Unknown error" }]));
-    return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
-  }
-});
+  },
+);
 
 export default boardSlice.reducer;

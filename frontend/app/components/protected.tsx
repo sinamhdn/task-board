@@ -1,11 +1,9 @@
-import { Outlet, redirect, useLoaderData, useNavigate } from "react-router";
+import { Outlet, useLoaderData, useNavigate } from "react-router";
 import type { Route } from "./+types/protected";
 import { getCurrentUser } from "~/state/sessionSlice";
 import { useAppDispatch } from "~/state/hooks";
-import { socketioManager } from "~/socketio";
 import { getToken } from "~/utils";
 import { useEffect } from "react";
-import { useWebSocket } from "~/hooks";
 // import { useEffect } from "react";
 // import { setCurrentUser } from "~/state/sessionSlice";
 

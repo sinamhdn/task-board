@@ -64,13 +64,11 @@ async def get_board_by_id(
     )
 
 
-@router.post("", response_model=list[BoardResponse])
+@router.post("", response_model=BoardResponse, status_code=status.HTTP_201_CREATED)
 async def create_owned_board(
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_async_db_session)],
     board: BoardCreate,
-    status_code=status.HTTP_201_CREATED,
-    response_model=BoardResponse,
 ):
     if not current_user:
         raise HTTPException(
@@ -81,8 +79,7 @@ async def create_owned_board(
             },
         )
 
-    new_board = Board(name=board.name)
-
+    new_board = Board(name=board.name, user_id=current_user.id)
     db.add(new_board)
     await db.commit()
     await db.refresh(new_board, attribute_names=["user"])

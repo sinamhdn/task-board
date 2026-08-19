@@ -1,6 +1,6 @@
 import { TfiTrello } from "react-icons/tfi";
-import ThemeSelector from "./themeSelector";
-import UserNav from "./userNav";
+import ThemeSelector from "./theme-selector";
+import UserNav from "./user-nav";
 import { Link } from "react-router";
 
 function Header() {

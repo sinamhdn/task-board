@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getToken } from "~/utils";
 import { clearError } from "~/state/errorSlice";
 import { Input } from "./input";
-import { LoadingStatus } from "~/state/boardSlice";
+import { LoadingStatus as BoardLoadingStatusEnum } from "~/state/boardSlice";
 import { board_name_validation } from "~/utils/input/inputValidations";
 import type { RootState } from "~/state/store";
 import ClickAwayListener from "react-click-away-listener";
@@ -14,11 +14,13 @@ function BoardForm({ handleCancelClick }: { handleCancelClick: () => void }) {
   const token = getToken();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const loadingState = useAppSelector((state) => state.board.LoadingStatus);
+  const createBoardLoadingStatus = useAppSelector(
+    (state) => state.board.createBoardLoadingStatus,
+  );
   const errors = useAppSelector((error: RootState) => error.errors);
 
   interface FormValues {
-    form_name: string;
+    board_name: string;
   }
 
   if (!token) {
@@ -30,7 +32,7 @@ function BoardForm({ handleCancelClick }: { handleCancelClick: () => void }) {
     try {
       const result = await dispatch(
         createNewBoard({
-          name: data.form_name,
+          board_name: data.board_name,
           token: token,
         }),
       ).unwrap();
@@ -43,7 +45,7 @@ function BoardForm({ handleCancelClick }: { handleCancelClick: () => void }) {
 
   const methods = useForm<FormValues>({
     defaultValues: {
-      form_name: "",
+      board_name: "",
     },
     mode: "onChange",
   });
@@ -66,13 +68,18 @@ function BoardForm({ handleCancelClick }: { handleCancelClick: () => void }) {
             <div className="submit-button mt-5 mb-5">
               <button
                 type="submit"
-                className="flex items-center justify-center gap-1 p-5 mx-auto font-semibold w-48 text-center text-white bg-blue-600 rounded-md hover:bg-blue-800"
+                className="flex items-center justify-center gap-1 p-5 mx-auto font-semibold w-48 text-center text-white bg-green-600 rounded-md hover:bg-green-800  cursor-pointer"
               >
-                {loadingState === LoadingStatus.pending
+                {createBoardLoadingStatus === BoardLoadingStatusEnum.pending
                   ? "Adding board..."
                   : "Add board"}
               </button>
-              <button onClick={handleCancelClick}>X</button>
+              <button
+                className="bg-red-600 hover:bg-red-800  mt-8 h-12 w-12 rounded-full cursor-pointer"
+                onClick={handleCancelClick}
+              >
+                X
+              </button>
             </div>
           </form>
         </FormProvider>
