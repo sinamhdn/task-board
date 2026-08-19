@@ -1,6 +1,6 @@
 import { FaMoon, FaSun } from "react-icons/fa";
 import { LuEclipse } from "react-icons/lu";
-import { useTheme } from "./theme";
+import { useTheme } from "../providers/theme-provider";
 
 function ThemeSelector() {
   const { theme, changeTheme } = useTheme();

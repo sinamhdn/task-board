@@ -9,8 +9,9 @@ import { LoadingStatus as BoardLoadingStatusEnum } from "~/state/boardSlice";
 import { board_name_validation } from "~/utils/input/inputValidations";
 import type { RootState } from "~/state/store";
 import ClickAwayListener from "react-click-away-listener";
+import { useAddNewBoardForm } from "~/providers/board-add-provider";
 
-function BoardForm({ handleCancelClick }: { handleCancelClick: () => void }) {
+function BoardAddForm() {
   const token = getToken();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -18,6 +19,7 @@ function BoardForm({ handleCancelClick }: { handleCancelClick: () => void }) {
     (state) => state.board.createBoardLoadingStatus,
   );
   const errors = useAppSelector((error: RootState) => error.errors);
+  const { handleCancelAddNewBoardClick } = useAddNewBoardForm();
 
   interface FormValues {
     board_name: string;
@@ -53,8 +55,8 @@ function BoardForm({ handleCancelClick }: { handleCancelClick: () => void }) {
   const onSubmit = methods.handleSubmit(handleSubmitCallback);
 
   return (
-    <ClickAwayListener onClickAway={handleCancelClick}>
-      <div className="board-add-form-component">
+    <ClickAwayListener onClickAway={handleCancelAddNewBoardClick}>
+      <div className="board-add-form-component p-4 mt-4">
         <h4>New Board</h4>
         <FormProvider {...methods}>
           <form
@@ -74,12 +76,12 @@ function BoardForm({ handleCancelClick }: { handleCancelClick: () => void }) {
                   ? "Adding board..."
                   : "Add board"}
               </button>
-              <button
+              {/* <button
                 className="bg-red-600 hover:bg-red-800  mt-8 h-12 w-12 rounded-full cursor-pointer"
-                onClick={handleCancelClick}
+                onClick={handleCancelAddNewBoardClick}
               >
                 X
-              </button>
+              </button> */}
             </div>
           </form>
         </FormProvider>
@@ -88,4 +90,4 @@ function BoardForm({ handleCancelClick }: { handleCancelClick: () => void }) {
   );
 }
 
-export default BoardForm;
+export default BoardAddForm;

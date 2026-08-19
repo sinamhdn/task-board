@@ -1,27 +1,16 @@
-import { useState } from "react";
 import type { Route } from "./+types/boardnew";
 
-import BoardForm from "~/components/board-form";
-import BoardAdd from "~/components/board-add-button";
+import BoardAddForm from "~/components/board-form";
+// import BoardAddButton from "~/components/board-add-button";
+import { useAddNewBoardForm } from "~/providers/board-add-provider";
 
 function BoardNew() {
-  const [showForm, setShowForm] = useState(false);
-
-  function handleAddNewClick() {
-    setShowForm(true);
-  }
-
-  function handleCancelClick() {
-    setShowForm(false);
-  }
+  const { showAddNewBoardForm } = useAddNewBoardForm();
 
   return (
     <div className="board-new">
-      {showForm ? (
-        <BoardForm handleCancelClick={handleCancelClick} />
-      ) : (
-        <BoardAdd handleAddNewClick={handleAddNewClick} />
-      )}
+      {/* {showAddNewBoardForm ? <BoardAddForm /> : <BoardAddButton />} */}
+      {showAddNewBoardForm && <BoardAddForm />}
     </div>
   );
 }

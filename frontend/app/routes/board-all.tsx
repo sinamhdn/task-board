@@ -65,7 +65,7 @@ function BoardAll() {
   // Show boards
   return (
     <div className="all-boards-component container mx-auto text-center">
-      <div className="board-new-button-container mt-2 mb-2 bg-blue-700 p-2">
+      <div className="board-new-button-container bg-blue-700">
         <BoardNew />
       </div>
       {boards.length > 0 && (

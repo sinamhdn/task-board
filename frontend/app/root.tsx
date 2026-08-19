@@ -8,10 +8,8 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import { Provider } from "react-redux";
-import { store } from "./state/store.ts";
-import { ThemeProvider } from "~/components/theme.tsx";
 import "./app.css";
+import CombinedProviders from "./providers/index.tsx";
 
 export const links: Route.LinksFunction = () => [
   {
@@ -76,7 +74,7 @@ export const meta: Route.MetaFunction = () => [
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>                                                                     
+      <head>
         <Meta />
         <Links />
       </head>
@@ -91,11 +89,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <ThemeProvider>
-        <Outlet /> {/* This is where your MainLayout will render */}
-      </ThemeProvider>
-    </Provider>
+    <CombinedProviders>
+      <Outlet /> {/* This is where your MainLayout will render */}
+    </CombinedProviders>
   );
 }
 
