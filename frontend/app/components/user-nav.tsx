@@ -3,30 +3,20 @@ import { Link, useLocation } from "react-router";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { GiHamburgerMenu } from "react-icons/gi";
 import type { RootState } from "~/state/store";
-import { useNavigate } from "react-router";
-import { useAppDispatch } from "~/state/hooks";
-import { clearCurrentUser } from "~/state/sessionSlice";
-import { useEffect } from "react";
-import { removeToken } from "~/utils/auth";
 import BoardAddButton from "./board-add-button";
 import { useAddNewBoardForm } from "~/providers/board-add-provider";
+import LogoutButton from "./logout-button";
 
 function UserNav() {
   const currentUser = useSelector(
     (state: RootState) => state.session.currentUser,
   );
-  const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === "/";
   const { showAddNewBoardForm, handleCancelAddNewBoardClick } =
     useAddNewBoardForm();
 
   console.log("USER NAV CURRENT USER", currentUser);
-
-  useEffect(() => {
-    if (!currentUser) removeToken();
-    navigate("/signin", { replace: true });
-  }, []);
 
   return (
     <nav className="user-nav">
@@ -43,13 +33,13 @@ function UserNav() {
         ) : (
           <ul className="flex">
             <li className="p-2 m-2 rounded-sm content-center bg-gray-300 dark:bg-gray-700">
-              <LogoutButton />
+              <LogoutButton className="cursor-pointer" />
             </li>
             {isHome && (
               <li className="p-2 m-2 rounded-sm content-center bg-gray-300 dark:bg-gray-700">
                 {showAddNewBoardForm ? (
                   <button
-                    className="cursor-pointer pt-w pb-2"
+                    className="cursor-pointer w-full pt-2 pb-2"
                     onClick={handleCancelAddNewBoardClick}
                   >
                     Close Form
@@ -122,7 +112,7 @@ function UserNav() {
                 <div className="block w-full px-4 py-2 text-right">
                   {showAddNewBoardForm ? (
                     <button
-                      className="cursor-pointer pt-2 pb-2"
+                      className="cursor-pointer w-full pt-2 pb-2"
                       onClick={handleCancelAddNewBoardClick}
                     >
                       Close Form
@@ -133,30 +123,13 @@ function UserNav() {
                 </div>
               </MenuItem>
               <MenuItem>
-                <LogoutButton className="block w-full px-4 py-2 text-right" />
+                <LogoutButton className="block w-full px-4 py-2 text-center cursor-pointer" />
               </MenuItem>
             </MenuItems>
           )}
         </Menu>
       </div>
     </nav>
-  );
-}
-
-function LogoutButton({ className }: { className?: string }) {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-
-  function logout() {
-    localStorage.removeItem("jwt");
-    dispatch(clearCurrentUser());
-    navigate("/");
-  }
-
-  return (
-    <button onClick={logout} className={className}>
-      Logout
-    </button>
   );
 }
 

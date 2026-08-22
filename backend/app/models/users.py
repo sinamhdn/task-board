@@ -8,6 +8,7 @@ from sqlalchemy import Index, Integer, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..utils.db import Base
+from .members import members_table
 
 if TYPE_CHECKING:
     from .boards import Board
@@ -36,8 +37,16 @@ class User(Base):
         default=datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-    boards: Mapped[list[Board]] = relationship(
-        "Board", back_populates="user", cascade="all, delete-orphan"
+    owned_boards: Mapped[list[Board]] = relationship(
+        "Board",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )
+    membered_boards: Mapped[list["Board"]] = relationship(
+        "Board",
+        secondary=members_table,
+        back_populates="members",  # points to Board.members
+        cascade="save-update, merge",  # safer; don't delete boards automatically
     )
 
     __table_args__ = (

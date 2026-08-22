@@ -63,7 +63,6 @@ def general_http_exception_handler(request: Request, exception: Exception) -> Re
 # @app.exception_handler(RequestValidationError)
 def validation_exception_handler(request: Request, exception: Exception) -> Response:
     exc = cast(RequestValidationError, exception)
-    print("SHOW EXCEPTIONS ", exc.errors())
 
     request_validation_errors = []
     for error in exc.errors():
@@ -73,7 +72,6 @@ def validation_exception_handler(request: Request, exception: Exception) -> Resp
             else {"field": "server_error", "msg": "Unknown Validation Error"}
         )
         request_validation_errors.append(error_item)
-    print("request_validation_error", request_validation_errors)
     if request.url.path.startswith("/api"):
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

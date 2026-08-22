@@ -1,9 +1,16 @@
-import { Outlet, useLoaderData, useNavigate } from "react-router";
+import { Outlet, redirect, useLoaderData } from "react-router";
 import type { Route } from "./+types/protected";
-import { getCurrentUser } from "~/state/sessionSlice";
-import { useAppDispatch } from "~/state/hooks";
+import {
+  getCurrentUser,
+  setCurrentUser,
+  type User,
+} from "~/state/sessionSlice";
+import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getToken } from "~/utils";
 import { useEffect } from "react";
+import LoadingSpinner from "./loading-spinner";
+import { useActiveWebsocket } from "~/providers/websocket-provider";
+import { fetchCurrentUser, removeToken } from "~/utils/auth";
 // import { useEffect } from "react";
 // import { setCurrentUser } from "~/state/sessionSlice";
 
@@ -12,14 +19,19 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   console.log("IS TOKEN ALIVE", token);
 
   // useNavigate is better than this
-  // if (!token) {
-  //   throw redirect("/signin");
-  // }
+  // useNavigate is not better because clientLoader runs before component renders and navigate user to /signin but with useNavigate you see protected component for a split second before navigating because react renders the Outlet first the navigates
+  if (!token) {
+    throw redirect("/signin");
+  }
 
-  // let current_user = await getCurrentUser(token);
-  // socketioManager.socketConnect(token);
-
-  return { token /*current_user*/ };
+  try {
+    let currentUser = await fetchCurrentUser(token);
+    // socketioManager.socketConnect(token);
+    return { token, currentUser };
+  } catch (error) {
+    removeToken();
+    throw redirect("/signin");
+  }
 }
 
 clientLoader.hydrate = true as const;
@@ -31,25 +43,30 @@ export function shouldRevalidate() {
 
 // HydrateFallback is rendered while the client loader is running
 export function HydrateFallback() {
-  return <div>Loading...</div>;
+  return (
+    <div>
+      <LoadingSpinner spinnerIconClasses="fa fa-spinner fa-spin" />
+    </div>
+  );
 }
 
 export default function ProtectedLayout() {
-  const { token } = useLoaderData<typeof clientLoader>();
+  const { currentUser: loaderUser } = useLoaderData<typeof clientLoader>();
+  const { isConnected, sendMessage } = useActiveWebsocket();
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
 
   // useWebSocket({
   //   wsurl: `import.meta.env.VITE_SOCKET_URL?access_token=${token}`,
   // });
 
   useEffect(() => {
-    if (!token) {
-      navigate("/signin", { replace: true });
-    }
+    dispatch(setCurrentUser(loaderUser));
+  }, [loaderUser, dispatch]);
 
-    if (token) dispatch(getCurrentUser(token));
-  }, [dispatch, token, navigate]);
+  useEffect(() => {
+    if (isConnected && loaderUser)
+      sendMessage({ action: "subscribe", channel: `user:${loaderUser?.id}` });
+  }, [isConnected, loaderUser, sendMessage]);
 
   // useEffect(() => {
   //   if (current_user) {

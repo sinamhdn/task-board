@@ -1,6 +1,7 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import { fetchCurrentUser } from "~/utils/auth";
 import { setError } from "./errorSlice";
 
 export interface User {
@@ -22,6 +23,7 @@ export interface Token {
 }
 
 export interface SessionState {
+  websocket: WebSocket | null;
   currentUser: User | null;
   authStatus: string | null;
   userStatus: string | null;
@@ -39,6 +41,7 @@ export const LoadingStatus = {
 };
 
 const initialState: SessionState = {
+  websocket: null,
   currentUser: null,
   authStatus: null,
   userStatus: null,
@@ -211,19 +214,20 @@ export const getCurrentUser = createAsyncThunk<
   //   ]);
   // }
   try {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/v1/users/me`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-    console.log(
-      "sessionSlice.ts:: WHAT DOES RESPONSE>DATA RETURNS IN GETCURRENTUSER",
-      response.data,
-    );
-    return response.data;
+    // const response = await axios.get(
+    //   `${import.meta.env.VITE_API_URL}/api/v1/users/me`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //     },
+    //   },
+    // );
+    // console.log(
+    //   "sessionSlice.ts:: WHAT DOES RESPONSE>DATA RETURNS IN GETCURRENTUSER",
+    //   response.data,
+    // );
+    // return response.data;
+    return await fetchCurrentUser(token);
   } catch (err) {
     if (axios.isAxiosError(err)) {
       const errorMessage = err.response?.data.detail || [];

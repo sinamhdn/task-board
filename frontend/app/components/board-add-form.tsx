@@ -6,7 +6,7 @@ import { getToken } from "~/utils";
 import { clearError } from "~/state/errorSlice";
 import { Input } from "./input";
 import { LoadingStatus as BoardLoadingStatusEnum } from "~/state/boardSlice";
-import { board_name_validation } from "~/utils/input/inputValidations";
+import { board_name_validation } from "~/utils/input/input-validations";
 import type { RootState } from "~/state/store";
 import ClickAwayListener from "react-click-away-listener";
 import { useAddNewBoardForm } from "~/providers/board-add-provider";

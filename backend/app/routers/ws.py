@@ -89,6 +89,8 @@ async def socket(
                     },
                     websocket,
                 )
+            print("WEBSOCKET ACTIVE CONNECTIONS LIST", ws_manager.active_connections)
+            print("WEBSOCKET ACTIVE CHANNELS LIST", ws_manager.active_connections)
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
     except Exception as e:

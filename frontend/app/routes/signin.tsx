@@ -14,7 +14,7 @@ import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import {
   email_validation,
   password_validation,
-} from "~/utils/input/inputValidations";
+} from "~/utils/input/input-validations";
 import { setToken } from "~/utils/auth";
 
 export function meta({}: Route.MetaArgs) {

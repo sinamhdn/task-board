@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from ..models.boards import Board
+from ..models.members import members_table
 from ..schemas.boards import BoardCreate, BoardResponse
 from ..utils.auth import CurrentUser
 from ..utils.db import AsyncSession, get_async_db_session
@@ -53,7 +54,7 @@ async def get_board_by_id(
         )
 
     query_db = await db.execute(
-        select(Board).options(selectinload(Board.user)).where(Board.id == board_id)
+        select(Board).options(selectinload(Board.owner)).where(Board.id == board_id)
     )
     board = query_db.scalars().all()
     if board:
@@ -80,6 +81,7 @@ async def create_owned_board(
         )
 
     new_board = Board(name=board.name, user_id=current_user.id)
+    new_board.members.append(current_user)
     db.add(new_board)
     await db.commit()
     await db.refresh(new_board, attribute_names=["user"])

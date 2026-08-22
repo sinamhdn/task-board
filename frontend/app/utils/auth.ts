@@ -1,3 +1,5 @@
+import axios from "axios";
+
 interface User {
   id: number;
   uid: string;
@@ -43,6 +45,18 @@ export async function getCurrentUser(token: string) {
   })();
 
   return fetchPromise;
+}
+
+export async function fetchCurrentUser(token: string): Promise<User> {
+  const response = await axios.get(
+    `${import.meta.env.VITE_API_URL}/api/v1/users/me`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  return response.data;
 }
 
 export function logout() {

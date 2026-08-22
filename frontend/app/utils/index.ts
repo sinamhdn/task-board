@@ -1,3 +1,3 @@
 export { getCurrentUser, getToken, logout, setToken } from "./auth";
-export { findInputError } from "./input/findInputError";
-export { isFormInvalid } from "./input/isFormInvalid";
+export { findInputError } from "./input/find-input-error";
+export { isFormInvalid } from "./input/is-form-invalid";

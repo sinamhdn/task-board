@@ -4,10 +4,11 @@ import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, Index, Integer, String, Uuid, func
+from sqlalchemy import ForeignKey, Integer, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..utils.db import Base
+from .members import members_table
 
 if TYPE_CHECKING:
     from .users import User
@@ -27,7 +28,12 @@ class Board(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    user: Mapped[User] = relationship("User", back_populates="boards")
+    owner: Mapped[User] = relationship(
+        "User", foreign_keys=[user_id], back_populates="owned_boards"
+    )
+    members: Mapped[list[User]] = relationship(
+        "User", secondary=members_table, back_populates="membered_boards"
+    )
 
     def __repr__(self) -> str:
         return f"<Board(id={self.id}, name={self.name})>"

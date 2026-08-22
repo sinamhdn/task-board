@@ -113,4 +113,8 @@ class ConnectionManager:
         if user:
             user_email = user.email
 
-        print(f"RECIEVED USER {user_email}")
+        return user
+
+        # ---DEBUGGING BLOCK---
+        # print(f"RECIEVED USER {user_email}")
+        # ---DEBUGGING BLOCK---

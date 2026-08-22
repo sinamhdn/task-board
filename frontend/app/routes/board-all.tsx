@@ -10,6 +10,8 @@ import { getToken } from "~/utils";
 import classnames from "classnames";
 import BoardCard from "~/components/board-card";
 import BoardNew from "~/components/board-new";
+import { Link } from "react-router";
+import LoadingSpinner from "~/components/loading-spinner";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -44,13 +46,7 @@ function BoardAll() {
 
   // Show loading state first
   if (getBoardsLoadingStatus === BoardLoadingStatusEnum.pending) {
-    return (
-      <section>
-        <h3>
-          <i className={iconClasses} />
-        </h3>
-      </section>
-    );
+    return <LoadingSpinner spinnerIconClasses={iconClasses} />;
   }
 
   // Show empty state
@@ -81,7 +77,9 @@ function BoardAll() {
           <div className="my-boards-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xl">
             {boards.map((board) => (
               <div className="board-list-item bg-fuchsia-700 text-center rounded-sm flex flex-col pt-2">
-                <BoardCard key={board.id} board={board} />
+                <Link to={`boards/${board.id}`} state={{ board }}>
+                  <BoardCard key={board.id} board={board} />
+                </Link>
                 <button
                   className="bg-red-600 text-xs w-full rounded-b-sm mt-2"
                   onClick={() => handleDeleteBoard(board.id)}
