@@ -1,4 +1,4 @@
-import add_member from "~/assets/add_member.svg";
+import { ReactComponent as AddMemberIcom } from "~/assets/add_member.svg";
 
 function BoardMemberAddButton({
   handleAddNewMemberClick,
@@ -7,7 +7,7 @@ function BoardMemberAddButton({
 }) {
   return (
     <button
-      className="add-new-member-btn cursor-pointer dark:text-white text-black"
+      className="add-new-member-btn cursor-pointer"
       onClick={handleAddNewMemberClick}
     >
       <img className="max-w-12" src={add_member} alt="add new member button." />
