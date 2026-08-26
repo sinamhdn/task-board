@@ -1,4 +1,3 @@
-import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { GiHamburgerMenu } from "react-icons/gi";
@@ -6,9 +5,10 @@ import type { RootState } from "~/state/store";
 import BoardAddButton from "./board-add-button";
 import { useAddNewBoardForm } from "~/providers/board-add-provider";
 import LogoutButton from "./logout-button";
+import { useAppSelector } from "~/state/hooks";
 
 function UserNav() {
-  const currentUser = useSelector(
+  const currentUser = useAppSelector(
     (state: RootState) => state.session.currentUser,
   );
   const location = useLocation();
@@ -54,11 +54,19 @@ function UserNav() {
                 <span className="pr-2 content-center">
                   {currentUser.full_name}
                 </span>
-                <img
-                  src={`${import.meta.env.VITE_API_URL}/static/profile_pics/default.jpg`}
-                  alt="Profile Image"
-                  className="h-auto w-8 max-w-full rounded-full"
-                />
+                {currentUser?.image_file ? (
+                  <img
+                    className="max-w-10 rounded-full"
+                    src={`${import.meta.env.VITE_API_URL}/static/profile_pics/${currentUser.image_file}`}
+                    alt="signed in user profile image."
+                  />
+                ) : (
+                  <img
+                    className="max-w-10 rounded-full"
+                    src={`${import.meta.env.VITE_API_URL}/static/profile_pics/default.jpg`}
+                    alt="signed in user profile image."
+                  />
+                )}
               </Link>
             </li>
           </ul>
@@ -101,11 +109,19 @@ function UserNav() {
                   <span className="pr-2 content-center">
                     {currentUser.full_name}
                   </span>
-                  <img
-                    src={`${import.meta.env.VITE_API_URL}/static/profile_pics/default.jpg`}
-                    alt="Profile Image"
-                    className="h-auto w-8 max-w-full rounded-full"
-                  />
+                  {currentUser?.image_file ? (
+                    <img
+                      className="max-w-10 rounded-full"
+                      src={`${import.meta.env.VITE_API_URL}/static/profile_pics/${currentUser.image_file}`}
+                      alt="signed in user profile image."
+                    />
+                  ) : (
+                    <img
+                      className="max-w-10 rounded-full"
+                      src={`${import.meta.env.VITE_API_URL}/static/profile_pics/default.jpg`}
+                      alt="signed in user profile image."
+                    />
+                  )}
                 </Link>
               </MenuItem>
               <MenuItem>

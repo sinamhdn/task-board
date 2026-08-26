@@ -14,7 +14,7 @@ from .settings import settings
 
 logger = logging.getLogger(__name__)
 pwd_hash = PasswordHash.recommended()
-oath2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+oath2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
 
 def set_password(user: User, password: str) -> None:

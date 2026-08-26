@@ -26,6 +26,49 @@ async def get_current_user(current_user: CurrentUser):
     return current_user
 
 
+@router.patch("/me", response_model=UserPrivateResponse)
+async def update_current_user(
+    current_user: CurrentUser,
+    user_data: UserUpdate,
+    session: Annotated[AsyncSession, Depends(get_async_db_session)],
+):
+    """Update user"""
+    user = UserCRUD.get_user_by_id(session, current_user.id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"field": "server_error", "msg": "User not found."},
+        )
+    user = await UserCRUD.update_user(
+        session=session, user=current_user, user_data=user_data
+    )
+    return user
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_current_user(
+    current_user: CurrentUser,
+    token: Annotated[str, Depends(oath2_scheme)],
+    session: Annotated[AsyncSession, Depends(get_async_db_session)],
+):
+    """Delete user"""
+    user = await UserCRUD.get_user_by_id(session, current_user.id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"field": "server_error", "msg": "User not found."},
+        )
+    await UserCRUD.delete_user(session=session, user=current_user)
+    add_to_blacklist(token)
+    return Response(
+        status_code=status.HTTP_204_NO_CONTENT,
+        headers={
+            "X-Logout-Required": "true",
+            "X-Message": "User deleted successfully. Please log in again.",
+        },
+    )
+
+
 @router.get("", response_model=List[UserPublicResponse])
 async def get_all_users(
     session: Annotated[AsyncSession, Depends(get_async_db_session)],
@@ -112,47 +155,6 @@ async def delete_user(
 
     # Return 204 No Content with a header that tells the client to logout
     # Note: You can't return a body with 204, but you can add headers
-    return Response(
-        status_code=status.HTTP_204_NO_CONTENT,
-        headers={
-            "X-Logout-Required": "true",
-            "X-Message": "User deleted successfully. Please log in again.",
-        },
-    )
-
-
-@router.patch("/me", response_model=UserPrivateResponse)
-def update_current_user(
-    current_user: CurrentUser,
-    user_data: UserUpdate,
-    session: Annotated[AsyncSession, Depends(get_async_db_session)],
-):
-    """Update user"""
-    user = UserCRUD.get_user_by_id(session, current_user.id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"field": "server_error", "msg": "User not found."},
-        )
-    user = UserCRUD.update_user(session=session, user=current_user, user_data=user_data)
-    return user
-
-
-@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_current_user(
-    current_user: CurrentUser,
-    token: Annotated[str, Depends(oath2_scheme)],
-    session: Annotated[AsyncSession, Depends(get_async_db_session)],
-):
-    """Delete user"""
-    user = await UserCRUD.get_user_by_id(session, current_user.id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"field": "server_error", "msg": "User not found."},
-        )
-    await UserCRUD.delete_user(session=session, user=current_user)
-    add_to_blacklist(token)
     return Response(
         status_code=status.HTTP_204_NO_CONTENT,
         headers={

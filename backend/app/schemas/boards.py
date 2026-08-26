@@ -2,7 +2,9 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
+from .users import UserPublicResponse
 
 
 class BoardResponse(BaseModel):
@@ -12,7 +14,10 @@ class BoardResponse(BaseModel):
     name: str
     created_at: datetime
     updated_at: Optional[datetime]
+    members: list[UserPublicResponse] = []
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BoardCreate(BaseModel):
-    name: str
+    board_name: str

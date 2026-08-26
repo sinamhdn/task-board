@@ -32,7 +32,11 @@ async def get_all_owned_boards(
         )
 
     db_query = await db.execute(
-        select(Board).order_by(get_order_column(Board, order)).offset(skip).limit(limit)
+        select(Board)
+        .options(selectinload(Board.members))
+        .order_by(get_order_column(Board, order))
+        .offset(skip)
+        .limit(limit)
     )
 
     return list(db_query.scalars().all())
@@ -54,9 +58,11 @@ async def get_board_by_id(
         )
 
     query_db = await db.execute(
-        select(Board).options(selectinload(Board.owner)).where(Board.id == board_id)
+        select(Board)
+        .options(selectinload(Board.owner), selectinload(Board.members))
+        .where(Board.id == board_id)
     )
-    board = query_db.scalars().all()
+    board = query_db.scalars().first()
     if board:
         return board
     raise HTTPException(
@@ -80,11 +86,11 @@ async def create_owned_board(
             },
         )
 
-    new_board = Board(name=board.name, user_id=current_user.id)
+    new_board = Board(name=board.board_name, user_id=current_user.id)
     new_board.members.append(current_user)
     db.add(new_board)
     await db.commit()
-    await db.refresh(new_board, attribute_names=["user"])
+    await db.refresh(new_board, attribute_names=["owner"])
     return new_board
 
 
@@ -95,7 +101,9 @@ async def update_owned_board(
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_async_db_session)],
 ):
-    query_db = await db.execute(select(Board).where(Board.id == board_id))
+    query_db = await db.execute(
+        select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
+    )
     board = query_db.scalars().first()
     if not board:
         raise HTTPException(
@@ -111,9 +119,11 @@ async def update_owned_board(
         )
     update_board = board_data.model_dump(exclude_unset=True)
     for field, value in update_board.items():
+        if field == "board_name":
+            field = "name"
         setattr(board, field, value)
     await db.commit()
-    await db.refresh(board, attribute_names=["user"])
+    await db.refresh(board, attribute_names=["owner"])
     return board
 
 

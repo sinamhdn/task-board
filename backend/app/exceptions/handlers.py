@@ -20,6 +20,9 @@ class ErrorMessage(TypedDict):
     msg: str
 
 
+form_fields = ["email", "password", "first_name", "last_name", "board_name"]
+
+
 # fix pydantic error return format to be consistant
 # @app.exception_handler(StarletteHTTPException)
 def general_http_exception_handler(request: Request, exception: Exception) -> Response:
@@ -43,6 +46,11 @@ def general_http_exception_handler(request: Request, exception: Exception) -> Re
         }
 
     if request.url.path.startswith("/api"):
+        if message["field"] not in form_fields:
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={"detail": [{"field": "server_error", "msg": message["msg"]}]},
+            )
         return JSONResponse(
             status_code=exc.status_code,
             content={"detail": [{"field": message["field"], "msg": message["msg"]}]},
@@ -71,6 +79,8 @@ def validation_exception_handler(request: Request, exception: Exception) -> Resp
             if error["loc"] and error["msg"]
             else {"field": "server_error", "msg": "Unknown Validation Error"}
         )
+        if error["loc"][-1] not in form_fields:
+            error_item = {"field": "server_error", "msg": error["msg"]}
         request_validation_errors.append(error_item)
     if request.url.path.startswith("/api"):
         return JSONResponse(

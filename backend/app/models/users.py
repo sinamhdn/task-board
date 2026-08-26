@@ -46,7 +46,7 @@ class User(Base):
         "Board",
         secondary=members_table,
         back_populates="members",  # points to Board.members
-        cascade="save-update, merge",  # safer; don't delete boards automatically
+        cascade="all, delete",  # safer; don't delete boards automatically
     )
 
     __table_args__ = (

@@ -5,9 +5,21 @@ import { setError } from "./errorSlice";
 export interface RecievedBoardsInterface {
   id: number;
   uid: string;
+  user_id: number;
   name: string;
   updated_at: string;
   created_at: string;
+  members:
+    | [
+        {
+          id: number;
+          uid: string;
+          full_name: string;
+          image_file: string | null;
+          image_path: string;
+        },
+      ]
+    | [];
 }
 
 export const LoadingStatus = {
@@ -135,7 +147,7 @@ export const createNewBoard = createAsyncThunk<
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/v1/boards`,
         {
-          name: board_name,
+          board_name: board_name,
         },
         {
           headers: {
