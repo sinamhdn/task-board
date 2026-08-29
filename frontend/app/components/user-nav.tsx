@@ -16,8 +16,6 @@ function UserNav() {
   const { showAddNewBoardForm, handleCancelAddNewBoardClick } =
     useAddNewBoardForm();
 
-  console.log("USER NAV CURRENT USER", currentUser);
-
   return (
     <nav className="user-nav">
       <div className="user-nav-desktop hidden md:block">

@@ -43,6 +43,7 @@ class UserPublicResponse(BaseModel):
 
     id: int
     uid: uuid.UUID
+    email: str
     full_name: str
     image_file: str | None
     image_path: str | None
@@ -53,7 +54,6 @@ class UserPublicResponse(BaseModel):
 
 
 class UserPrivateResponse(UserPublicResponse):
-    email: str
     is_active: bool
     is_verified: bool
     created_at: datetime

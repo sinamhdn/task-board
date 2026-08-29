@@ -84,18 +84,24 @@ class ConnectionManager:
         return channel in self.channels and websocket in self.channels[channel]
 
     async def authenticateUser(self, websocket: WebSocket, session: AsyncSession):
-        token = websocket.query_params.get("access_token")
-
         await self.connect(websocket)
 
+        # we can also send token in the first message after connection which is more secure than query params
+        # raw_data = await websocket.receive_text()
+        # payload = json.loads(raw_data)
+        # token = payload.get("token")
+
+        token = websocket.query_params.get("access_token")
+
         if not token:  # handles None or empty string
-            # await websocket.send_json(
-            #     {"field": "server_error", "msg": "Missing access token"}
-            # )
+            await websocket.send_json(
+                {"field": "server_error", "msg": "Missing access token"}
+            )
+            self.disconnect(websocket)
             await websocket.close(
                 code=status.WS_1008_POLICY_VIOLATION, reason="Authentication Required."
             )
-            return
+            return None
 
         user_id = verify_access_token(token)
 

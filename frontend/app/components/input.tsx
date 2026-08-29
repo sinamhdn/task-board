@@ -25,6 +25,7 @@ type FormValues = {
   password: string;
   confirm: string;
   board_name: string;
+  board_member_email: string;
 };
 
 export const Input = ({

@@ -28,14 +28,15 @@ async def socket(
     websocket: WebSocket,
     session: Annotated[AsyncSession, Depends(get_async_db_session)],
 ):
+    # authenticate and connect websocket
     user = await ws_manager.authenticateUser(websocket=websocket, session=session)
-    await ws_manager.connect(websocket)
 
     try:
         while True:
             try:
-                payload = await websocket.receive_json()
-                payload = adapter.validate_python(payload)
+                recieved_payload = await websocket.receive_json()
+                payload_pydanthic = adapter.validate_python(recieved_payload)
+                payload = payload_pydanthic.model_dump()
 
                 # FOR TESTING
                 await ws_manager.send_personal_message(payload, websocket)
@@ -90,7 +91,7 @@ async def socket(
                     websocket,
                 )
             print("WEBSOCKET ACTIVE CONNECTIONS LIST", ws_manager.active_connections)
-            print("WEBSOCKET ACTIVE CHANNELS LIST", ws_manager.active_connections)
+            print("WEBSOCKET ACTIVE CHANNELS LIST", ws_manager.channels)
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
     except Exception as e:

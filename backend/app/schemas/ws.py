@@ -27,7 +27,12 @@ class WebSocketMessage(BaseModel):
 
     @field_validator("action")
     def validate_action(cls, v):
-        allowed_actions = {"subscribe", "unsubscribe", "broadcast"}
+        allowed_actions = {
+            "subscribe",
+            "unsubscribe",
+            "broadcast_channel",
+            "broadcast_global",
+        }
         if v not in allowed_actions:
             raise ValueError(f"Action must be one of {allowed_actions}")
         return v

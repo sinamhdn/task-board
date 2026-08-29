@@ -134,3 +134,22 @@ export const board_name_validation = {
     },
   },
 };
+
+export const board_member_email_validation = {
+  name: "board_member_email" as const,
+  label: "",
+  type: "email",
+  id: "board_member_email",
+  placeholder: "enter email address of the member you want to add ...",
+  validation: {
+    required: {
+      value: true,
+      message: "required",
+    },
+    pattern: {
+      value:
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+      message: "not valid",
+    },
+  },
+};

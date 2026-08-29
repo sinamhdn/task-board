@@ -1,5 +1,12 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { useWebSocket } from "~/hooks";
+import { getToken } from "~/utils";
 
 interface WebsocketContextType {
   disconnect: () => void;
@@ -15,9 +22,18 @@ interface WebsocketContextType {
 const WebsocketContext = createContext<WebsocketContextType | null>(null);
 
 export function WebsocketProvider({ children }: { children: ReactNode }) {
-  const { disconnect, isConnected, isConnecting, sendMessage } = useWebSocket(
-    import.meta.env.VITE_SOCKET_URL,
-  );
+  const [wsurl, setWsUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      setWsUrl(import.meta.env.VITE_SOCKET_URL + "?access_token=" + token);
+    }
+  }, []);
+
+  const { disconnect, isConnected, isConnecting, sendMessage } = useWebSocket({
+    wsurl: wsurl,
+  });
 
   return (
     <WebsocketContext.Provider

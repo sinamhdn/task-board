@@ -9,17 +9,23 @@ export interface RecievedBoardsInterface {
   name: string;
   updated_at: string;
   created_at: string;
-  members:
-    | [
-        {
-          id: number;
-          uid: string;
-          full_name: string;
-          image_file: string | null;
-          image_path: string;
-        },
-      ]
-    | [];
+  members: {
+    id: number;
+    uid: string;
+    email: string;
+    full_name: string;
+    image_file: string | null;
+    image_path: string;
+  }[];
+}
+
+export interface RecievedBoardMemberInterface {
+  id: number;
+  uid: string;
+  email: string;
+  full_name: string;
+  image_file: string | null;
+  image_path: string;
 }
 
 export const LoadingStatus = {
@@ -37,11 +43,15 @@ const initialState: {
   getBoardsLoadingStatus: string | null;
   createBoardLoadingStatus: string | null;
   deleteBoardLoadingStatus: string | null;
+  addBoardMemberLoadingStatus: string | null;
+  deleteBoardMemberLoadingStatus: string | null;
   boards: RecievedBoardsInterface[];
 } = {
   getBoardsLoadingStatus: null,
   createBoardLoadingStatus: null,
   deleteBoardLoadingStatus: null,
+  addBoardMemberLoadingStatus: null,
+  deleteBoardMemberLoadingStatus: null,
   boards: [],
 };
 
@@ -54,6 +64,8 @@ const boardSlice = createSlice({
       state.getBoardsLoadingStatus = null;
       state.createBoardLoadingStatus = null;
       state.deleteBoardLoadingStatus = null;
+      state.addBoardMemberLoadingStatus = null;
+      state.deleteBoardMemberLoadingStatus = null;
     },
   },
   extraReducers: (builder) => {
@@ -75,10 +87,6 @@ const boardSlice = createSlice({
       .addCase(createNewBoard.fulfilled, (state, action) => {
         state.createBoardLoadingStatus = LoadingStatus.fulfilled;
         state.boards.push(action.payload);
-        console.log(
-          "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
-          action.payload,
-        );
       })
       .addCase(createNewBoard.pending, (state) => {
         state.createBoardLoadingStatus = LoadingStatus.pending;
@@ -96,6 +104,46 @@ const boardSlice = createSlice({
       })
       .addCase(deleteBoard.rejected, (state, action) => {
         state.deleteBoardLoadingStatus = LoadingStatus.rejected;
+      })
+      .addCase(addBoardMember.fulfilled, (state, action) => {
+        state.addBoardMemberLoadingStatus = LoadingStatus.fulfilled;
+        const newMember = action.payload; // Assuming this is the added member
+        const boardId = action.meta.arg.board_id;
+        console.log("📝 Adding member:", newMember);
+        console.log("📝 To board ID:", boardId);
+        const board = state.boards.find((board) => board.id === boardId);
+        if (board) {
+          const exists = state.boards.some((board) => board.id === boardId);
+          if (!exists) {
+            board.members.push(newMember);
+            console.log("✅ Member added successfully");
+          } else {
+            console.warn("Board not found in state:", boardId);
+          }
+        }
+      })
+      .addCase(addBoardMember.pending, (state) => {
+        state.addBoardMemberLoadingStatus = LoadingStatus.pending;
+      })
+      .addCase(addBoardMember.rejected, (state, action) => {
+        state.addBoardMemberLoadingStatus = LoadingStatus.rejected;
+      })
+      .addCase(deleteBoardMember.fulfilled, (state, action) => {
+        state.deleteBoardMemberLoadingStatus = LoadingStatus.fulfilled;
+        const deletedMemberId = action.payload.id;
+        const boardId = action.meta.arg.board_id;
+        const board = state.boards.find((board) => board.id === boardId);
+        if (board) {
+          board.members = board.members.filter(
+            (member) => member.id !== deletedMemberId,
+          );
+        }
+      })
+      .addCase(deleteBoardMember.pending, (state) => {
+        state.deleteBoardMemberLoadingStatus = LoadingStatus.pending;
+      })
+      .addCase(deleteBoardMember.rejected, (state, action) => {
+        state.deleteBoardMemberLoadingStatus = LoadingStatus.rejected;
       });
   },
 });
@@ -179,6 +227,71 @@ export const deleteBoard = createAsyncThunk<
     try {
       const response = await axios.delete(
         `${import.meta.env.VITE_API_URL}/api/v1/boards/${board_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data.detail || [];
+        console.log("boardSlice.ts::" + error);
+        dispatch(setError(errorMessage));
+        return rejectWithValue(errorMessage);
+      }
+      dispatch(setError([{ field: "server_error", msg: "Unknown error" }]));
+      return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
+    }
+  },
+);
+
+export const addBoardMember = createAsyncThunk<
+  RecievedBoardMemberInterface,
+  { board_id: number; board_member_email: string; token: string },
+  { rejectValue: BackendValidationError[] }
+>(
+  "board/addboardmember",
+  async (
+    { token, board_id, board_member_email },
+    { dispatch, rejectWithValue },
+  ) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/v1/boards/${board_id}/add-member`,
+        {
+          board_member_email: board_member_email,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data.detail || [];
+        dispatch(setError(errorMessage));
+        return rejectWithValue(errorMessage);
+      }
+      dispatch(setError([{ field: "server_error", msg: "Unknown error" }]));
+      return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
+    }
+  },
+);
+
+export const deleteBoardMember = createAsyncThunk<
+  RecievedBoardMemberInterface,
+  { board_id: number; member_id: number; token: string },
+  { rejectValue: BackendValidationError[] }
+>(
+  "board/deleteboardmember",
+  async ({ token, board_id, member_id }, { dispatch, rejectWithValue }) => {
+    try {
+      const response = await axios.delete(
+        `${import.meta.env.VITE_API_URL}/api/v1/boards/${board_id}/delete-member?member_id=${member_id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

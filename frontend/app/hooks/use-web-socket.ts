@@ -4,7 +4,7 @@ import { setData, setStatus as setSocketStatus } from "~/state/socketSlice";
 import { useAppSelector } from "../state/hooks";
 
 interface WebSocketHookInput {
-  wsurl: string;
+  wsurl: string | null;
   retryAtempts?: number;
   retryInterval?: number;
 }
@@ -37,6 +37,13 @@ export function useWebSocket({
   const socketState = useAppSelector((state) => state.socket.status);
 
   const connect = useCallback(() => {
+    // ✅ Guard: reject empty or malformed URLs
+    if (!wsurl || (!wsurl.startsWith("ws://") && !wsurl.startsWith("wss://"))) {
+      console.warn("Invalid WebSocket URL, skipping connection:", wsurl);
+      dispatch(setSocketStatus("close"));
+      return;
+    }
+
     shouldReconnectRef.current = true;
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       return;

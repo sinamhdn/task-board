@@ -21,7 +21,7 @@ function BoardSingle() {
 
   useEffect(() => {
     if (isConnected)
-      sendMessage({ action: "subscribe", channel: `board:${id}` });
+      sendMessage({ action: "subscribe", channel: `boards:${id}` });
     return disconnect();
   }, []);
 

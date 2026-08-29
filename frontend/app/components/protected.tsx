@@ -55,17 +55,13 @@ export default function ProtectedLayout() {
   const { isConnected, sendMessage } = useActiveWebsocket();
   const dispatch = useAppDispatch();
 
-  // useWebSocket({
-  //   wsurl: `import.meta.env.VITE_SOCKET_URL?access_token=${token}`,
-  // });
-
   useEffect(() => {
     dispatch(setCurrentUser(loaderUser));
   }, [loaderUser, dispatch]);
 
   useEffect(() => {
     if (isConnected && loaderUser)
-      sendMessage({ action: "subscribe", channel: `user:${loaderUser?.id}` });
+      sendMessage({ action: "subscribe", channel: `users:${loaderUser?.id}` });
   }, [isConnected, loaderUser, sendMessage]);
 
   // useEffect(() => {

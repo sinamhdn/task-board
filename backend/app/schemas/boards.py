@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 from .users import UserPublicResponse
 
@@ -21,3 +21,7 @@ class BoardResponse(BaseModel):
 
 class BoardCreate(BaseModel):
     board_name: str
+
+
+class BoardMemberAdd(BaseModel):
+    board_member_email: EmailStr
