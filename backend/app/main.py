@@ -24,6 +24,7 @@ from .exceptions.handlers import (
 from .routers.auth import router as auth_router
 from .routers.boards import router as boards_router
 from .routers.frontend import router as frontend_router
+from .routers.search import router as search_router
 from .routers.tests import router as tests_router
 from .routers.users import router as users_router
 from .routers.ws import router as websocket_router
@@ -77,6 +78,7 @@ app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
 app.include_router(boards_router, prefix="/api/v1/boards", tags=["boards"])
 app.include_router(tests_router, prefix="/api/v1/tests", tags=["tests"])
+app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
 app.include_router(websocket_router, prefix="/api/v1/ws", tags=["ws"])
 app.include_router(frontend_router, prefix="", tags=["frontend"])
 app.add_exception_handler(StarletteHTTPException, general_http_exception_handler)

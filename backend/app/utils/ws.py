@@ -109,18 +109,15 @@ class ConnectionManager:
             # await ws_manager.send_personal_message(
             #     {"field": "server_error", "msg": "Not Authenticated."}, websocket
             # )
+            self.disconnect(websocket)
             await websocket.close(
                 code=status.WS_1008_POLICY_VIOLATION, reason="User not exists."
             )
-            return
+            return None
 
         user = await UserCRUD.get_user_by_id(session, int(user_id))
-
-        if user:
-            user_email = user.email
-
-        return user
 
         # ---DEBUGGING BLOCK---
         # print(f"RECIEVED USER {user_email}")
         # ---DEBUGGING BLOCK---
+        return user

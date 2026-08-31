@@ -31,6 +31,10 @@ async def socket(
     # authenticate and connect websocket
     user = await ws_manager.authenticateUser(websocket=websocket, session=session)
 
+    # If authentication failed, user will be None and connection is already closed
+    if user is None:
+        return  # Stop execution
+
     try:
         while True:
             try:

@@ -140,7 +140,7 @@ export const board_member_email_validation = {
   label: "",
   type: "email",
   id: "board_member_email",
-  placeholder: "enter email address of the member you want to add ...",
+  placeholder: "enter email address ...",
   validation: {
     required: {
       value: true,

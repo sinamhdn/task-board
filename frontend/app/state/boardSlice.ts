@@ -73,15 +73,25 @@ const boardSlice = createSlice({
       .addCase(getAllBoards.fulfilled, (state, action) => {
         state.getBoardsLoadingStatus = LoadingStatus.fulfilled;
         state.boards = action.payload;
-        console.log(
-          "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
-          action.payload,
-        );
       })
       .addCase(getAllBoards.pending, (state) => {
         state.getBoardsLoadingStatus = LoadingStatus.pending;
       })
       .addCase(getAllBoards.rejected, (state, action) => {
+        state.getBoardsLoadingStatus = LoadingStatus.rejected;
+      })
+      .addCase(getBoardById.fulfilled, (state, action) => {
+        state.getBoardsLoadingStatus = LoadingStatus.fulfilled;
+        state.boards.push(action.payload);
+        console.log(
+          "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
+          action.payload,
+        );
+      })
+      .addCase(getBoardById.pending, (state) => {
+        state.getBoardsLoadingStatus = LoadingStatus.pending;
+      })
+      .addCase(getBoardById.rejected, (state, action) => {
         state.getBoardsLoadingStatus = LoadingStatus.rejected;
       })
       .addCase(createNewBoard.fulfilled, (state, action) => {
@@ -113,8 +123,10 @@ const boardSlice = createSlice({
         console.log("📝 To board ID:", boardId);
         const board = state.boards.find((board) => board.id === boardId);
         if (board) {
-          const exists = state.boards.some((board) => board.id === boardId);
-          if (!exists) {
+          const memberExists = board.members.some(
+            (member) => member.id === newMember.id,
+          );
+          if (!memberExists) {
             board.members.push(newMember);
             console.log("✅ Member added successfully");
           } else {
@@ -166,6 +178,36 @@ export const getAllBoards = createAsyncThunk<
             skip,
             limit,
             order,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data.detail || [];
+        console.log("boardSlice.ts::" + error.response?.data.detail);
+        dispatch(setError(errorMessage));
+        return rejectWithValue(errorMessage);
+      }
+      dispatch(setError([{ field: "server_error", msg: "Unknown error" }]));
+      return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
+    }
+  },
+);
+
+export const getBoardById = createAsyncThunk<
+  RecievedBoardsInterface,
+  { boardId: number; token: string },
+  { rejectValue: BackendValidationError[] }
+>(
+  "board/boardbyid",
+  async ({ token, boardId }, { dispatch, rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/v1/boards/${boardId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
         },
       );

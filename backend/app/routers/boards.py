@@ -218,6 +218,15 @@ async def add_new_board_member(
             },
         )
 
+    if len(board_members_email_list) > 4:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "field": "server_error",
+                "msg": "You can't add more than 4 members to a board.",
+            },
+        )
+
     board.members.append(user)
     await db.commit()
     await db.refresh(board, attribute_names=["owner"])

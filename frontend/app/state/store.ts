@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import boardSlice from "./boardSlice";
 import errorSlice from "./errorSlice";
+import searchSlice from "./searchSlice";
 import sessionSlice from "./sessionSlice";
 import socketSlice from "./socketSlice";
 
@@ -8,6 +9,7 @@ export const store = configureStore({
   reducer: {
     session: sessionSlice,
     socket: socketSlice,
+    search: searchSlice,
     board: boardSlice,
     errors: errorSlice,
   },

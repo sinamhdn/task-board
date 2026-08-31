@@ -10,7 +10,7 @@ import { getToken } from "~/utils";
 import classnames from "classnames";
 import BoardCard from "~/components/board-card";
 import BoardNew from "~/components/board-new";
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
 import LoadingSpinner from "~/components/loading-spinner";
 
 export function meta({}: Route.MetaArgs) {
@@ -36,7 +36,7 @@ function BoardAll() {
   });
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) throw redirect("signin");
     dispatch(getAllBoards({ token }));
   }, [token]);
 

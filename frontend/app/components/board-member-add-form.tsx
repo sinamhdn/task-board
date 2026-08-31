@@ -6,6 +6,9 @@ import type { RootState } from "~/state/store";
 import { board_member_email_validation } from "~/utils/input/input-validations";
 import { addBoardMember, LoadingStatus } from "~/state/boardSlice";
 import { clearError } from "~/state/errorSlice";
+import { useEffect } from "react";
+import { setQuery } from "~/state/searchSlice";
+import useLiveSearch from "~/hooks/use-live-search";
 
 function BoardMemberAddForm({
   board_id,
@@ -29,6 +32,16 @@ function BoardMemberAddForm({
     mode: "onChange",
   });
 
+  const watchedEmail = methods.watch("board_member_email");
+  const searchResults = useLiveSearch(watchedEmail);
+  console.log("SEARCH SEARCH", searchResults);
+
+  useEffect(() => {
+    if (watchedEmail) {
+      dispatch(setQuery(watchedEmail));
+    }
+  }, [watchedEmail]);
+
   const handleSubmitCallback = async (data: { board_member_email: string }) => {
     try {
       const result = await dispatch(
@@ -43,22 +56,26 @@ function BoardMemberAddForm({
       console.log(err);
     }
   };
+
   const onSubmit = methods.handleSubmit(handleSubmitCallback);
+
   return (
     <ClickAwayListener onClickAway={handleCancelAddNewBoardClick}>
-      <div className="add-new-member-form absolute text-center">
+      <div className="add-new-member-form absolute text-center bg-gray-300 dark:bg-gray-700 w-100">
         <p>ADD NEW MEMBER FORM</p>
         <FormProvider {...methods}>
           <form
-            className="signup-form xl:w-1/4 lg:w-1/2 sm:w-full mx-auto text-center"
+            className="board-member-add-form pl-5 pr-5 mx-auto text-center"
             noValidate
             onSubmit={onSubmit}
           >
-            <Input {...board_member_email_validation} errors={errors} />
+            <div className="member-add-form-inputs">
+              <Input {...board_member_email_validation} errors={errors} />
+            </div>
             <div className="submit-button mt-5 mb-5">
               <button
                 type="submit"
-                className="flex items-center justify-center gap-1 p-5 mx-auto font-semibold w-48 text-center text-white bg-blue-600 rounded-md hover:bg-blue-800"
+                className="flex items-center justify-center gap-1 mx-auto font-semibold text-center dark:text-white text-black"
               >
                 {addBoardMemberLoadingStatus === LoadingStatus.pending
                   ? "Adding..."

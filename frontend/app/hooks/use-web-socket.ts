@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useAppDispatch } from "~/state/hooks";
 import { setData, setStatus as setSocketStatus } from "~/state/socketSlice";
 import { useAppSelector } from "../state/hooks";
