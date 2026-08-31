@@ -17,7 +17,7 @@ export const store = configureStore({
     getDefaultMiddleware({
       thunk: true,
       serializableCheck: {
-        ignoredActions: ["pesist/PERSIST", "session/setSocket"],
+        ignoredActions: ["persist/PERSIST", "session/setSocket"],
       },
     }),
   // devTools: process.env.NODE_ENV !== "production",

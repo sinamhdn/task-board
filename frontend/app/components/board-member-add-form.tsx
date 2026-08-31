@@ -7,8 +7,9 @@ import { board_member_email_validation } from "~/utils/input/input-validations";
 import { addBoardMember, LoadingStatus } from "~/state/boardSlice";
 import { clearError } from "~/state/errorSlice";
 import { useEffect } from "react";
-import { setQuery } from "~/state/searchSlice";
+import { clearQuery, setQuery } from "~/state/searchSlice";
 import useLiveSearch from "~/hooks/use-live-search";
+import SearchResultModal from "./search-result-modal";
 
 function BoardMemberAddForm({
   board_id,
@@ -34,13 +35,21 @@ function BoardMemberAddForm({
 
   const watchedEmail = methods.watch("board_member_email");
   const searchResults = useLiveSearch(watchedEmail);
-  console.log("SEARCH SEARCH", searchResults);
 
   useEffect(() => {
     if (watchedEmail) {
       dispatch(setQuery(watchedEmail));
     }
   }, [watchedEmail]);
+
+  const handleSearchResultSelection = (value: string) => {
+    dispatch(clearQuery());
+    methods.setValue("board_member_email", value, {
+      shouldValidate: true, // trigger validation
+      shouldDirty: true, // mark field as dirty
+      shouldTouch: true, // mark field as touched
+    });
+  };
 
   const handleSubmitCallback = async (data: { board_member_email: string }) => {
     try {
@@ -71,6 +80,14 @@ function BoardMemberAddForm({
           >
             <div className="member-add-form-inputs">
               <Input {...board_member_email_validation} errors={errors} />
+              <div className="search-result-modal">
+                <SearchResultModal
+                  searchResults={searchResults}
+                  handleSearchResultSelection={(value: string) =>
+                    handleSearchResultSelection(value)
+                  }
+                />
+              </div>
             </div>
             <div className="submit-button mt-5 mb-5">
               <button

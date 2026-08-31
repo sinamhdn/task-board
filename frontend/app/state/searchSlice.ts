@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { setError } from "./errorSlice";
 
-interface RecievedSearchUsersInterface {
+export interface RecievedSearchUsersInterface {
   id: number;
   uid: string;
   email: string;
@@ -31,6 +31,11 @@ const searchSlice = createSlice({
       state.query = action.payload;
       return state;
     },
+    clearQuery: (state) => {
+      state.userEmailSearchResults = [];
+      state.isLoading = false;
+      state.query = "";
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -56,7 +61,7 @@ export const searchUsers = createAsyncThunk<
   RecievedSearchUsersInterface[],
   { query: string },
   { rejectValue: { field: string; msg: string }[] }
->("board/allboards", async ({ query }, { dispatch, rejectWithValue }) => {
+>("board/searchusers", async ({ query }, { dispatch, rejectWithValue }) => {
   try {
     const response = await axios.get(
       `${import.meta.env.VITE_API_URL}/api/v1/search?search_type=user&limit=20&query=${query}`,
@@ -73,6 +78,6 @@ export const searchUsers = createAsyncThunk<
   }
 });
 
-export const { setQuery } = searchSlice.actions;
+export const { setQuery, clearQuery } = searchSlice.actions;
 
 export default searchSlice.reducer;
