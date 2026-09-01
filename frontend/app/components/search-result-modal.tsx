@@ -27,7 +27,7 @@ function SearchResultModal({
           <li key={result.id}>
             <button
               type="button"
-              className="w-full text-left p-2 hover:bg-gray-100"
+              className="w-full text-left p-2 cursor-pointer"
               onClick={() => handleSearchResultSelection(result.email)}
             >
               {result.email}

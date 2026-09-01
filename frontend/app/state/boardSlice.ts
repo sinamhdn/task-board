@@ -83,10 +83,6 @@ const boardSlice = createSlice({
       .addCase(getBoardById.fulfilled, (state, action) => {
         state.getBoardsLoadingStatus = LoadingStatus.fulfilled;
         state.boards.push(action.payload);
-        console.log(
-          "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
-          action.payload,
-        );
       })
       .addCase(getBoardById.pending, (state) => {
         state.getBoardsLoadingStatus = LoadingStatus.pending;

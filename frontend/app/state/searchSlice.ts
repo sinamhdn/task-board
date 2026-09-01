@@ -42,11 +42,6 @@ const searchSlice = createSlice({
       .addCase(searchUsers.fulfilled, (state, action) => {
         state.isLoading = false;
         state.userEmailSearchResults = action.payload;
-        console.log(
-          "search results:::  ",
-          action.payload,
-          state.userEmailSearchResults,
-        );
       })
       .addCase(searchUsers.pending, (state) => {
         state.isLoading = true;

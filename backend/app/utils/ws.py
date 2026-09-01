@@ -121,3 +121,7 @@ class ConnectionManager:
         # print(f"RECIEVED USER {user_email}")
         # ---DEBUGGING BLOCK---
         return user
+
+
+def send_boards_to_members(ws_manager: ConnectionManager, db: AsyncSession):
+    pass

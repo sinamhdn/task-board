@@ -16,7 +16,6 @@ import { fetchCurrentUser, removeToken } from "~/utils/auth";
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const token = getToken();
-  console.log("IS TOKEN ALIVE", token);
 
   // useNavigate is better than this
   // useNavigate is not better because clientLoader runs before component renders and navigate user to /signin but with useNavigate you see protected component for a split second before navigating because react renders the Outlet first the navigates
