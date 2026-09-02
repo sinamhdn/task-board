@@ -1,8 +1,10 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import selectinload
+
+from server.app.models import members
 
 from ..models.boards import Board
 from ..models.users import User
@@ -38,6 +40,7 @@ async def get_all_owned_boards(
         .order_by(get_order_column(Board, order))
         .offset(skip)
         .limit(limit)
+        .where(or_(Board.id == current_user.id, Board.members.any(id=current_user.id)))
     )
 
     return list(db_query.scalars().all())

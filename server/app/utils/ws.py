@@ -27,15 +27,18 @@ class ConnectionManager:
         )
         # if any(websocket in connections for connections in self.channels.values()):
 
-    def disconnect(self, websocket: WebSocket):
+    async def disconnect(
+        self, websocket: WebSocket, close_status_code, close_reason: str
+    ):
         self.active_connections.discard(websocket)
         for channel in list(self.channels.keys()):
             self.channels[channel].discard(websocket)
             if not self.channels[channel]:
                 del self.channels[channel]
+        await websocket.close(code=close_status_code, reason=close_reason)
 
     async def send_personal_message(self, message: Dict, websocket: WebSocket):
-        await websocket.send_json(message)
+        await websocket.send_json({"res_type": "Personal Message", "message": message})
 
     async def broadcast_channel(
         self, websocket: WebSocket, channel: str, message: Dict
@@ -43,21 +46,29 @@ class ConnectionManager:
         if not self.is_subscribed(websocket, channel):
             await self.send_personal_message(
                 {
-                    "field": "ws_notif",
+                    "type": "ws_notif",
                     "msg": f"You are not subscribed to {channel}.",
                 },
                 websocket,
             )
             return
         for connection in self.channels[channel]:
-            await connection.send_json(message)
+            await connection.send_json(
+                {
+                    "res_type": "Channel Broadcast",
+                    "channel": channel,
+                    "message": message,
+                }
+            )
         # if channel in self.channels:
         #     for connection in self.channels[channel]:
         #         await connection.send_json(message)
 
     async def broadcast_global(self, message: Dict):
         for connection in self.active_connections:
-            await connection.send_json(message)
+            await connection.send_json(
+                {"res_type": "Global Broadcast", "message": message}
+            )
 
     def subscribe(self, websocket: WebSocket, channel: str):
         if channel not in self.channels:
@@ -74,7 +85,6 @@ class ConnectionManager:
                 websocket,
             )
             return
-
         if channel in self.channels:
             self.channels[channel].discard(websocket)
             if not self.channels[channel]:
@@ -85,38 +95,34 @@ class ConnectionManager:
 
     async def authenticateUser(self, websocket: WebSocket, session: AsyncSession):
         await self.connect(websocket)
-
         # we can also send token in the first message after connection which is more secure than query params
         # raw_data = await websocket.receive_text()
         # payload = json.loads(raw_data)
         # token = payload.get("token")
-
         token = websocket.query_params.get("access_token")
-
         if not token:  # handles None or empty string
-            await websocket.send_json(
-                {"field": "server_error", "msg": "Missing access token"}
+            await self.send_personal_message(
+                websocket=websocket,
+                message={"type": "ws_error", "msg": "Missing access token"},
             )
-            self.disconnect(websocket)
-            await websocket.close(
-                code=status.WS_1008_POLICY_VIOLATION, reason="Authentication Required."
+            await self.disconnect(
+                websocket=websocket,
+                close_status_code=status.WS_1008_POLICY_VIOLATION,
+                close_reason="Authentication Required.",
             )
             return None
-
         user_id = verify_access_token(token)
-
         if not user_id:
             # await ws_manager.send_personal_message(
             #     {"field": "server_error", "msg": "Not Authenticated."}, websocket
             # )
-            self.disconnect(websocket)
-            await websocket.close(
-                code=status.WS_1008_POLICY_VIOLATION, reason="User not exists."
+            await self.disconnect(
+                websocket=websocket,
+                close_status_code=status.WS_1008_POLICY_VIOLATION,
+                close_reason="User not exists.",
             )
             return None
-
         user = await UserCRUD.get_user_by_id(session, int(user_id))
-
         # ---DEBUGGING BLOCK---
         # print(f"RECIEVED USER {user_email}")
         # ---DEBUGGING BLOCK---

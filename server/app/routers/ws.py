@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Annotated
 
 from fastapi import (
@@ -9,6 +10,7 @@ from fastapi import (
     WebSocketException,
     status,
 )
+from pydantic import ValidationError
 
 from ..crud.users import UserCRUD
 from ..schemas.ws import adapter
@@ -18,6 +20,7 @@ from ..utils.ws import ConnectionManager
 
 router = APIRouter(prefix="", tags=["ws"])
 ws_manager = ConnectionManager()
+logger = logging.getLogger("websocketapp")
 
 
 # client side message examples
@@ -30,35 +33,42 @@ async def socket(
 ):
     # authenticate and connect websocket
     user = await ws_manager.authenticateUser(websocket=websocket, session=session)
-
     # If authentication failed, user will be None and connection is already closed
+    # Stop execution
     if user is None:
-        return  # Stop execution
-
+        return
     try:
         while True:
             try:
                 recieved_payload = await websocket.receive_json()
                 payload_pydanthic = adapter.validate_python(recieved_payload)
                 payload = payload_pydanthic.model_dump()
-
                 # FOR TESTING
-                await ws_manager.send_personal_message(payload, websocket)
+                # await ws_manager.send_personal_message(payload, websocket)
                 # FOR TESTING
-
                 action = payload.get("action")
                 channel = payload.get("channel")
                 message = payload.get("message")
-
-            except json.JSONDecodeError:
-                # await ws_manager.send_personal_message(
-                #     {"field": "server_error", "msg": "Invalid JSON format"}, websocket
-                # )
-                # continue
-                raise WebSocketException(
-                    status.HTTP_400_BAD_REQUEST, reason="Invalid JSON format."
+            except json.JSONDecodeError as e:
+                logger.info("invalid json format")
+                await ws_manager.send_personal_message(
+                    websocket=websocket,
+                    message={
+                        "type": "ws_error",
+                        "msg": f"Invalid JSON format: {repr(e)}",
+                    },
                 )
-
+                continue
+            except ValidationError as e:
+                logger.info("validation error")
+                await ws_manager.send_personal_message(
+                    websocket=websocket,
+                    message={
+                        "type": "ws_error",
+                        "msg": f"Incorrect message format: {repr(e)}",
+                    },
+                )
+                continue
             if action == "subscribe":
                 ws_manager.subscribe(websocket, channel)
                 await ws_manager.send_personal_message(
@@ -94,10 +104,29 @@ async def socket(
                     },
                     websocket,
                 )
-            print("WEBSOCKET ACTIVE CONNECTIONS LIST", ws_manager.active_connections)
-            print("WEBSOCKET ACTIVE CHANNELS LIST", ws_manager.channels)
     except WebSocketDisconnect:
-        ws_manager.disconnect(websocket)
+        logger.info("Client disconnected")
+        await ws_manager.send_personal_message(
+            websocket=websocket,
+            message={"type": "ws_error", "msg": "Client disconnected."},
+        )
+        await ws_manager.disconnect(
+            websocket=websocket,
+            close_status_code=status.WS_1005_NO_STATUS_RCVD,
+            close_reason="Client disconnected.",
+        )
     except Exception as e:
-        print("WebSocket exception:", repr(e))
-        ws_manager.disconnect(websocket)
+        logger.error(f"WebSocket exception: {repr(e)}")
+        await ws_manager.send_personal_message(
+            websocket=websocket,
+            message={"type": "ws_error", "msg": f"Error occurred: {repr(e)}"},
+        )
+        # Internal server error
+        await ws_manager.disconnect(
+            websocket=websocket,
+            close_status_code=status.WS_1005_NO_STATUS_RCVD,
+            close_reason="Error occurred.",
+        )
+        raise WebSocketException(
+            status.WS_1011_INTERNAL_ERROR, reason="Error occurred."
+        )
