@@ -41,9 +41,9 @@ class ConnectionManager:
         await websocket.send_json({"res_type": "Personal Message", "message": message})
 
     async def broadcast_channel(
-        self, websocket: WebSocket, channel: str, message: Dict
+        self, websocket: WebSocket | None, channel: str, message: Dict
     ):
-        if not self.is_subscribed(websocket, channel):
+        if websocket is not None and not self.is_subscribed(websocket, channel):
             await self.send_personal_message(
                 {
                     "type": "ws_notif",
@@ -51,6 +51,8 @@ class ConnectionManager:
                 },
                 websocket,
             )
+            return
+        if channel not in self.channels:
             return
         for connection in self.channels[channel]:
             await connection.send_json(
@@ -129,5 +131,25 @@ class ConnectionManager:
         return user
 
 
-def send_boards_to_members(ws_manager: ConnectionManager, db: AsyncSession):
-    pass
+class ClientConnectionManager:
+    def __init__(self, websocket: WebSocket, manager: ConnectionManager):
+        self.websocket = websocket
+        self.manager = manager
+
+    async def send_personal_message(self, message: Dict):
+        await self.manager.send_personal_message(message, self.websocket)
+
+    def subscribe(self, channel: str):
+        self.manager.subscribe(self.websocket, channel)
+
+    async def unsubscribe(self, channel: str):
+        await self.manager.unsubscribe(self.websocket, channel)
+
+    async def broadcast_channel(self, channel: str, message: Dict):
+        await self.manager.broadcast_channel(self.websocket, channel, message)
+
+    async def broadcast_global(self, message: Dict):
+        await self.manager.broadcast_global(message)
+
+
+manager = ConnectionManager()

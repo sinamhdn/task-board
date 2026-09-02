@@ -12,10 +12,9 @@ from ..schemas.users import UserPublicResponse
 from ..utils.auth import CurrentUser
 from ..utils.db import AsyncSession, get_async_db_session
 from ..utils.utilities import get_order_column
-from ..utils.ws import ConnectionManager
+from ..utils.ws import manager
 
 router = APIRouter(prefix="", tags=["boards"])
-ws_manager = ConnectionManager()
 
 
 @router.get("", response_model=list[BoardResponse])
@@ -234,7 +233,18 @@ async def add_new_board_member(
     board.members.append(user)
     await db.commit()
     await db.refresh(board, attribute_names=["owner"])
-    ws_manager.broadcast_channel()
+    user_data = UserPublicResponse.model_validate(user).model_dump()
+    board_data = BoardResponse.model_validate(board).model_dump()
+    manager.subscribe()
+    await manager.broadcast_channel(
+        channel=f"boards:{board.id}",
+        websocket=None,
+        message={
+            "event": "member_added",
+            "member_data": user_data,
+            "board_data": board_data,
+        },
+    )
     return user
 
 
