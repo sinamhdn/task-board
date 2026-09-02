@@ -55,7 +55,7 @@ class ConnectionManager:
         for connection in self.channels[channel]:
             await connection.send_json(
                 {
-                    "res_type": "Channel Broadcast",
+                    "res_type": "broadcast_channel",
                     "channel": channel,
                     "message": message,
                 }
@@ -67,7 +67,7 @@ class ConnectionManager:
     async def broadcast_global(self, message: Dict):
         for connection in self.active_connections:
             await connection.send_json(
-                {"res_type": "Global Broadcast", "message": message}
+                {"res_type": "broadcast_global", "message": message}
             )
 
     def subscribe(self, websocket: WebSocket, channel: str):

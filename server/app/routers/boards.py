@@ -4,8 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.orm import selectinload
 
-from server.app.models import members
-
+from ..models import members
 from ..models.boards import Board
 from ..models.users import User
 from ..schemas.boards import BoardCreate, BoardMemberAdd, BoardResponse
@@ -13,8 +12,10 @@ from ..schemas.users import UserPublicResponse
 from ..utils.auth import CurrentUser
 from ..utils.db import AsyncSession, get_async_db_session
 from ..utils.utilities import get_order_column
+from ..utils.ws import ConnectionManager
 
 router = APIRouter(prefix="", tags=["boards"])
+ws_manager = ConnectionManager()
 
 
 @router.get("", response_model=list[BoardResponse])
@@ -233,6 +234,7 @@ async def add_new_board_member(
     board.members.append(user)
     await db.commit()
     await db.refresh(board, attribute_names=["owner"])
+    ws_manager.broadcast_channel()
     return user
 
 
