@@ -31,7 +31,9 @@ async def socket(
     session: Annotated[AsyncSession, Depends(get_async_db_session)],
 ):
     # authenticate and connect websocket
-    user = await manager.authenticateUser(websocket=websocket, session=session)
+    user = await manager.connect_and_authenticate(websocket=websocket, session=session)
+    if user:
+        manager.add_connection(websocket=websocket, user_id=user.id)
     client_manager = ClientConnectionManager(websocket=websocket, manager=manager)
     # If authentication failed, user will be None and connection is already closed
     # Stop execution
@@ -68,7 +70,7 @@ async def socket(
                 )
                 continue
             if action == "subscribe":
-                client_manager.subscribe(channel=channel)
+                manager.subscribe(websocket=websocket, channel=channel)
                 await client_manager.send_personal_message(
                     {
                         "type": "ws_notif",
@@ -76,7 +78,7 @@ async def socket(
                     },
                 )
             elif action == "unsubscribe" and channel:
-                await client_manager.unsubscribe(channel=channel)
+                await manager.unsubscribe(websocket=websocket, channel=channel)
                 await client_manager.send_personal_message(
                     {
                         "type": "ws_notif",
@@ -90,7 +92,7 @@ async def socket(
                     message={"sender": user, "channel": channel, "content": message},
                 )
             elif action == "broadcast_global":
-                await client_manager.broadcast_global(message)
+                await client_manager.broadcast_global(user_id=user.id, message=message)
             else:
                 await client_manager.send_personal_message(
                     message={
@@ -103,6 +105,7 @@ async def socket(
         await client_manager.send_personal_message(
             message={"type": "ws_error", "msg": "Client disconnected."},
         )
+        manager.remove_connection(websocket=websocket, user_id=user.id)
         await manager.disconnect(
             websocket=websocket,
             close_status_code=status.WS_1005_NO_STATUS_RCVD,
@@ -114,6 +117,7 @@ async def socket(
             message={"type": "ws_error", "msg": f"Error occurred: {repr(e)}"},
         )
         # Internal server error
+        manager.remove_connection(websocket=websocket, user_id=user.id)
         await manager.disconnect(
             websocket=websocket,
             close_status_code=status.WS_1005_NO_STATUS_RCVD,

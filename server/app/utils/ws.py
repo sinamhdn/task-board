@@ -4,6 +4,7 @@ from fastapi import (
     WebSocket,
     status,
 )
+from httpx import delete
 
 from ..crud.users import UserCRUD
 from ..utils.auth import verify_access_token
@@ -12,12 +13,11 @@ from .db import AsyncSession
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: Set[WebSocket] = set()
+        self.active_connections: Dict[int, Set[WebSocket]] = {}
         self.channels: Dict[str, Set[WebSocket]] = {}
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
-        self.active_connections.add(websocket)
         await self.send_personal_message(
             {
                 "field": "ws_notif",
@@ -28,22 +28,34 @@ class ConnectionManager:
         # if any(websocket in connections for connections in self.channels.values()):
 
     async def disconnect(
-        self, websocket: WebSocket, close_status_code, close_reason: str
+        self,
+        websocket: WebSocket,
+        close_status_code: int,
+        close_reason: str,
     ):
-        self.active_connections.discard(websocket)
+
+        await websocket.close(code=close_status_code, reason=close_reason)
+
+    def add_connection(self, websocket: WebSocket, user_id: int):
+        self.active_connections[user_id].add(websocket)
+
+    def remove_connection(self, websocket: WebSocket, user_id: int):
+        self.active_connections[user_id].discard(websocket)
+        if self.active_connections[user_id] == set():
+            self.active_connections.pop(user_id, None)
+            # del self.active_connections[user_id]
         for channel in list(self.channels.keys()):
             self.channels[channel].discard(websocket)
             if not self.channels[channel]:
                 del self.channels[channel]
-        await websocket.close(code=close_status_code, reason=close_reason)
 
     async def send_personal_message(self, message: Dict, websocket: WebSocket):
         await websocket.send_json({"res_type": "Personal Message", "message": message})
 
     async def broadcast_channel(
-        self, websocket: WebSocket | None, channel: str, message: Dict
+        self, websocket: WebSocket, channel: str, message: Dict
     ):
-        if websocket is not None and not self.is_subscribed(websocket, channel):
+        if not self.is_subscribed(websocket, channel):
             await self.send_personal_message(
                 {
                     "type": "ws_notif",
@@ -51,8 +63,6 @@ class ConnectionManager:
                 },
                 websocket,
             )
-            return
-        if channel not in self.channels:
             return
         for connection in self.channels[channel]:
             await connection.send_json(
@@ -66,8 +76,10 @@ class ConnectionManager:
         #     for connection in self.channels[channel]:
         #         await connection.send_json(message)
 
-    async def broadcast_global(self, message: Dict):
-        for connection in self.active_connections:
+    async def broadcast_global(self, user_id: int, message: Dict):
+        if not self.active_connections.get(user_id):
+            return
+        for connection in self.active_connections[user_id]:
             await connection.send_json(
                 {"res_type": "broadcast_global", "message": message}
             )
@@ -95,7 +107,9 @@ class ConnectionManager:
     def is_subscribed(self, websocket: WebSocket, channel: str):
         return channel in self.channels and websocket in self.channels[channel]
 
-    async def authenticateUser(self, websocket: WebSocket, session: AsyncSession):
+    async def connect_and_authenticate(
+        self, websocket: WebSocket, session: AsyncSession
+    ):
         await self.connect(websocket)
         # we can also send token in the first message after connection which is more secure than query params
         # raw_data = await websocket.receive_text()
@@ -137,19 +151,17 @@ class ClientConnectionManager:
         self.manager = manager
 
     async def send_personal_message(self, message: Dict):
-        await self.manager.send_personal_message(message, self.websocket)
+        await self.manager.send_personal_message(
+            websocket=self.websocket, message=message
+        )
 
-    def subscribe(self, channel: str):
-        self.manager.subscribe(self.websocket, channel)
-
-    async def unsubscribe(self, channel: str):
-        await self.manager.unsubscribe(self.websocket, channel)
+    async def broadcast_global(self, user_id: int, message: Dict):
+        await self.manager.broadcast_global(message=message, user_id=user_id)
 
     async def broadcast_channel(self, channel: str, message: Dict):
-        await self.manager.broadcast_channel(self.websocket, channel, message)
-
-    async def broadcast_global(self, message: Dict):
-        await self.manager.broadcast_global(message)
+        await self.manager.broadcast_channel(
+            websocket=self.websocket, channel=channel, message=message
+        )
 
 
 manager = ConnectionManager()
