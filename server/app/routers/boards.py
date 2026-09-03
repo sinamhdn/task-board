@@ -235,16 +235,17 @@ async def add_new_board_member(
     await db.refresh(board, attribute_names=["owner"])
     user_data = UserPublicResponse.model_validate(user).model_dump()
     board_data = BoardResponse.model_validate(board).model_dump()
-    manager.subscribe()
-    await manager.broadcast_channel(
-        channel=f"boards:{board.id}",
-        websocket=None,
-        message={
-            "event": "member_added",
-            "member_data": user_data,
-            "board_data": board_data,
-        },
-    )
+    for connection_key in manager.active_connections.keys():
+        if connection_key in manager.active_connections.keys():
+            await manager.broadcast_channel(
+                channel=f"boards:{board.id}",
+                websocket=list(manager.active_connections[connection_key])[0],
+                message={
+                    "event": "member_added",
+                    "member_data": user_data,
+                    "board_data": board_data,
+                },
+            )
     return user
 
 
