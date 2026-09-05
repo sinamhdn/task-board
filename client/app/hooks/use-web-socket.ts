@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "~/state/hooks";
 import { setData, setStatus as setSocketStatus } from "~/state/socketSlice";
 import { useAppSelector } from "../state/hooks";
 
 interface WebSocketHookInput {
   wsurl: string | null;
+  token: string | null;
   retryAtempts?: number;
   retryInterval?: number;
 }
@@ -18,6 +19,7 @@ type SendFunction = (data: object) => void;
 
 export function useWebSocket({
   wsurl,
+  token,
   retryAtempts: defaultRetryAttempts = 3,
   retryInterval = 1500,
 }: WebSocketHookInput) {
@@ -33,11 +35,23 @@ export function useWebSocket({
   const shouldReconnectRef = useRef(true);
   const reconnectAttemptsRef = useRef(0);
 
+  const [wsURL, setWsUrl] = useState(import.meta.env.VITE_SOCKET_URL + token);
+
   const dispatch = useAppDispatch();
   const socketState = useAppSelector((state) => state.socket.status);
 
+  useEffect(() => {
+    setWsUrl(import.meta.env.VITE_SOCKET_URL + token);
+  }, [token]);
+
   const connect = useCallback(() => {
     // ✅ Guard: reject empty or malformed URLs
+    if (!token) {
+      console.warn("Singin first");
+      dispatch(setSocketStatus("close"));
+      return;
+    }
+
     if (!wsurl) {
       console.warn("Websocket url not available");
       dispatch(setSocketStatus("close"));
@@ -55,7 +69,7 @@ export function useWebSocket({
       return;
     }
     try {
-      const ws = new WebSocket(wsurl);
+      const ws = new WebSocket(wsURL);
       wsRef.current = ws;
       // setSocketState("connecting");
       dispatch(setSocketStatus("connecting"));
