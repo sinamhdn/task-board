@@ -9,10 +9,10 @@ interface WebSocketHookInput {
   retryInterval?: number;
 }
 
-interface WebSocketDataRecieved {
-  message: string;
-  timestamp: number;
-}
+// interface WebSocketDataRecieved {
+//   message: string;
+//   timestamp: number;
+// }
 
 type SendFunction = (data: object) => void;
 

@@ -66,14 +66,23 @@ export function logout() {
 }
 
 export function getToken() {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return null; // or return undefined
+  }
   return localStorage.getItem("jwt");
 }
 
 export function setToken(token: string) {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return null; // or return undefined
+  }
   localStorage.setItem("jwt", token);
 }
 
 export function removeToken() {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return null; // or return undefined
+  }
   localStorage.removeItem("jwt");
 }
 
