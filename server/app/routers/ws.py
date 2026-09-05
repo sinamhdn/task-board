@@ -46,14 +46,17 @@ async def socket(
                 payload_pydanthic = adapter.validate_python(recieved_payload)
                 payload = payload_pydanthic.model_dump()
                 # FOR TESTING
-                await client_manager.send_personal_message(payload)
+                await manager.send_personal_message(
+                    websocket=websocket, message=payload
+                )
                 # FOR TESTING
                 action = payload.get("action")
                 channel = payload.get("channel")
                 message = payload.get("message")
             except json.JSONDecodeError as e:
                 logger.info("invalid json format")
-                await client_manager.send_personal_message(
+                await manager.send_personal_message(
+                    websocket=websocket,
                     message={
                         "type": "ws_error",
                         "msg": f"Invalid JSON format: {repr(e)}",
@@ -62,7 +65,8 @@ async def socket(
                 continue
             except ValidationError as e:
                 logger.info("validation error")
-                await client_manager.send_personal_message(
+                await manager.send_personal_message(
+                    websocket=websocket,
                     message={
                         "type": "ws_error",
                         "msg": f"Incorrect message format: {repr(e)}",
@@ -71,30 +75,34 @@ async def socket(
                 continue
             if action == "subscribe":
                 manager.subscribe(websocket=websocket, channel=channel)
-                await client_manager.send_personal_message(
-                    {
+                await manager.send_personal_message(
+                    websocket=websocket,
+                    message={
                         "type": "ws_notif",
                         "msg": f"Subscribed to channel: {channel}",
                     },
                 )
             elif action == "unsubscribe" and channel:
                 await manager.unsubscribe(websocket=websocket, channel=channel)
-                await client_manager.send_personal_message(
-                    {
+                await manager.send_personal_message(
+                    websocket=websocket,
+                    message={
                         "type": "ws_notif",
                         "msg": f"Unsubscribed from channel: {channel}",
                     },
                 )
             elif action == "broadcast_channel" and channel and message:
                 # Client wants to broadcast a message to a specific channel
-                await client_manager.broadcast_channel(
+                await manager.broadcast_channel(
+                    websocket=websocket,
                     channel=channel,
                     message={"sender": user, "channel": channel, "content": message},
                 )
             elif action == "broadcast_global":
-                await client_manager.broadcast_global(user_id=user.id, message=message)
+                await manager.broadcast_global(user_id=user.id, message=message)
             else:
-                await client_manager.send_personal_message(
+                await manager.send_personal_message(
+                    websocket=websocket,
                     message={
                         "type": "ws_notif",
                         "msg": "Unknown action or missing fields",
@@ -102,7 +110,8 @@ async def socket(
                 )
     except WebSocketDisconnect:
         logger.info("Client disconnected")
-        await client_manager.send_personal_message(
+        await manager.send_personal_message(
+            websocket=websocket,
             message={"type": "ws_error", "msg": "Client disconnected."},
         )
         manager.remove_connection(websocket=websocket, user_id=user.id)
@@ -113,7 +122,8 @@ async def socket(
         )
     except Exception as e:
         logger.error(f"WebSocket exception: {repr(e)}")
-        await client_manager.send_personal_message(
+        await manager.send_personal_message(
+            websocket=websocket,
             message={"type": "ws_error", "msg": f"Error occurred: {repr(e)}"},
         )
         # Internal server error

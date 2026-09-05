@@ -5,6 +5,7 @@ import {
   getAllBoards,
   deleteBoard,
   LoadingStatus as BoardLoadingStatusEnum,
+  addBoard,
 } from "~/state/boardSlice";
 import { getToken } from "~/utils";
 import classnames from "classnames";
@@ -27,6 +28,7 @@ function BoardAll() {
   const getBoardsLoadingStatus = useAppSelector(
     (state) => state.board.getBoardsLoadingStatus,
   );
+  const wsData = useAppSelector((state) => state.socket.data);
 
   const iconClasses = classnames({
     fa: true,
@@ -43,6 +45,11 @@ function BoardAll() {
   useEffect(() => {
     console.log("boards returned.", boards);
   }, [boards]);
+
+  useEffect(() => {
+    if (!wsData) return;
+    if (wsData.event === "member_added") dispatch(addBoard(wsData.board_data));
+  }, [wsData]);
 
   // Show loading state first
   if (getBoardsLoadingStatus === BoardLoadingStatusEnum.pending) {

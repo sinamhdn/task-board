@@ -1,4 +1,4 @@
-from typing import Dict, Set
+from typing import Dict, List, Set
 
 from fastapi import (
     WebSocket,
@@ -13,7 +13,7 @@ from .db import AsyncSession
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: Dict[int, Set[WebSocket]] = {}
+        self.active_connections: Dict[int, List[WebSocket]] = {}
         self.channels: Dict[str, Set[WebSocket]] = {}
 
     async def connect(self, websocket: WebSocket):
@@ -37,10 +37,10 @@ class ConnectionManager:
         await websocket.close(code=close_status_code, reason=close_reason)
 
     def add_connection(self, websocket: WebSocket, user_id: int):
-        self.active_connections[user_id].add(websocket)
+        self.active_connections.setdefault(user_id, []).append(websocket)
 
     def remove_connection(self, websocket: WebSocket, user_id: int):
-        self.active_connections[user_id].discard(websocket)
+        self.active_connections[user_id].remove(websocket)
         if self.active_connections[user_id] == set():
             self.active_connections.pop(user_id, None)
             # del self.active_connections[user_id]

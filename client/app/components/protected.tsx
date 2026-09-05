@@ -3,13 +3,13 @@ import type { Route } from "./+types/protected";
 import {
   getCurrentUser,
   setCurrentUser,
-  type User,
+  type UserInterface,
 } from "~/state/sessionSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getToken } from "~/utils";
 import { useEffect } from "react";
 import LoadingSpinner from "./loading-spinner";
-import { useActiveWebsocket } from "~/providers/websocket-provider";
+import { useWebsocketContext } from "~/providers/websocket-provider";
 import { fetchCurrentUser, removeToken } from "~/utils/auth";
 // import { useEffect } from "react";
 // import { setCurrentUser } from "~/state/sessionSlice";
@@ -51,7 +51,7 @@ export function HydrateFallback() {
 
 export default function ProtectedLayout() {
   const { currentUser: loaderUser } = useLoaderData<typeof clientLoader>();
-  const { isConnected, sendMessage } = useActiveWebsocket();
+  const { isConnected, sendMessage } = useWebsocketContext();
   const dispatch = useAppDispatch();
 
   useEffect(() => {

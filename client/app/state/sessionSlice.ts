@@ -4,7 +4,7 @@ import axios from "axios";
 import { fetchCurrentUser } from "~/utils/auth";
 import { setError } from "./errorSlice";
 
-export interface User {
+export interface UserInterface {
   id: number;
   uid: string;
   full_name: string;
@@ -17,14 +17,14 @@ export interface User {
   updated_at: string;
 }
 
-export interface Token {
+export interface TokenInterface {
   access_token: string;
   token_type: string;
 }
 
 export interface SessionState {
   websocket: WebSocket | null;
-  currentUser: User | null;
+  currentUser: UserInterface | null;
   authStatus: string | null;
   userStatus: string | null;
 }
@@ -51,7 +51,7 @@ const sessionSlice = createSlice({
   name: "session",
   initialState: initialState,
   reducers: {
-    setCurrentUser: (state, action: PayloadAction<User | null>) => {
+    setCurrentUser: (state, action: PayloadAction<UserInterface | null>) => {
       state.currentUser = action.payload;
     },
     clearCurrentUser: (state) => {
@@ -99,7 +99,7 @@ const sessionSlice = createSlice({
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.userStatus = LoadingStatus.fulfilled;
-        state.currentUser = action.payload as User;
+        state.currentUser = action.payload as UserInterface;
         console.log(
           "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN GETCURRENTUSER?",
           action.payload,
@@ -119,7 +119,7 @@ const sessionSlice = createSlice({
 });
 
 export const signinUser = createAsyncThunk<
-  Token,
+  TokenInterface,
   {
     email: string;
     password: string;
@@ -164,7 +164,7 @@ export const signinUser = createAsyncThunk<
 });
 
 export const signupUser = createAsyncThunk<
-  User,
+  UserInterface,
   {
     first_name: string;
     last_name: string;
@@ -202,7 +202,7 @@ export const signupUser = createAsyncThunk<
 });
 
 export const getCurrentUser = createAsyncThunk<
-  User,
+  UserInterface,
   string,
   {
     rejectValue: BackendValidationError[];

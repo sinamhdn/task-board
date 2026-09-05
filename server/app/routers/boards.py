@@ -1,3 +1,4 @@
+from dataclasses import field
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -233,19 +234,32 @@ async def add_new_board_member(
     board.members.append(user)
     await db.commit()
     await db.refresh(board, attribute_names=["owner"])
-    user_data = UserPublicResponse.model_validate(user).model_dump()
-    board_data = BoardResponse.model_validate(board).model_dump()
-    for connection_key in manager.active_connections.keys():
-        if connection_key in manager.active_connections.keys():
+
+    # add new added member to board channel if they are online
+    user_data = {
+        field: getattr(user, field) for field in UserPublicResponse.model_fields.keys()
+    }
+    board_data = {
+        field: getattr(board, field) for field in BoardResponse.model_fields.keys()
+    }
+    channel_name = f"boards:{board.id}"
+    if user.id in manager.active_connections.keys():
+        for connection in manager.active_connections[user.id]:
+            if channel_name in manager.channels.keys():
+                manager.channels[channel_name].add(connection)
+        for websocket in manager.channels[channel_name]:
             await manager.broadcast_channel(
                 channel=f"boards:{board.id}",
-                websocket=list(manager.active_connections[connection_key])[0],
+                websocket=websocket,
                 message={
                     "event": "member_added",
                     "member_data": user_data,
                     "board_data": board_data,
                 },
             )
+    else:
+        print("Member is not online.")
+
     return user
 
 

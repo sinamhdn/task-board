@@ -1,12 +1,22 @@
 import { createSlice } from "@reduxjs/toolkit";
+import type {
+  RecievedBoardMemberInterface,
+  RecievedBoardsInterface,
+} from "./boardSlice";
 
 export interface SocketError {
   type: string;
   msg: string;
 }
 
+export interface EventMemberAddedInterface {
+  event: string;
+  member_data: RecievedBoardMemberInterface;
+  board_data: RecievedBoardsInterface;
+}
+
 export interface SocketState {
-  data: object | null;
+  data: EventMemberAddedInterface | null;
   error: SocketError | null;
   status: string | null;
 }

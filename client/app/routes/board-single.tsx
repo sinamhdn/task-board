@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { redirect, useLocation, useParams } from "react-router";
 import LoadingSpinner from "~/components/loading-spinner";
 import BoardAddNewList from "~/components/board-add-new-list";
-import { useActiveWebsocket } from "~/providers/websocket-provider";
+import { useWebsocketContext } from "~/providers/websocket-provider";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getBoardById } from "~/state/boardSlice";
 import { getToken } from "~/utils";
@@ -20,7 +20,7 @@ function BoardSingle() {
   const { id: urlParamBoardId } = useParams();
   const location = useLocation();
   const { board: locationBoard } = location.state;
-  const { isConnected, sendMessage, disconnect } = useActiveWebsocket();
+  const { isConnected, sendMessage, disconnect } = useWebsocketContext();
   const token = getToken();
 
   const board = useAppSelector((state) => {

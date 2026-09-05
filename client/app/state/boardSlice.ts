@@ -67,6 +67,9 @@ const boardSlice = createSlice({
       state.addBoardMemberLoadingStatus = null;
       state.deleteBoardMemberLoadingStatus = null;
     },
+    addBoard: (state, action) => {
+      state.boards.push(action.payload);
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -349,5 +352,7 @@ export const deleteBoardMember = createAsyncThunk<
     }
   },
 );
+
+export const { resetBoards, addBoard } = boardSlice.actions;
 
 export default boardSlice.reducer;

@@ -38,7 +38,13 @@ export function useWebSocket({
 
   const connect = useCallback(() => {
     // ✅ Guard: reject empty or malformed URLs
-    if (!wsurl || (!wsurl.startsWith("ws://") && !wsurl.startsWith("wss://"))) {
+    if (!wsurl) {
+      console.warn("Websocket url not available");
+      dispatch(setSocketStatus("close"));
+      return;
+    }
+
+    if (!wsurl.startsWith("ws://") && !wsurl.startsWith("wss://")) {
       console.warn("Invalid WebSocket URL, skipping connection:", wsurl);
       dispatch(setSocketStatus("close"));
       return;

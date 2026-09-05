@@ -27,7 +27,7 @@ export function WebsocketProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = getToken();
     if (token) {
-      setWsUrl(import.meta.env.VITE_SOCKET_URL + "?access_token=" + token);
+      setWsUrl(import.meta.env.VITE_SOCKET_URL + token);
     }
   }, []);
 
@@ -49,7 +49,7 @@ export function WebsocketProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useActiveWebsocket() {
+export function useWebsocketContext() {
   const context = useContext(WebsocketContext);
   if (!context) {
     throw new Error(
