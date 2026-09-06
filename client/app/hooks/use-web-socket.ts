@@ -35,14 +35,8 @@ export function useWebSocket({
   const shouldReconnectRef = useRef(true);
   const reconnectAttemptsRef = useRef(0);
 
-  const [wsURL, setWsUrl] = useState(import.meta.env.VITE_SOCKET_URL + token);
-
   const dispatch = useAppDispatch();
   const socketState = useAppSelector((state) => state.socket.status);
-
-  useEffect(() => {
-    setWsUrl(import.meta.env.VITE_SOCKET_URL + token);
-  }, [token]);
 
   const connect = useCallback(() => {
     // ✅ Guard: reject empty or malformed URLs
@@ -58,7 +52,9 @@ export function useWebSocket({
       return;
     }
 
-    if (!wsurl.startsWith("ws://") && !wsurl.startsWith("wss://")) {
+    const fullURL = wsurl + token;
+
+    if (!fullURL.startsWith("ws://") && !fullURL.startsWith("wss://")) {
       console.warn("Invalid WebSocket URL, skipping connection:", wsurl);
       dispatch(setSocketStatus("close"));
       return;
@@ -69,7 +65,7 @@ export function useWebSocket({
       return;
     }
     try {
-      const ws = new WebSocket(wsURL);
+      const ws = new WebSocket(fullURL);
       wsRef.current = ws;
       // setSocketState("connecting");
       dispatch(setSocketStatus("connecting"));

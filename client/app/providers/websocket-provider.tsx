@@ -25,8 +25,9 @@ export function WebsocketProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   useEffect(() => {
     const accessToken = getToken();
+    console.log(`ACCESS TOKEN INSIDE WEBSOCKET PROVIDER ${accessToken}`);
     setAccessToken(accessToken);
-  });
+  }, []);
   const { disconnect, isConnected, isConnecting, sendMessage } = useWebSocket({
     wsurl: import.meta.env.VITE_SOCKET_URL,
     token: accessToken,
