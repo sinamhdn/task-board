@@ -17,6 +17,7 @@ class ConnectionManager:
         self.channels: Dict[str, Set[WebSocket]] = {}
 
     async def connect(self, websocket: WebSocket):
+        print(f"WEBSOCKET IS CONNECTED OR NOT ====>>>> {websocket}")
         await websocket.accept()
         await self.send_personal_message(
             {

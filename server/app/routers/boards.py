@@ -259,6 +259,7 @@ async def add_new_board_member(
             )
     else:
         print("Member is not online.")
+    print(f"ACTIVE CONNECTIONS +++>>> {manager.active_connections}")
 
     return user
 

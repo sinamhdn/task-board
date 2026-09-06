@@ -93,6 +93,7 @@ export function useWebSocket({
       };
 
       ws.onmessage = (event) => {
+        console.log(`WEBSOCKET ONMESSAGE ---> ${event} ${event.data}`);
         try {
           const msg = convertJSONtoObject(event.data);
           // setDataRecieved({
@@ -130,7 +131,7 @@ export function useWebSocket({
       // setSocketState("close");
       dispatch(setSocketStatus("close"));
     }
-  }, [wsurl, defaultRetryAttempts, retryInterval]);
+  }, [wsurl, token, defaultRetryAttempts, retryInterval]);
 
   //cleanup
   const disconnect = useCallback(() => {
