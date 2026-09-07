@@ -32,13 +32,11 @@ async def socket(
 ):
     # authenticate and connect websocket
     user = await manager.connect_and_authenticate(websocket=websocket, session=session)
-    if user:
-        manager.add_connection(websocket=websocket, user_id=user.id)
-    client_manager = ClientConnectionManager(websocket=websocket, manager=manager)
-    # If authentication failed, user will be None and connection is already closed
-    # Stop execution
     if user is None:
         return
+    manager.add_connection(websocket=websocket, user_id=user.id)
+    # If authentication failed, user will be None and connection is already closed
+    # Stop execution
     try:
         while True:
             try:
@@ -110,10 +108,6 @@ async def socket(
                 )
     except WebSocketDisconnect:
         logger.info("Client disconnected")
-        await manager.send_personal_message(
-            websocket=websocket,
-            message={"type": "ws_error", "msg": "Client disconnected."},
-        )
         manager.remove_connection(websocket=websocket, user_id=user.id)
         await manager.disconnect(
             websocket=websocket,
@@ -121,18 +115,15 @@ async def socket(
             close_reason="Client disconnected.",
         )
     except Exception as e:
-        logger.error(f"WebSocket exception: {repr(e)}")
-        await manager.send_personal_message(
-            websocket=websocket,
-            message={"type": "ws_error", "msg": f"Error occurred: {repr(e)}"},
-        )
-        # Internal server error
+        logger.exception("WebSocket exception")
         manager.remove_connection(websocket=websocket, user_id=user.id)
         await manager.disconnect(
             websocket=websocket,
-            close_status_code=status.WS_1005_NO_STATUS_RCVD,
-            close_reason="Error occurred.",
+            close_status_code=status.WS_1011_INTERNAL_ERROR,
+            close_reason="Internal server error.",
         )
-        raise WebSocketException(
-            status.WS_1011_INTERNAL_ERROR, reason="Error occurred."
+    finally:
+        manager.remove_connection(
+            websocket=websocket,
+            user_id=user.id,
         )
