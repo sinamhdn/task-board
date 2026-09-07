@@ -22,11 +22,23 @@ interface WebsocketContextType {
 const WebsocketContext = createContext<WebsocketContextType | null>(null);
 
 export function WebsocketProvider({ children }: { children: ReactNode }) {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const token = getToken();
+      console.log("🔑 Initial token read:", token);
+      return token;
+    }
+    return null;
+  });
   useEffect(() => {
-    const accessToken = getToken();
-    console.log(`ACCESS TOKEN INSIDE WEBSOCKET PROVIDER ${accessToken}`);
-    setAccessToken(accessToken);
+    if (typeof window === "undefined") return;
+    const handleStorageChange = () => {
+      const newToken = getToken();
+      console.log("🔄 Token updated from storage:", newToken);
+      setAccessToken(newToken);
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
   const { disconnect, isConnected, isConnecting, sendMessage } = useWebSocket({
     wsurl: import.meta.env.VITE_SOCKET_URL,

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "~/state/hooks";
 import { setData, setStatus as setSocketStatus } from "~/state/socketSlice";
+import { getToken } from "~/utils";
 import { useAppSelector } from "../state/hooks";
 
 interface WebSocketHookInput {
@@ -53,6 +54,9 @@ export function useWebSocket({
     }
 
     const fullURL = wsurl + token;
+    console.log(
+      `FULL URL ::: ${fullURL} TOKEN ::: ${token} getToken():::${getToken()}`,
+    );
 
     if (!fullURL.startsWith("ws://") && !fullURL.startsWith("wss://")) {
       console.warn("Invalid WebSocket URL, skipping connection:", wsurl);

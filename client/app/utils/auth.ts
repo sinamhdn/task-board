@@ -65,11 +65,15 @@ export function logout() {
   window.location.href = "/";
 }
 
-export function getToken() {
-  // if (typeof window === "undefined" || !window.localStorage) {
-  //   return null; // or return undefined
-  // }
-  return localStorage.getItem("jwt");
+export function getToken(): string | null {
+  if (typeof window === "undefined" || !window.localStorage) return null;
+  try {
+    const token = localStorage.getItem("jwt") || sessionStorage.getItem("jwt");
+    return token;
+  } catch (error) {
+    console.error("Error reading token from storage:", error);
+    return null;
+  }
 }
 
 export function setToken(token: string) {

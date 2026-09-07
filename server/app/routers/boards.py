@@ -242,6 +242,7 @@ async def add_new_board_member(
     board_data = {
         field: getattr(board, field) for field in BoardResponse.model_fields.keys()
     }
+    print(f"ACTIVE CONNECTIONS +++>>> {manager.active_connections}")
     channel_name = f"boards:{board.id}"
     if user.id in manager.active_connections.keys():
         for connection in manager.active_connections[user.id]:
@@ -249,7 +250,7 @@ async def add_new_board_member(
                 manager.channels[channel_name].add(connection)
         for websocket in manager.channels[channel_name]:
             await manager.broadcast_channel(
-                channel=f"boards:{board.id}",
+                channel=channel_name,
                 websocket=websocket,
                 message={
                     "event": "member_added",
