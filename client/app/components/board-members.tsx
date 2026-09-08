@@ -1,32 +1,28 @@
-import { redirect } from "react-router";
 import {
   deleteBoardMember,
   type RecievedBoardsInterface,
 } from "~/state/boardSlice";
 import Tooltip from "@mui/material/Tooltip";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import BoardMemberAddButton from "./board-member-add-btn";
 import BoardMemberAddForm from "./board-member-add-form";
 import { useAppDispatch } from "~/state/hooks";
+import type { UserInterface } from "~/state/sessionSlice";
+import LoadingSpinner from "./loading-spinner";
 import { getToken } from "~/utils";
-import type { User } from "~/state/sessionSlice";
 
 function BoardMembers({
   board,
   currentUser,
 }: {
   board: RecievedBoardsInterface;
-  currentUser: User;
+  currentUser: UserInterface;
 }) {
   const [showFrom, setShowForm] = useState(false);
   const dispatch = useAppDispatch();
-  const [token, setToken] = useState("");
+  const token = getToken();
 
-  useEffect(() => {
-    const token = getToken();
-    if (token) setToken(token);
-    else throw redirect("/signin");
-  }, []);
+  if (!token) return <LoadingSpinner />;
 
   const handleAddNewMemberClick = () => {
     setShowForm(true);
@@ -83,7 +79,7 @@ function BoardMembers({
                 />
               )}
             </Tooltip>
-            {/* <p>{member.full_name}</p> */}
+            {/* <p>member.fullname</p> */}
           </li>
         ))}
       </ul>

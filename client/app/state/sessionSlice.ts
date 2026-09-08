@@ -34,7 +34,7 @@ export interface BackendValidationError {
   msg: string;
 }
 
-export const LoadingStatus = {
+export const SessionLoadingStatusEnum = {
   fulfilled: "fulfilled",
   pending: "pending",
   rejected: "rejected",
@@ -61,7 +61,7 @@ const sessionSlice = createSlice({
       state.authStatus = action.payload?.auth;
       state.userStatus = action.payload?.user;
     },
-    clearStatus: (state) => {
+    clearSessionStatus: (state) => {
       state.authStatus = null;
       state.userStatus = null;
     },
@@ -69,7 +69,7 @@ const sessionSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(signinUser.fulfilled, (state, action) => {
-        state.authStatus = LoadingStatus.fulfilled;
+        state.authStatus = SessionLoadingStatusEnum.fulfilled;
         // state.currentUser = action.payload as User;
         console.log(
           "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
@@ -77,13 +77,13 @@ const sessionSlice = createSlice({
         );
       })
       .addCase(signinUser.pending, (state) => {
-        state.authStatus = LoadingStatus.pending;
+        state.authStatus = SessionLoadingStatusEnum.pending;
       })
       .addCase(signinUser.rejected, (state, action) => {
-        state.authStatus = LoadingStatus.rejected;
+        state.authStatus = SessionLoadingStatusEnum.rejected;
       })
       .addCase(signupUser.fulfilled, (state, action) => {
-        state.authStatus = LoadingStatus.fulfilled;
+        state.authStatus = SessionLoadingStatusEnum.fulfilled;
         // state.currentUser = action.payload as User;
         console.log(
           "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER?",
@@ -91,14 +91,14 @@ const sessionSlice = createSlice({
         );
       })
       .addCase(signupUser.pending, (state) => {
-        state.authStatus = LoadingStatus.pending;
+        state.authStatus = SessionLoadingStatusEnum.pending;
       })
       .addCase(signupUser.rejected, (state, action) => {
-        state.authStatus = LoadingStatus.rejected;
+        state.authStatus = SessionLoadingStatusEnum.rejected;
         // console.log(action.payload);
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
-        state.userStatus = LoadingStatus.fulfilled;
+        state.userStatus = SessionLoadingStatusEnum.fulfilled;
         state.currentUser = action.payload as UserInterface;
         console.log(
           "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN GETCURRENTUSER?",
@@ -110,10 +110,10 @@ const sessionSlice = createSlice({
         );
       })
       .addCase(getCurrentUser.pending, (state) => {
-        state.userStatus = LoadingStatus.pending;
+        state.userStatus = SessionLoadingStatusEnum.pending;
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
-        state.userStatus = LoadingStatus.rejected;
+        state.userStatus = SessionLoadingStatusEnum.rejected;
       });
   },
 });
@@ -214,19 +214,6 @@ export const getCurrentUser = createAsyncThunk<
   //   ]);
   // }
   try {
-    // const response = await axios.get(
-    //   `${import.meta.env.VITE_API_URL}/api/v1/users/me`,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //   },
-    // );
-    // console.log(
-    //   "sessionSlice.ts:: WHAT DOES RESPONSE>DATA RETURNS IN GETCURRENTUSER",
-    //   response.data,
-    // );
-    // return response.data;
     return await fetchCurrentUser(token);
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -242,7 +229,11 @@ export const getCurrentUser = createAsyncThunk<
   }
 });
 
-export const { setCurrentUser, clearCurrentUser, setStatus, clearStatus } =
-  sessionSlice.actions;
+export const {
+  setCurrentUser,
+  clearCurrentUser,
+  setStatus,
+  clearSessionStatus,
+} = sessionSlice.actions;
 
 export default sessionSlice.reducer;

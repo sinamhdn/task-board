@@ -20,11 +20,11 @@ function BoardMemberAddForm({
   token: string;
   handleCancelAddNewBoardClick: () => void;
 }) {
-  const dispatch = useAppDispatch();
-  const errors = useAppSelector((state: RootState) => state.errors);
   const addBoardMemberLoadingStatus = useAppSelector(
     (state) => state.board.addBoardMemberLoadingStatus,
   );
+  const errors = useAppSelector((state: RootState) => state.errors);
+  const dispatch = useAppDispatch();
 
   const methods = useForm<{ board_member_email: string }>({
     defaultValues: {

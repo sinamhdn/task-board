@@ -1,8 +1,10 @@
-import { LoadingStatus } from "~/state/sessionSlice";
+import {
+  clearSessionStatus,
+  SessionLoadingStatusEnum,
+} from "~/state/sessionSlice";
 import { useSelector } from "react-redux";
 import type { RootState } from "~/state/store";
 import { useAppDispatch } from "~/state/hooks";
-import { clearStatus } from "~/state/sessionSlice";
 import { clearError } from "~/state/errorSlice";
 import { useEffect, useState } from "react";
 
@@ -14,22 +16,22 @@ function FormSubmissionStatusModal() {
   );
 
   useEffect(() => {
-    if (authLoadingStatus === LoadingStatus.fulfilled) {
+    if (authLoadingStatus === SessionLoadingStatusEnum.fulfilled) {
       setFormSubmitState("fulfilled");
       const timer = setTimeout(() => {
         setFormSubmitState("");
         dispatch(clearError());
-        dispatch(clearStatus());
+        dispatch(clearSessionStatus());
       }, 5000); // 5 seconds
       return () => clearTimeout(timer); // Cleanup timeout if componeauthLoadingStatusnt unmounts
     }
 
-    if (authLoadingStatus === LoadingStatus.rejected) {
+    if (authLoadingStatus === SessionLoadingStatusEnum.rejected) {
       setFormSubmitState("rejected");
       const timer = setTimeout(() => {
         setFormSubmitState("");
         dispatch(clearError());
-        dispatch(clearStatus());
+        dispatch(clearSessionStatus());
       }, 5000); // 5 seconds
       return () => clearTimeout(timer); // Cleanup timeout if component unmounts
     }
@@ -44,7 +46,7 @@ function FormSubmissionStatusModal() {
           onClick={() => {
             setFormSubmitState("");
             dispatch(clearError());
-            dispatch(clearStatus());
+            dispatch(clearSessionStatus());
           }}
           className="mr-5 pl-1 self-start"
           style={{ background: "none", border: "none", cursor: "pointer" }}
@@ -63,7 +65,7 @@ function FormSubmissionStatusModal() {
           onClick={() => {
             setFormSubmitState("");
             dispatch(clearError());
-            dispatch(clearStatus());
+            dispatch(clearSessionStatus());
           }}
           className="mr-5 pl-1 self-start"
           style={{ background: "none", border: "none", cursor: "pointer" }}

@@ -7,6 +7,9 @@ import {
 } from "react";
 import { useWebSocket } from "~/hooks";
 import { getToken } from "~/utils";
+import type { Route } from "../+types/root";
+import { useLoaderData } from "react-router";
+import { useAppSelector } from "~/state/hooks";
 
 interface WebsocketContextType {
   disconnect: () => void;
@@ -19,30 +22,35 @@ interface WebsocketContextType {
   }) => void;
 }
 
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+  const token = getToken();
+  console.log(`WebsocketProvider CLIENT LOADER ACCESS TOKEN ${token}`);
+  return token;
+}
+
+clientLoader.hydrate = true as const;
+
 const WebsocketContext = createContext<WebsocketContextType | null>(null);
 
 export function WebsocketProvider({ children }: { children: ReactNode }) {
-  const [accessToken, setAccessToken] = useState<string | null>(() => {
-    if (typeof window !== "undefined" && window.localStorage) {
-      const token = getToken();
-      console.log("🔑 Initial token read:", token);
-      return token;
-    }
-    return null;
-  });
+  const clientLoaderToken = useLoaderData<typeof clientLoader>();
+  const [accessToken, setAccessToken] = useState<string | null>(
+    clientLoaderToken,
+  );
+  const currentUser = useAppSelector((state) => state.session.currentUser);
+
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handleStorageChange = () => {
-      const newToken = getToken();
-      console.log("🔄 Token updated from storage:", newToken);
-      setAccessToken(newToken);
-    };
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+    const newToken = getToken();
+    if (newToken) setAccessToken(newToken);
+    console.log(
+      `WebsocketProvider ACCESS TOKEN VALUE INSIDE USEEFFECT ${newToken}`,
+    );
+  }, [currentUser]);
+
+  console.log(`WebsocketProvider ACCESS TOKEN VALUE ${accessToken}`);
+
   const { disconnect, isConnected, isConnecting, sendMessage } = useWebSocket({
-    wsurl: import.meta.env.VITE_SOCKET_URL,
-    token: accessToken,
+    wsurl: import.meta.env.VITE_SOCKET_URL + accessToken,
   });
 
   return (

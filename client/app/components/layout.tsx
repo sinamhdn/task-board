@@ -2,19 +2,26 @@ import { Outlet } from "react-router";
 import Header from "./header";
 import type { RootState } from "~/state/store";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { clearStatus, setCurrentUser } from "~/state/sessionSlice";
+import { clearSessionStatus } from "~/state/sessionSlice";
 import { clearError } from "~/state/errorSlice";
 import { useEffect, useState } from "react";
 import FormSubmissionStatusModal from "./form-submission-status-modal";
 import ServerErrorModal from "./server-error-modal";
-import { getToken } from "~/utils";
-import { fetchCurrentUser, removeToken } from "~/utils/auth";
+import { getToken } from "~/utils/auth";
+import { getCurrentUser } from "~/state/sessionSlice.ts";
 
 function MainLayout() {
   const dispatch = useAppDispatch();
   const errors = useAppSelector((state: RootState) => state.errors);
-  const currentUser = useAppSelector((state) => state.session.currentUser);
   const [showError, setShowError] = useState(false);
+  const currentUser = useAppSelector((state) => state.session.currentUser);
+  const token = getToken();
+
+  useEffect(() => {
+    if (token && !currentUser) {
+      dispatch(getCurrentUser(token));
+    }
+  }, [dispatch, token, currentUser]);
 
   useEffect(() => {
     if (errors?.server_error) {
@@ -22,20 +29,11 @@ function MainLayout() {
       const timer = setTimeout(() => {
         setShowError(false);
         dispatch(clearError());
-        dispatch(clearStatus());
+        dispatch(clearSessionStatus());
       }, 5000); // 5 seconds
       return () => clearTimeout(timer); // Cleanup timeout if component unmounts
     }
   }, [errors, dispatch]);
-
-  useEffect(() => {
-    const token = getToken();
-    if (token && !currentUser) {
-      fetchCurrentUser(token)
-        .then((user) => dispatch(setCurrentUser(user)))
-        .catch(() => removeToken()); // token invalid – clear it
-    }
-  }, [dispatch, currentUser]);
 
   return (
     <div className="main-layout-component">

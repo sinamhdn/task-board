@@ -4,7 +4,7 @@ import type { RootState } from "~/state/store";
 import { useForm, FormProvider } from "react-hook-form";
 import { GrMail } from "react-icons/gr";
 import {
-  LoadingStatus as AuthLoadingStatus,
+  SessionLoadingStatusEnum as AuthLoadingStatus,
   signinUser,
 } from "~/state/sessionSlice";
 import { clearError } from "~/state/errorSlice";

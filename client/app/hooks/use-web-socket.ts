@@ -1,26 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useAppDispatch } from "~/state/hooks";
 import { setData, setStatus as setSocketStatus } from "~/state/socketSlice";
-import { getToken } from "~/utils";
 import { useAppSelector } from "../state/hooks";
 
 interface WebSocketHookInput {
   wsurl: string | null;
-  token: string | null;
   retryAtempts?: number;
   retryInterval?: number;
 }
-
-// interface WebSocketDataRecieved {
-//   message: string;
-//   timestamp: number;
-// }
 
 type SendFunction = (data: object) => void;
 
 export function useWebSocket({
   wsurl,
-  token,
   retryAtempts: defaultRetryAttempts = 3,
   retryInterval = 1500,
 }: WebSocketHookInput) {
@@ -41,11 +33,6 @@ export function useWebSocket({
 
   const connect = useCallback(() => {
     // ✅ Guard: reject empty or malformed URLs
-    if (!token) {
-      console.warn("Singin first");
-      dispatch(setSocketStatus("close"));
-      return;
-    }
 
     if (!wsurl) {
       console.warn("Websocket url not available");
@@ -53,23 +40,20 @@ export function useWebSocket({
       return;
     }
 
-    const fullURL = wsurl + token;
-    console.log(
-      `FULL URL ::: ${fullURL} TOKEN ::: ${token} getToken():::${getToken()}`,
-    );
-
-    if (!fullURL.startsWith("ws://") && !fullURL.startsWith("wss://")) {
+    if (!wsurl.startsWith("ws://") && !wsurl.startsWith("wss://")) {
       console.warn("Invalid WebSocket URL, skipping connection:", wsurl);
       dispatch(setSocketStatus("close"));
       return;
     }
 
     shouldReconnectRef.current = true;
+
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       return;
     }
+
     try {
-      const ws = new WebSocket(fullURL);
+      const ws = new WebSocket(wsurl);
       wsRef.current = ws;
       // setSocketState("connecting");
       dispatch(setSocketStatus("connecting"));
@@ -131,7 +115,7 @@ export function useWebSocket({
       // setSocketState("close");
       dispatch(setSocketStatus("close"));
     }
-  }, [wsurl, token, defaultRetryAttempts, retryInterval]);
+  }, [wsurl, defaultRetryAttempts, retryInterval]);
 
   //cleanup
   const disconnect = useCallback(() => {

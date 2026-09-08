@@ -4,7 +4,7 @@ import { GrMail } from "react-icons/gr";
 import { Link } from "react-router";
 import { Input } from "~/components/input";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { LoadingStatus, signupUser } from "~/state/sessionSlice";
+import { SessionLoadingStatusEnum, signupUser } from "~/state/sessionSlice";
 import { clearError } from "~/state/errorSlice";
 import type { RootState } from "~/state/store";
 import { useNavigate } from "react-router";
@@ -95,7 +95,7 @@ function Signup() {
               className="flex items-center justify-center gap-1 p-5 mx-auto font-semibold w-48 text-center text-white bg-blue-600 rounded-md hover:bg-blue-800"
             >
               <GrMail />
-              {loadingState === LoadingStatus.pending
+              {loadingState === SessionLoadingStatusEnum.pending
                 ? "Signing up..."
                 : "Register"}
             </button>

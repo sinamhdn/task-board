@@ -77,17 +77,21 @@ export function getToken(): string | null {
 }
 
 export function setToken(token: string) {
-  // if (typeof window === "undefined" || !window.localStorage) {
-  //   return null; // or return undefined
-  // }
-  localStorage.setItem("jwt", token);
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    localStorage.setItem("jwt", token);
+  } catch (error) {
+    console.error("Error setting token to storage:", error);
+  }
 }
 
 export function removeToken() {
-  // if (typeof window === "undefined" || !window.localStorage) {
-  //   return null; // or return undefined
-  // }
-  localStorage.removeItem("jwt");
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    localStorage.removeItem("jwt");
+  } catch (error) {
+    console.error("Error removing token from storage:", error);
+  }
 }
 
 export function clearUserCache() {

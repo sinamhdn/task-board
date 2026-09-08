@@ -1,8 +1,6 @@
 import { useForm, FormProvider } from "react-hook-form";
-import { useNavigate } from "react-router";
 import { createNewBoard } from "~/state/boardSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { getToken } from "~/utils";
 import { clearError } from "~/state/errorSlice";
 import { Input } from "./input";
 import { LoadingStatus as BoardLoadingStatusEnum } from "~/state/boardSlice";
@@ -10,25 +8,23 @@ import { board_name_validation } from "~/utils/input/input-validations";
 import type { RootState } from "~/state/store";
 import ClickAwayListener from "react-click-away-listener";
 import { useAddNewBoardForm } from "~/providers/board-add-provider";
+import LoadingSpinner from "./loading-spinner";
+import { getToken } from "~/utils";
+
+interface FormValues {
+  board_name: string;
+}
 
 function BoardAddForm() {
-  const token = getToken();
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const createBoardLoadingStatus = useAppSelector(
     (state) => state.board.createBoardLoadingStatus,
   );
   const errors = useAppSelector((error: RootState) => error.errors);
+  const dispatch = useAppDispatch();
   const { handleCancelAddNewBoardClick } = useAddNewBoardForm();
+  const token = getToken();
 
-  interface FormValues {
-    board_name: string;
-  }
-
-  if (!token) {
-    navigate("/signin");
-    throw "Please sign in";
-  }
+  if (!token) return <LoadingSpinner />;
 
   const handleSubmitCallback = async (data: FormValues) => {
     try {
@@ -39,7 +35,6 @@ function BoardAddForm() {
         }),
       ).unwrap();
       dispatch(clearError());
-      navigate("/");
       handleCancelAddNewBoardClick();
     } catch (err) {
       console.log(err);
