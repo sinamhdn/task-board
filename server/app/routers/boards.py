@@ -244,9 +244,12 @@ async def add_new_board_member(
     }
     print(f"ACTIVE CONNECTIONS +++>>> {manager.active_connections}")
     channel_name = f"boards:{board.id}"
-    if user.id in manager.active_connections.keys():
+    if user.id in manager.active_connections:
         for connection in manager.active_connections[user.id]:
-            if channel_name in manager.channels.keys():
+            if channel_name in manager.channels:
+                manager.channels[channel_name].add(connection)
+            else:
+                manager.channels[channel_name] = set()
                 manager.channels[channel_name].add(connection)
         for websocket in manager.channels[channel_name]:
             await manager.broadcast_channel(

@@ -13,11 +13,10 @@ from .db import AsyncSession
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: Dict[int, List[WebSocket]] = {}
+        self.active_connections: Dict[int, Set[WebSocket]] = {}
         self.channels: Dict[str, Set[WebSocket]] = {}
 
     async def connect(self, websocket: WebSocket):
-        print(f"WEBSOCKET IS CONNECTED OR NOT ====>>>> {websocket}")
         await websocket.accept()
         await self.send_personal_message(
             {
@@ -38,13 +37,16 @@ class ConnectionManager:
         await websocket.close(code=close_status_code, reason=close_reason)
 
     def add_connection(self, websocket: WebSocket, user_id: int):
-        self.active_connections.setdefault(user_id, []).append(websocket)
+        # self.active_connections.setdefault(user_id, []).append(websocket)
+        if user_id not in self.active_connections:
+            self.active_connections[user_id] = set()
+        self.active_connections[user_id].add(websocket)
 
     def remove_connection(self, websocket: WebSocket, user_id: int):
-        self.active_connections[user_id].remove(websocket)
-        if self.active_connections[user_id] == set():
-            self.active_connections.pop(user_id, None)
-            # del self.active_connections[user_id]
+        if user_id in self.active_connections:
+            self.active_connections[user_id].remove(websocket)
+        if len(self.active_connections[user_id]) == 0:
+            del self.active_connections[user_id]
         for channel in list(self.channels.keys()):
             self.channels[channel].discard(websocket)
             if not self.channels[channel]:
@@ -85,13 +87,27 @@ class ConnectionManager:
                 {"res_type": "broadcast_global", "message": message}
             )
 
-    def subscribe(self, websocket: WebSocket, channel: str):
+    async def subscribe(self, websocket: WebSocket, channel: str):
         if channel not in self.channels:
             self.channels[channel] = set()
+        if websocket in self.channels[channel]:
+            return
         self.channels[channel].add(websocket)
+        await self.send_personal_message(
+            {"type": "ws_notif", "msg": f"Subscribed to {channel}"}, websocket
+        )
 
     async def unsubscribe(self, websocket: WebSocket, channel: str):
-        if not self.is_subscribed(websocket, channel):
+        if channel not in self.channels:
+            await self.send_personal_message(
+                {
+                    "type": "ws_notif",
+                    "msg": f"Channel {channel} does not exist.",
+                },
+                websocket,
+            )
+            return
+        if websocket not in self.channels[channel]:
             await self.send_personal_message(
                 {
                     "type": "ws_notif",
@@ -100,10 +116,12 @@ class ConnectionManager:
                 websocket,
             )
             return
-        if channel in self.channels:
-            self.channels[channel].discard(websocket)
-            if not self.channels[channel]:
-                del self.channels[channel]
+        self.channels[channel].discard(websocket)
+        if not self.channels[channel]:
+            del self.channels[channel]
+        await self.send_personal_message(
+            {"type": "ws_notif", "msg": f"Unsubscribed from {channel}"}, websocket
+        )
 
     def is_subscribed(self, websocket: WebSocket, channel: str):
         return channel in self.channels and websocket in self.channels[channel]

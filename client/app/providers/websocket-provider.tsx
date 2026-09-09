@@ -22,26 +22,30 @@ interface WebsocketContextType {
   }) => void;
 }
 
-export async function clientLoader({ request }: Route.ClientLoaderArgs) {
-  const token = getToken();
-  console.log(`WebsocketProvider CLIENT LOADER ACCESS TOKEN ${token}`);
-  return token;
-}
+// for some reason when app starts it loads the old webtoken inside memory
+// starting state with null may fix this
+// export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+//   const token = getToken();
+//   console.log(`WebsocketProvider CLIENT LOADER ACCESS TOKEN ${token}`);
+//   return token;
+// }
 
-clientLoader.hydrate = true as const;
+// clientLoader.hydrate = true as const;
 
 const WebsocketContext = createContext<WebsocketContextType | null>(null);
 
 export function WebsocketProvider({ children }: { children: ReactNode }) {
-  const clientLoaderToken = useLoaderData<typeof clientLoader>();
-  const [accessToken, setAccessToken] = useState<string | null>(
-    clientLoaderToken,
-  );
+  // const clientLoaderToken = useLoaderData<typeof clientLoader>();
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [shouldWebsocketConnect, setShouldWebsocketConnect] = useState(false);
   const currentUser = useAppSelector((state) => state.session.currentUser);
 
   useEffect(() => {
     const newToken = getToken();
-    if (newToken) setAccessToken(newToken);
+    if (newToken) {
+      setAccessToken(newToken);
+      setShouldWebsocketConnect(true);
+    }
     console.log(
       `WebsocketProvider ACCESS TOKEN VALUE INSIDE USEEFFECT ${newToken}`,
     );
@@ -51,6 +55,7 @@ export function WebsocketProvider({ children }: { children: ReactNode }) {
 
   const { disconnect, isConnected, isConnecting, sendMessage } = useWebSocket({
     wsurl: import.meta.env.VITE_SOCKET_URL + accessToken,
+    shouldConnect: shouldWebsocketConnect,
   });
 
   return (

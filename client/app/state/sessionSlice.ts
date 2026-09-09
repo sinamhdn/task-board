@@ -135,11 +135,6 @@ export const signinUser = createAsyncThunk<
     form.append("password", credentials.password);
     form.append("grant_type", "password");
 
-    console.log(
-      "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER? TOKENRESPONSE",
-      // tokenResponse.data.access_token,
-    );
-
     const tokenResponse = await axios.post(
       `${import.meta.env.VITE_API_URL}/api/v1/auth/login`,
       form,

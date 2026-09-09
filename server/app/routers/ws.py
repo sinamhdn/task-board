@@ -39,6 +39,9 @@ async def socket(
     # Stop execution
     try:
         while True:
+            print(
+                f"WEBSOCKET IS CONNECTED OR NOT ====>>>> {websocket} --- ACTIVE CONNECTIONS {manager.active_connections}"
+            )
             try:
                 recieved_payload = await websocket.receive_json()
                 payload_pydanthic = adapter.validate_python(recieved_payload)
@@ -72,7 +75,7 @@ async def socket(
                 )
                 continue
             if action == "subscribe":
-                manager.subscribe(websocket=websocket, channel=channel)
+                await manager.subscribe(websocket=websocket, channel=channel)
                 await manager.send_personal_message(
                     websocket=websocket,
                     message={
