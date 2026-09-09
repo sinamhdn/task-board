@@ -54,6 +54,46 @@ async def socket(
                 action = payload.get("action")
                 channel = payload.get("channel")
                 message = payload.get("message")
+                if action == "subscribe":
+                    await manager.subscribe(websocket=websocket, channel=channel)
+                    await manager.send_personal_message(
+                        websocket=websocket,
+                        message={
+                            "type": "ws_notif",
+                            "msg": f"Subscribed to channel: {channel}",
+                        },
+                    )
+                elif action == "unsubscribe" and channel:
+                    await manager.unsubscribe(websocket=websocket, channel=channel)
+                    await manager.send_personal_message(
+                        websocket=websocket,
+                        message={
+                            "type": "ws_notif",
+                            "msg": f"Unsubscribed from channel: {channel}",
+                        },
+                    )
+                elif action == "broadcast_channel" and channel and message:
+                    # Client wants to broadcast a message to a specific channel
+                    await manager.broadcast_channel(
+                        websocket=websocket,
+                        channel=channel,
+                        message={
+                            "sender": user,
+                            "channel": channel,
+                            "content": message,
+                        },
+                        user_id=user.id,
+                    )
+                elif action == "broadcast_global":
+                    await manager.broadcast_global(user_id=user.id, message=message)
+                else:
+                    await manager.send_personal_message(
+                        websocket=websocket,
+                        message={
+                            "type": "ws_notif",
+                            "msg": "Unknown action or missing fields",
+                        },
+                    )
             except json.JSONDecodeError as e:
                 logger.info("invalid json format")
                 await manager.send_personal_message(
@@ -74,59 +114,13 @@ async def socket(
                     },
                 )
                 continue
-            if action == "subscribe":
-                await manager.subscribe(websocket=websocket, channel=channel)
-                await manager.send_personal_message(
-                    websocket=websocket,
-                    message={
-                        "type": "ws_notif",
-                        "msg": f"Subscribed to channel: {channel}",
-                    },
-                )
-            elif action == "unsubscribe" and channel:
-                await manager.unsubscribe(websocket=websocket, channel=channel)
-                await manager.send_personal_message(
-                    websocket=websocket,
-                    message={
-                        "type": "ws_notif",
-                        "msg": f"Unsubscribed from channel: {channel}",
-                    },
-                )
-            elif action == "broadcast_channel" and channel and message:
-                # Client wants to broadcast a message to a specific channel
-                await manager.broadcast_channel(
-                    websocket=websocket,
-                    channel=channel,
-                    message={"sender": user, "channel": channel, "content": message},
-                )
-            elif action == "broadcast_global":
-                await manager.broadcast_global(user_id=user.id, message=message)
-            else:
-                await manager.send_personal_message(
-                    websocket=websocket,
-                    message={
-                        "type": "ws_notif",
-                        "msg": "Unknown action or missing fields",
-                    },
-                )
     except WebSocketDisconnect:
         logger.info("Client disconnected")
-        manager.remove_connection(websocket=websocket, user_id=user.id)
-        await manager.disconnect(
-            websocket=websocket,
-            close_status_code=status.WS_1005_NO_STATUS_RCVD,
-            close_reason="Client disconnected.",
-        )
     except Exception as e:
         logger.exception("WebSocket exception")
-        manager.remove_connection(websocket=websocket, user_id=user.id)
-        await manager.disconnect(
-            websocket=websocket,
-            close_status_code=status.WS_1011_INTERNAL_ERROR,
-            close_reason="Internal server error.",
-        )
     finally:
         manager.remove_connection(
             websocket=websocket,
             user_id=user.id,
         )
+        await manager.disconnect(websocket=websocket)

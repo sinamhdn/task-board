@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -36,14 +37,14 @@ const WebsocketContext = createContext<WebsocketContextType | null>(null);
 
 export function WebsocketProvider({ children }: { children: ReactNode }) {
   // const clientLoaderToken = useLoaderData<typeof clientLoader>();
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [wsUrl, setWsUrl] = useState<string | null>(null);
   const [shouldWebsocketConnect, setShouldWebsocketConnect] = useState(false);
   const currentUser = useAppSelector((state) => state.session.currentUser);
 
   useEffect(() => {
     const newToken = getToken();
     if (newToken) {
-      setAccessToken(newToken);
+      setWsUrl(import.meta.env.VITE_SOCKET_URL + newToken);
       setShouldWebsocketConnect(true);
     }
     console.log(
@@ -51,10 +52,10 @@ export function WebsocketProvider({ children }: { children: ReactNode }) {
     );
   }, [currentUser]);
 
-  console.log(`WebsocketProvider ACCESS TOKEN VALUE ${accessToken}`);
+  console.log(`WebsocketProvider URL ${wsUrl}`);
 
   const { disconnect, isConnected, isConnecting, sendMessage } = useWebSocket({
-    wsurl: import.meta.env.VITE_SOCKET_URL + accessToken,
+    wsurl: wsUrl,
     shouldConnect: shouldWebsocketConnect,
   });
 
