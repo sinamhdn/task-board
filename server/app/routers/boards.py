@@ -1,3 +1,4 @@
+import logging
 from dataclasses import field
 from typing import Annotated
 
@@ -14,6 +15,8 @@ from ..utils.auth import CurrentUser
 from ..utils.db import AsyncSession, get_async_db_session
 from ..utils.utilities import get_order_column
 from ..utils.ws import manager
+
+logger = logging.getLogger(f"Board router logger: Filename->{__name__}")
 
 router = APIRouter(prefix="", tags=["boards"])
 
@@ -260,9 +263,10 @@ async def add_new_board_member(
                     "member_data": user_data,
                     "board_data": board_data,
                 },
+                user_id=user.id,
             )
     else:
-        print("Member is not online.")
+        logger.info("Member is not online.")
     print(f"ACTIVE CONNECTIONS +++>>> {manager.active_connections}")
 
     return user

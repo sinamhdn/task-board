@@ -59,10 +59,8 @@ class SearchService:
         self, search_type: str, query: str, limit: int = 20
     ) -> Union[List[UserPublicResponse], List[BoardResponse]]:
         if search_type == "user":
-            print("SEARCH SEARCH SEARCH")
             return await self.search_users(query=query, limit=limit)
         elif search_type == "board":
             return await self.search_boards(query=query, limit=limit)
         else:
-            print("ERR ERR ERR")
             raise ValueError("search_type must be user or board.")

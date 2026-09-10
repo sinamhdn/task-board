@@ -42,14 +42,14 @@ export function WebsocketProvider({ children }: { children: ReactNode }) {
   const currentUser = useAppSelector((state) => state.session.currentUser);
 
   useEffect(() => {
+    //only change url if url actually change
     const newToken = getToken();
-    if (newToken) {
-      setWsUrl(import.meta.env.VITE_SOCKET_URL + newToken);
-      setShouldWebsocketConnect(true);
-    }
-    console.log(
-      `WebsocketProvider ACCESS TOKEN VALUE INSIDE USEEFFECT ${newToken}`,
-    );
+    const nextUrl = newToken
+      ? import.meta.env.VITE_SOCKET_URL + newToken
+      : null;
+    setWsUrl((prev) => (prev === nextUrl ? prev : nextUrl)); // ← bail if unchanged
+    setShouldWebsocketConnect(Boolean(newToken));
+    console.log("currentUser changed — ref:", currentUser);
   }, [currentUser]);
 
   console.log(`WebsocketProvider URL ${wsUrl}`);

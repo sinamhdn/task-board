@@ -18,7 +18,7 @@ from ..utils.db import get_async_db_session
 from ..utils.utilities import add_to_blacklist
 
 router = APIRouter(prefix="", tags=["users"])
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"Users utilities logger: Filename->{__name__}")
 
 
 @router.get("/me", response_model=UserPrivateResponse)

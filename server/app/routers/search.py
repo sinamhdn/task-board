@@ -20,7 +20,7 @@ from ..utils.search import SearchService
 from ..utils.utilities import add_to_blacklist
 
 router = APIRouter(prefix="", tags=["users"])
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"Search router logger: Filename->{__name__}")
 
 
 @router.get("", response_model=Union[list[UserPublicResponse], list[BoardResponse]])
@@ -30,7 +30,6 @@ async def search_all(
     db: Annotated[AsyncSession, Depends(get_async_db_session)],
     limit: int = 20,
 ):
-    print("RECIEVED SEARCH QUERIES", search_type, query, limit)
     try:
         search_service = SearchService(db)
         results = await search_service.search_all(

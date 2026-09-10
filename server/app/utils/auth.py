@@ -12,7 +12,7 @@ from ..models.users import User
 from .db import AsyncSession, get_async_db_session
 from .settings import settings
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"Auth utilities logger: Filename->{__name__}")
 pwd_hash = PasswordHash.recommended()
 oath2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 

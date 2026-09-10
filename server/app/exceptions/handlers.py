@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import Response
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"Handlers logger: Filename->{__name__}")
 templates = Jinja2Templates(
     directory=os.path.join(os.path.dirname(__file__), "../../templates")
 )

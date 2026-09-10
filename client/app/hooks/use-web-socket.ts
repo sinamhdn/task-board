@@ -35,7 +35,7 @@ export function useWebSocket({
 
   const connect = useCallback(() => {
     // ✅ Guard: reject empty or malformed URLs
-    if (!wsurl) {
+    if (!shouldConnect || !wsurl) {
       console.warn("Websocket url not available");
       dispatch(setSocketStatus("close"));
       return;
@@ -53,8 +53,10 @@ export function useWebSocket({
       return;
     }
 
+    if (!shouldConnect) return;
+
     try {
-      const ws = shouldConnect ? new WebSocket(wsurl) : null;
+      const ws = new WebSocket(wsurl);
       wsRef.current = ws;
       // setSocketState("connecting");
       dispatch(setSocketStatus("connecting"));
@@ -134,9 +136,11 @@ export function useWebSocket({
     // setSocketState("close");
     dispatch(setSocketStatus("close"));
     sendCallback.current = () => false;
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
+    if (!wsurl) return;
+
     connect();
     // Cleanup on unmount or when wsurl changes
     // useEffect calls function on component unmount

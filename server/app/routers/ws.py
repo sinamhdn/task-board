@@ -19,7 +19,7 @@ from ..utils.db import AsyncSession, get_async_db_session
 from ..utils.ws import ClientConnectionManager, manager
 
 router = APIRouter(prefix="", tags=["ws"])
-logger = logging.getLogger("websocketapp")
+logger = logging.getLogger(f"Websocket router logger: Filename->{__name__}")
 
 
 # client side message examples
@@ -95,7 +95,7 @@ async def socket(
                         },
                     )
             except json.JSONDecodeError as e:
-                logger.info("invalid json format")
+                logger.error(f"invalid json format: {e}")
                 await manager.send_personal_message(
                     websocket=websocket,
                     message={
@@ -105,7 +105,7 @@ async def socket(
                 )
                 continue
             except ValidationError as e:
-                logger.info("validation error")
+                logger.error(f"validation error: {e}")
                 await manager.send_personal_message(
                     websocket=websocket,
                     message={
@@ -114,10 +114,10 @@ async def socket(
                     },
                 )
                 continue
-    except WebSocketDisconnect:
-        logger.info("Client disconnected")
+    except WebSocketDisconnect as e:
+        logger.info(f"Client disconnected: {e}")
     except Exception as e:
-        logger.exception("WebSocket exception")
+        logger.error(f"WebSocket exception: {e}")
     finally:
         manager.remove_connection(
             websocket=websocket,

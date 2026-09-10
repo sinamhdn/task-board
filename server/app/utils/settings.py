@@ -34,3 +34,41 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+import logging
+import sys
+
+
+def setup_logging():
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+
+    # Remove any handlers already attached (e.g., by Uvicorn)
+    for h in root.handlers[:]:
+        root.removeHandler(h)
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s | %(levelname)-8s | %(name)s:%(lineno)d | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
+    root.addHandler(handler)
+
+    # Ensure all loggers propagate to root (they do by default, but be safe)
+    for name in logging.root.manager.loggerDict:
+        lg = logging.getLogger(name)
+        lg.setLevel(logging.DEBUG)
+        lg.propagate = True
+        # Remove handlers so they don't duplicate output
+        for h in lg.handlers[:]:
+            lg.removeHandler(h)
+
+    # Silence noisy third-party loggers
+    for noisy in ("urllib3", "asyncio", "botocore", "httpx", "httpcore", "multipart"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
+
+
+setup_logging()

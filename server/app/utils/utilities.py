@@ -9,7 +9,7 @@ from sqlalchemy import asc, desc
 from ..models.users import User
 
 TOKEN_BLACKLIST: Dict[str, datetime] = {}  # token -> expiration_time
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"General utilities logger: Filename->{__name__}")
 
 
 def add_to_blacklist(token: str, expires_in: int = 3600) -> None:
