@@ -18,9 +18,8 @@ export function meta({}: Route.MetaArgs) {
 
 function BoardSingle() {
   const { id: urlParamBoardId } = useParams();
-  const location = useLocation();
-  const { board: locationBoard } = location.state;
-  const { isConnected, sendMessage, disconnect } = useWebsocketContext();
+  const { board: locationBoard } = useLocation().state ?? {};
+  const { isConnected, sendMessage } = useWebsocketContext();
   const token = getToken();
 
   const board = useAppSelector((state) => {
@@ -30,22 +29,27 @@ function BoardSingle() {
       (board) => board.id === Number(urlParamBoardId),
     );
   });
+
   const loggedInUser = useAppSelector((state) => state.session.currentUser);
+
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (!token) throw redirect("signin");
-    if (!board)
+    if (!board && urlParamBoardId)
       dispatch(
         getBoardById({ boardId: Number(urlParamBoardId), token: token }),
       );
-    if (isConnected)
-      sendMessage({
-        action: "subscribe",
-        channel: `boards:${urlParamBoardId}`,
-      });
-    return disconnect();
-  }, []);
+  }, [token, board, urlParamBoardId, dispatch]);
+
+  useEffect(() => {
+    if (!isConnected || !urlParamBoardId) return;
+
+    sendMessage({
+      action: "subscribe",
+      channel: `boards:${urlParamBoardId}`,
+    });
+  }, [isConnected, urlParamBoardId, sendMessage]);
 
   return (
     <div className="single-board-component">

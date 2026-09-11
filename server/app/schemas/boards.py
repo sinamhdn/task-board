@@ -8,6 +8,7 @@ from .users import UserPublicResponse
 
 
 class BoardResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     uid: uuid.UUID
     user_id: int

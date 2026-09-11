@@ -6,6 +6,7 @@ import {
   deleteBoard,
   LoadingStatus as BoardLoadingStatusEnum,
   addBoard,
+  removeBoard,
 } from "~/state/boardSlice";
 import { getToken } from "~/utils";
 import classnames from "classnames";
@@ -13,6 +14,7 @@ import BoardCard from "~/components/board-card";
 import BoardNew from "~/components/board-new";
 import { Link, redirect } from "react-router";
 import LoadingSpinner from "~/components/loading-spinner";
+import type { BoardChannelPayload } from "~/state/socketSlice";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -48,7 +50,12 @@ function BoardAll() {
 
   useEffect(() => {
     if (!wsData) return;
-    if (wsData.event === "member_added") dispatch(addBoard(wsData.board_data));
+    const payload: BoardChannelPayload = JSON.parse(wsData.message);
+    if (payload.message.event === "member_added")
+      dispatch(addBoard(payload.message.board_data));
+    if (payload.message.event === "member_removed" || payload.message.event === "board_removed")
+      dispatch(removeBoard(payload.message.board_data));
+    console.log(`WSDATA CONTENT ${JSON.stringify(wsData)}`);
   }, [wsData]);
 
   // Show loading state first

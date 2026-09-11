@@ -168,6 +168,30 @@ async def delete_board(
     await db.delete(board)
     await db.commit()
 
+    board_data = BoardResponse.model_validate(board).model_dump(mode="json")
+    channel_name = f"boards:{board.id}"
+    for member in board.members:
+        if member.id in manager.active_connections:
+            for websocket in manager.channels[channel_name]:
+                member_data = UserPublicResponse.model_validate(member).model_dump(
+                    mode="json"
+                )
+                await manager.broadcast_channel(
+                    channel=channel_name,
+                    websocket=websocket,
+                    message={
+                        "event": "board_removed",
+                        "member_data": member_data,
+                        "board_data": board_data,
+                    },
+                    user_id=member.id,
+                )
+            for connection in manager.active_connections[member.id]:
+                if channel_name in manager.channels:
+                    manager.channels[channel_name].discard(connection)
+                if not manager.channels[channel_name]:
+                    manager.channels.pop(channel_name)
+
 
 @router.post(
     "/{board_id}/add-member",
@@ -239,13 +263,15 @@ async def add_new_board_member(
     await db.refresh(board, attribute_names=["owner"])
 
     # add new added member to board channel if they are online
-    user_data = {
-        field: getattr(user, field) for field in UserPublicResponse.model_fields.keys()
-    }
-    board_data = {
-        field: getattr(board, field) for field in BoardResponse.model_fields.keys()
-    }
-    print(f"ACTIVE CONNECTIONS +++>>> {manager.active_connections}")
+    # user_data = {
+    #     field: getattr(user, field) for field in UserPublicResponse.model_fields.keys()
+    # }
+    # board_data = {
+    #     field: getattr(board, field) for field in BoardResponse.model_fields.keys()
+    # }
+    # fix serlization problem
+    user_data = UserPublicResponse.model_validate(user).model_dump(mode="json")
+    board_data = BoardResponse.model_validate(board).model_dump(mode="json")
     channel_name = f"boards:{board.id}"
     if user.id in manager.active_connections:
         for connection in manager.active_connections[user.id]:
@@ -267,7 +293,6 @@ async def add_new_board_member(
             )
     else:
         logger.info("Member is not online.")
-    print(f"ACTIVE CONNECTIONS +++>>> {manager.active_connections}")
 
     return user
 
@@ -326,7 +351,29 @@ async def delete_board_member(
             },
         )
 
+    user_data = UserPublicResponse.model_validate(user).model_dump(mode="json")
+    board_data = BoardResponse.model_validate(board).model_dump(mode="json")
+    channel_name = f"users:{user.id}"
+    if user.id in manager.active_connections:
+        for websocket in manager.channels[channel_name]:
+            await manager.broadcast_channel(
+                channel=channel_name,
+                websocket=websocket,
+                message={
+                    "event": "member_removed",
+                    "member_data": user_data,
+                    "board_data": board_data,
+                },
+                user_id=user.id,
+            )
+        for connection in manager.active_connections[user.id]:
+            if channel_name in manager.channels:
+                manager.channels[channel_name].discard(connection)
+            if not manager.channels[channel_name]:
+                manager.channels.pop(channel_name)
+
     board.members.remove(user)
     await db.commit()
     await db.refresh(board, attribute_names=["owner"])
+
     return user

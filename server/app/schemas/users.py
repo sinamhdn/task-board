@@ -41,6 +41,7 @@ class UserUpdate(BaseModel):
 class UserPublicResponse(BaseModel):
     """Schema for returning user data (excludes sensitive info)"""
 
+    model_config = ConfigDict(from_attributes=True)
     id: int
     uid: uuid.UUID
     email: str

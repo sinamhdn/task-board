@@ -1,0 +1,122 @@
+import {
+  createContext,
+  useContext,
+  useMemo,
+  type ReactNode,
+} from "react";
+
+import { useAppSelector } from "~/state/hooks";
+import { useWebSocket } from "./useWebSocket";
+
+interface WebSocketContextValue {
+  sendMessage: (data: object) => boolean;
+
+  subscribe: (channel: string) => boolean;
+
+  unsubscribe: (channel: string) => boolean;
+
+  disconnect: () => void;
+
+  reconnect: () => void;
+
+  isConnected: boolean;
+
+  isConnecting: boolean;
+}
+
+const WebSocketContext =
+  createContext<WebSocketContextValue | null>(
+    null,
+  );
+
+interface WebSocketProviderProps {
+  children: ReactNode;
+}
+
+const WS_URL =
+  "ws://127.0.0.1:8000/api/v1/ws";
+
+export function WebSocketProvider({
+  children,
+}: WebSocketProviderProps) {
+  /**
+   * Adjust this selector to match your sessionSlice.
+   */
+  const token = useAppSelector(
+    (state) =>
+      state.session.token?.access_token ?? null,
+  );
+
+  const loadingStatus = useAppSelector(
+    (state) => state.session.loadingStatus,
+  );
+
+  /**
+   * Only connect when authenticated.
+   *
+   * You can replace this with:
+   *
+   * const isAuthenticated =
+   *   Boolean(token && currentUser);
+   */
+  const shouldConnect =
+    Boolean(token) &&
+    loadingStatus !== "pending";
+
+  const socket = useWebSocket({
+    wsurl: WS_URL,
+    token,
+    shouldConnect,
+
+    retryAttempts: 5,
+    retryInterval: 1500,
+  });
+
+  const value = useMemo<WebSocketContextValue>(
+    () => ({
+      sendMessage: socket.sendMessage,
+
+      subscribe: socket.subscribe,
+
+      unsubscribe: socket.unsubscribe,
+
+      disconnect: socket.disconnect,
+
+      reconnect: socket.reconnect,
+
+      isConnected:
+        socket.isConnected,
+
+      isConnecting:
+        socket.isConnecting,
+    }),
+    [
+      socket.sendMessage,
+      socket.subscribe,
+      socket.unsubscribe,
+      socket.disconnect,
+      socket.reconnect,
+      socket.isConnected,
+      socket.isConnecting,
+    ],
+  );
+
+  return (
+    <WebSocketContext.Provider value={value}>
+      {children}
+    </WebSocketContext.Provider>
+  );
+}
+
+export function useSocket() {
+  const context =
+    useContext(WebSocketContext);
+
+  if (!context) {
+    throw new Error(
+      "useSocket must be used inside WebSocketProvider",
+    );
+  }
+
+  return context;
+}

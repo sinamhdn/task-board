@@ -1,0 +1,674 @@
+import {
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
+import { useAppDispatch } from "~/state/hooks";
+import {
+  setData,
+  setStatus as setSocketStatus,
+} from "~/state/socketSlice";
+
+export type WebSocketStatus =
+  | "connecting"
+  | "open"
+  | "close";
+
+export interface WebSocketHookInput {
+  wsurl: string | null;
+  token: string | null;
+  shouldConnect: boolean;
+  retryAttempts?: number;
+  retryInterval?: number;
+}
+
+export interface WebSocketCloseInfo {
+  code: number;
+  reason: string;
+  wasClean: boolean;
+}
+
+type SendFunction = (data: object) => boolean;
+
+interface UseWebSocketReturn {
+  sendMessage: (data: object) => boolean;
+  subscribe: (channel: string) => boolean;
+  unsubscribe: (channel: string) => boolean;
+  disconnect: () => void;
+  reconnect: () => void;
+  isConnected: boolean;
+  isConnecting: boolean;
+}
+
+export function useWebSocket({
+  wsurl,
+  token,
+  shouldConnect,
+  retryAttempts = 5,
+  retryInterval = 1500,
+}: WebSocketHookInput): UseWebSocketReturn {
+  const dispatch = useAppDispatch();
+
+  const wsRef = useRef<WebSocket | null>(null);
+
+  /**
+   * Used to invalidate an old socket.
+   *
+   * Example:
+   *
+   * socket A exists
+   * socket B replaces socket A
+   * socket A closes later
+   *
+   * socket A must NOT be allowed to modify the state of socket B.
+   */
+  const socketGenerationRef = useRef(0);
+
+  const reconnectTimeoutRef = useRef<number | null>(null);
+
+  const manuallyDisconnectedRef = useRef(false);
+
+  const reconnectAttemptsRef = useRef(0);
+
+  const sendCallback = useRef<SendFunction>(() => false);
+
+  /**
+   * Channels that should remain subscribed after reconnecting.
+   */
+  const subscriptionsRef = useRef<Set<string>>(new Set());
+
+  /**
+   * Keep latest values available to callbacks without forcing
+   * every callback to be recreated.
+   */
+  const tokenRef = useRef(token);
+  const wsurlRef = useRef(wsurl);
+  const shouldConnectRef = useRef(shouldConnect);
+
+  useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
+
+  useEffect(() => {
+    wsurlRef.current = wsurl;
+  }, [wsurl]);
+
+  useEffect(() => {
+    shouldConnectRef.current = shouldConnect;
+  }, [shouldConnect]);
+
+  const clearReconnectTimeout = useCallback(() => {
+    if (reconnectTimeoutRef.current !== null) {
+      window.clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+  }, []);
+
+  const send = useCallback((data: object): boolean => {
+    const ws = wsRef.current;
+
+    if (!ws) {
+      console.warn("Cannot send WebSocket message: no socket");
+      return false;
+    }
+
+    if (ws.readyState !== WebSocket.OPEN) {
+      console.warn(
+        "Cannot send WebSocket message: socket is not open",
+      );
+      return false;
+    }
+
+    try {
+      ws.send(JSON.stringify(data));
+      return true;
+    } catch (error) {
+      console.error(
+        "Failed to send WebSocket message:",
+        error,
+      );
+      return false;
+    }
+  }, []);
+
+  const subscribe = useCallback(
+    (channel: string): boolean => {
+      if (!channel) {
+        return false;
+      }
+
+      /**
+       * Store it first.
+       *
+       * This means if the socket is temporarily disconnected,
+       * the subscription will automatically be restored after
+       * reconnecting.
+       */
+      subscriptionsRef.current.add(channel);
+
+      return send({
+        action: "subscribe",
+        channel,
+      });
+    },
+    [send],
+  );
+
+  const unsubscribe = useCallback(
+    (channel: string): boolean => {
+      if (!channel) {
+        return false;
+      }
+
+      subscriptionsRef.current.delete(channel);
+
+      return send({
+        action: "unsubscribe",
+        channel,
+      });
+    },
+    [send],
+  );
+
+  const scheduleReconnect = useCallback(() => {
+    if (!shouldConnectRef.current) {
+      return;
+    }
+
+    if (manuallyDisconnectedRef.current) {
+      return;
+    }
+
+    if (!tokenRef.current) {
+      console.warn(
+        "WebSocket reconnect skipped: no token",
+      );
+      return;
+    }
+
+    if (reconnectAttemptsRef.current >= retryAttempts) {
+      console.warn(
+        "WebSocket reconnect attempts exhausted",
+      );
+      return;
+    }
+
+    if (reconnectTimeoutRef.current !== null) {
+      return;
+    }
+
+    const attempt = reconnectAttemptsRef.current;
+
+    const delay = Math.min(
+      retryInterval * Math.pow(2, attempt),
+      10_000,
+    );
+
+    reconnectAttemptsRef.current += 1;
+
+    console.log(
+      `WebSocket reconnect scheduled in ${delay}ms`,
+      {
+        attempt: attempt + 1,
+        maxAttempts: retryAttempts,
+      },
+    );
+
+    reconnectTimeoutRef.current = window.setTimeout(() => {
+      reconnectTimeoutRef.current = null;
+
+      if (!shouldConnectRef.current) {
+        return;
+      }
+
+      if (!tokenRef.current) {
+        return;
+      }
+
+      connect();
+    }, delay);
+  }, [retryAttempts, retryInterval]);
+
+  const connect = useCallback(() => {
+    const currentWsUrl = wsurlRef.current;
+    const currentToken = tokenRef.current;
+
+    if (!shouldConnectRef.current) {
+      console.log(
+        "WebSocket connect skipped: shouldConnect=false",
+      );
+      return;
+    }
+
+    if (!currentWsUrl) {
+      console.warn(
+        "WebSocket connect skipped: no URL",
+      );
+      dispatch(setSocketStatus("close"));
+      return;
+    }
+
+    if (!currentToken) {
+      console.warn(
+        "WebSocket connect skipped: no token",
+      );
+      dispatch(setSocketStatus("close"));
+      return;
+    }
+
+    if (
+      !currentWsUrl.startsWith("ws://") &&
+      !currentWsUrl.startsWith("wss://")
+    ) {
+      console.error(
+        "Invalid WebSocket URL:",
+        currentWsUrl,
+      );
+      dispatch(setSocketStatus("close"));
+      return;
+    }
+
+    const existingSocket = wsRef.current;
+
+    if (
+      existingSocket &&
+      (
+        existingSocket.readyState === WebSocket.OPEN ||
+        existingSocket.readyState === WebSocket.CONNECTING
+      )
+    ) {
+      console.log(
+        "WebSocket already connected/connecting",
+      );
+      return;
+    }
+
+    clearReconnectTimeout();
+
+    manuallyDisconnectedRef.current = false;
+
+    /**
+     * Every new socket receives a new generation.
+     */
+    const generation =
+      socketGenerationRef.current + 1;
+
+    socketGenerationRef.current = generation;
+
+    const url =
+      `${currentWsUrl}?access_token=${encodeURIComponent(currentToken)}`;
+
+    console.log("Creating WebSocket:", url);
+
+    const ws = new WebSocket(url);
+
+    wsRef.current = ws;
+
+    dispatch(setSocketStatus("connecting"));
+
+    /**
+     * Check whether this socket is still the current socket.
+     */
+    const isCurrentSocket = () => {
+      return (
+        wsRef.current === ws &&
+        socketGenerationRef.current === generation
+      );
+    };
+
+    ws.onopen = () => {
+      if (!isCurrentSocket()) {
+        return;
+      }
+
+      console.log(
+        "CONNECTED TO SOCKET",
+      );
+
+      reconnectAttemptsRef.current = 0;
+
+      dispatch(setSocketStatus("open"));
+
+      sendCallback.current = (data) => {
+        if (!isCurrentSocket()) {
+          return false;
+        }
+
+        if (ws.readyState !== WebSocket.OPEN) {
+          return false;
+        }
+
+        try {
+          ws.send(JSON.stringify(data));
+          return true;
+        } catch (error) {
+          console.error(
+            "Failed to send WebSocket message:",
+            error,
+          );
+
+          return false;
+        }
+      };
+
+      /**
+       * Restore subscriptions after reconnect.
+       */
+      for (
+        const channel of subscriptionsRef.current
+      ) {
+        try {
+          ws.send(
+            JSON.stringify({
+              action: "subscribe",
+              channel,
+            }),
+          );
+
+          console.log(
+            "Restored subscription:",
+            channel,
+          );
+        } catch (error) {
+          console.error(
+            `Failed to restore subscription ${channel}:`,
+            error,
+          );
+        }
+      }
+    };
+
+    ws.onmessage = (event) => {
+      if (!isCurrentSocket()) {
+        return;
+      }
+
+      console.log(
+        "WEBSOCKET MESSAGE --->",
+        event.data,
+      );
+
+      try {
+        const parsed = JSON.parse(event.data);
+
+        dispatch(
+          setData({
+            message:
+              typeof parsed === "string"
+                ? parsed
+                : JSON.stringify(parsed),
+
+            timestamp: Date.now(),
+          }),
+        );
+      } catch (error) {
+        console.error(
+          "Failed to parse WebSocket message:",
+          error,
+        );
+      }
+    };
+
+    ws.onerror = (error) => {
+      if (!isCurrentSocket()) {
+        return;
+      }
+
+      console.error(
+        "WEBSOCKET ERROR --->",
+        error,
+      );
+    };
+
+    ws.onclose = (event) => {
+      /**
+       * CRITICAL:
+       *
+       * An old WebSocket must never manipulate the new
+       * WebSocket's state.
+       */
+      if (!isCurrentSocket()) {
+        console.log(
+          "Ignoring close from stale WebSocket",
+        );
+        return;
+      }
+
+      console.log(
+        "WEBSOCKET CLOSED --->",
+        {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean,
+        },
+      );
+
+      wsRef.current = null;
+
+      sendCallback.current = () => false;
+
+      dispatch(setSocketStatus("close"));
+
+      /**
+       * Manual disconnect means no reconnect.
+       */
+      if (manuallyDisconnectedRef.current) {
+        return;
+      }
+
+      /**
+       * shouldConnect may have changed while this socket
+       * was alive.
+       */
+      if (!shouldConnectRef.current) {
+        return;
+      }
+
+      /**
+       * 1008 is commonly used by your server for policy/auth
+       * failures.
+       *
+       * Do NOT continuously reconnect with an expired JWT.
+       */
+      if (event.code === 1008) {
+        console.warn(
+          "WebSocket closed with 1008. Authentication/policy failure. Reconnect stopped.",
+        );
+
+        manuallyDisconnectedRef.current = true;
+
+        return;
+      }
+
+      scheduleReconnect();
+    };
+  }, [
+    clearReconnectTimeout,
+    dispatch,
+    scheduleReconnect,
+  ]);
+
+  const disconnect = useCallback(() => {
+    console.log(
+      "MANUAL WEBSOCKET DISCONNECT",
+    );
+
+    manuallyDisconnectedRef.current = true;
+
+    clearReconnectTimeout();
+
+    /**
+     * Invalidate all previously-created socket callbacks.
+     */
+    socketGenerationRef.current += 1;
+
+    const ws = wsRef.current;
+
+    wsRef.current = null;
+
+    sendCallback.current = () => false;
+
+    dispatch(setSocketStatus("close"));
+
+    if (!ws) {
+      return;
+    }
+
+    /**
+     * Only call close while it is meaningful to do so.
+     */
+    if (
+      ws.readyState === WebSocket.CONNECTING ||
+      ws.readyState === WebSocket.OPEN
+    ) {
+      try {
+        ws.close(
+          1000,
+          "Client disconnect",
+        );
+      } catch (error) {
+        console.error(
+          "Failed to close WebSocket:",
+          error,
+        );
+      }
+    }
+  }, [clearReconnectTimeout, dispatch]);
+
+  const reconnect = useCallback(() => {
+    console.log(
+      "MANUAL WEBSOCKET RECONNECT",
+    );
+
+    manuallyDisconnectedRef.current = false;
+
+    clearReconnectTimeout();
+
+    reconnectAttemptsRef.current = 0;
+
+    const existingSocket = wsRef.current;
+
+    if (
+      existingSocket &&
+      (
+        existingSocket.readyState === WebSocket.OPEN ||
+        existingSocket.readyState === WebSocket.CONNECTING
+      )
+    ) {
+      return;
+    }
+
+    connect();
+  }, [clearReconnectTimeout, connect]);
+
+  /**
+   * Connect/disconnect lifecycle.
+   *
+   * Notice that token and shouldConnect are included.
+   */
+  useEffect(() => {
+    if (!shouldConnect || !token || !wsurl) {
+      disconnect();
+      return;
+    }
+
+    connect();
+
+    return () => {
+      /**
+       * This cleanup belongs to the current effect.
+       */
+      disconnect();
+    };
+  }, [
+    connect,
+    disconnect,
+    shouldConnect,
+    token,
+    wsurl,
+  ]);
+
+  /**
+   * If the token changes while we have an active socket,
+   * replace the socket with one using the new token.
+   *
+   * This is useful after a token refresh.
+   */
+  useEffect(() => {
+    if (!shouldConnect || !token) {
+      return;
+    }
+
+    const currentSocket = wsRef.current;
+
+    if (!currentSocket) {
+      return;
+    }
+
+    /**
+     * We don't know which token created the existing socket
+     * from the WebSocket API itself, so the safest behaviour
+     * is to reconnect when the auth token changes.
+     */
+    if (
+      currentSocket.readyState === WebSocket.OPEN ||
+      currentSocket.readyState === WebSocket.CONNECTING
+    ) {
+      console.log(
+        "Token changed, reconnecting WebSocket",
+      );
+
+      manuallyDisconnectedRef.current = true;
+
+      clearReconnectTimeout();
+
+      socketGenerationRef.current += 1;
+
+      wsRef.current = null;
+
+      sendCallback.current = () => false;
+
+      try {
+        if (
+          currentSocket.readyState === WebSocket.OPEN ||
+          currentSocket.readyState === WebSocket.CONNECTING
+        ) {
+          currentSocket.close(
+            1000,
+            "Token changed",
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Failed to close old WebSocket:",
+          error,
+        );
+      }
+
+      manuallyDisconnectedRef.current = false;
+
+      reconnectAttemptsRef.current = 0;
+
+      connect();
+    }
+  }, [
+    token,
+    shouldConnect,
+    clearReconnectTimeout,
+    connect,
+  ]);
+
+  return {
+    sendMessage: send,
+    subscribe,
+    unsubscribe,
+    disconnect,
+    reconnect,
+    isConnected:
+      wsRef.current?.readyState ===
+      WebSocket.OPEN,
+    isConnecting:
+      wsRef.current?.readyState ===
+      WebSocket.CONNECTING,
+  };
+}

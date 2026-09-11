@@ -9,14 +9,7 @@ export interface RecievedBoardsInterface {
   name: string;
   updated_at: string;
   created_at: string;
-  members: {
-    id: number;
-    uid: string;
-    email: string;
-    full_name: string;
-    image_file: string | null;
-    image_path: string;
-  }[];
+  members: RecievedBoardMemberInterface[];
 }
 
 export interface RecievedBoardMemberInterface {
@@ -68,7 +61,13 @@ const boardSlice = createSlice({
       state.deleteBoardMemberLoadingStatus = null;
     },
     addBoard: (state, action) => {
+      if (state.boards.find((board) => board.id === action.payload.id)) return;
       state.boards.push(action.payload);
+    },
+    removeBoard: (state, action) => {
+      state.boards = state.boards.filter(
+        (boards) => boards.id !== action.payload.id,
+      );
     },
   },
   extraReducers: (builder) => {
@@ -353,6 +352,6 @@ export const deleteBoardMember = createAsyncThunk<
   },
 );
 
-export const { resetBoards, addBoard } = boardSlice.actions;
+export const { resetBoards, addBoard, removeBoard } = boardSlice.actions;
 
 export default boardSlice.reducer;
