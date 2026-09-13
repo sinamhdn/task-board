@@ -59,7 +59,9 @@ function BoardSingle() {
         <div>
           <header className="flex justify-between">
             <h3>{board.name}</h3>
-            <BoardMembers board={board} currentUser={loggedInUser} />
+            {loggedInUser.id === board.user_id && (
+              <BoardMembers board={board} currentUser={loggedInUser} />
+            )}
           </header>
           <div className="canvas-wrapper">
             <div className="canvas">

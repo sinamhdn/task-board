@@ -11,6 +11,7 @@ from ..utils.db import Base
 from .members import members_table
 
 if TYPE_CHECKING:
+    from .lists import List
     from .users import User
 
 
@@ -33,6 +34,11 @@ class Board(Base):
     )
     members: Mapped[list[User]] = relationship(
         "User", secondary=members_table, back_populates="membered_boards"
+    )
+    owned_lists: Mapped[list[List]] = relationship(
+        "List",
+        back_populates="owner",
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:
