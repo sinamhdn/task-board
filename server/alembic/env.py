@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 from alembic import context
-from app.models import boards, users
+from app.models import boards, cards, lists, users
 from app.utils.db import Base
 from app.utils.settings import settings
 from sqlalchemy import engine_from_config, pool
