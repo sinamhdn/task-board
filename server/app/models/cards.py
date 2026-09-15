@@ -8,9 +8,7 @@ from sqlalchemy import ForeignKey, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..utils.db import Base
-
-if TYPE_CHECKING:
-    from .users import Board
+from .lists import List
 
 
 class Card(Base):
@@ -27,7 +25,7 @@ class Card(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     list_id: Mapped[int] = mapped_column(ForeignKey("lists.id"), nullable=False)
-    owner: Mapped[Board] = relationship(
+    owner: Mapped[List] = relationship(
         "List", foreign_keys=[list_id], back_populates="owned_cards"
     )
 

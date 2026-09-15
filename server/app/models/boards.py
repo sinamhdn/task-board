@@ -8,10 +8,10 @@ from sqlalchemy import ForeignKey, Integer, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..utils.db import Base
+from .lists import List
 from .members import members_table
 
 if TYPE_CHECKING:
-    from .lists import List
     from .users import User
 
 

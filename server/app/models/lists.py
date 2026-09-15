@@ -8,10 +8,8 @@ from sqlalchemy import ForeignKey, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..utils.db import Base
-
-if TYPE_CHECKING:
-    from .cards import Card
-    from .users import Board
+from .boards import Board
+from .cards import Card
 
 
 class List(Base):
