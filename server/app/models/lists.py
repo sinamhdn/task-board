@@ -8,8 +8,12 @@ from sqlalchemy import ForeignKey, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..utils.db import Base
-from .boards import Board
-from .cards import Card
+
+# to avoid circular dependency problem we do this
+# instead we need to impoert each one inside __init__.py to solve name import problem in relationshipts
+if TYPE_CHECKING:
+    from .boards import Board
+    from .cards import Card
 
 
 class List(Base):

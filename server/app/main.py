@@ -4,6 +4,8 @@ import json
 import os
 from contextlib import asynccontextmanager
 
+import app.models
+
 # import socketio
 from fastapi import (
     FastAPI,
