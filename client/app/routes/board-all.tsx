@@ -10,7 +10,7 @@ import {
 } from "~/state/boardSlice";
 import { getToken } from "~/utils";
 import classnames from "classnames";
-import BoardCard from "~/components/board-card";
+import BoardCard from "~/components/board-card-item";
 import BoardNew from "~/components/board-new";
 import { Link, redirect } from "react-router";
 import LoadingSpinner from "~/components/loading-spinner";

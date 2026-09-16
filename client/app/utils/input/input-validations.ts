@@ -153,3 +153,31 @@ export const board_member_email_validation = {
     },
   },
 };
+
+export const board_list_name_validation = {
+  name: "list_name" as const,
+  label: "List title",
+  type: "text",
+  id: "list_name",
+  placeholder: "enter title of the list",
+  validation: {
+    required: {
+      value: true,
+      message: "required",
+    },
+  },
+};
+
+export const board_card_desc_validation = {
+  name: "card_desc" as const,
+  label: "Card Description",
+  type: "text",
+  id: "card_desc",
+  placeholder: "Whats on your mind?",
+  validation: {
+    required: {
+      value: true,
+      message: "required",
+    },
+  },
+};

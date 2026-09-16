@@ -1,6 +1,6 @@
 import type { RecievedBoardsInterface } from "~/state/boardSlice";
 
-const BoardCard = ({ board }: { board: RecievedBoardsInterface }) => {
+const BoardCardItem = ({ board }: { board: RecievedBoardsInterface }) => {
   return (
     <div className="board-card ">
       <h2 className="text-4xl">{board.name}</h2>
@@ -8,4 +8,4 @@ const BoardCard = ({ board }: { board: RecievedBoardsInterface }) => {
   );
 };
 
-export default BoardCard;
+export default BoardCardItem;

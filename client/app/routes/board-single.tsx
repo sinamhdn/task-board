@@ -3,11 +3,11 @@ import BoardMembers from "~/components/board-members";
 import { useEffect } from "react";
 import { redirect, useLocation, useParams } from "react-router";
 import LoadingSpinner from "~/components/loading-spinner";
-import BoardAddNewList from "~/components/board-add-new-list";
 import { useWebsocketContext } from "~/providers/websocket-provider";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getBoardById } from "~/state/boardSlice";
 import { getToken } from "~/utils";
+import BoardListAddButton from "~/components/board-list-add-btn";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -66,7 +66,8 @@ function BoardSingle() {
           <div className="canvas-wrapper">
             <div className="canvas">
               <div className="lists-wrapper">
-                <BoardAddNewList />
+                <BoardListAddButton />
+                <ul className="board-lists"></ul>
               </div>
             </div>
           </div>

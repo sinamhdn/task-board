@@ -1,4 +1,4 @@
-function BoardAddNewList() {
+function BoardListAddButton() {
   return (
     <div className="add-new-list">
       <button>Add new list...</button>
@@ -6,4 +6,4 @@ function BoardAddNewList() {
   );
 }
 
-export default BoardAddNewList;
+export default BoardListAddButton;

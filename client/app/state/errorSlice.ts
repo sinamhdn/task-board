@@ -4,6 +4,7 @@ export interface ErrorState {
   auth_field_errors: { [key: string]: string | undefined };
   board_add_field_errors: { [key: string]: string | undefined };
   board_member_add_field_errors: { [key: string]: string | undefined };
+  board_list_add_field_errors: { [key: string]: string | undefined };
   server_error?: string;
   ws_error?: string;
 }
@@ -29,6 +30,9 @@ const initialState: ErrorState = {
   },
   board_member_add_field_errors: {
     board_member_email: "",
+  },
+  board_list_add_field_errors: {
+    list_name: "",
   },
   server_error: "",
   ws_error: "",
@@ -58,6 +62,10 @@ const errorSlice = createSlice({
             } else if (field in state.board_member_add_field_errors) {
               state.board_member_add_field_errors[
                 field as keyof { board_member_email: string }
+              ] = error.msg;
+            } else if (field in state.board_list_add_field_errors) {
+              state.board_list_add_field_errors[
+                field as keyof { list_name: string }
               ] = error.msg;
             } else {
               state.server_error = error.msg;
