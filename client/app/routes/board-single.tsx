@@ -1,13 +1,14 @@
-import type { Route } from "./+types/boardsingle";
-import BoardMembers from "~/components/board-members";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { redirect, useLocation, useParams } from "react-router";
+import BoardEditForm from "~/components/board-edit-form";
+import BoardListAddButton from "~/components/board-list-add-btn";
+import BoardMembers from "~/components/board-members";
 import LoadingSpinner from "~/components/loading-spinner";
 import { useWebsocketContext } from "~/providers/websocket-provider";
-import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getBoardById } from "~/state/boardSlice";
+import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getToken } from "~/utils";
-import BoardListAddButton from "~/components/board-list-add-btn";
+import type { Route } from "./+types/boardsingle";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -17,6 +18,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 function BoardSingle() {
+  const [editBoardName, setEditBoardName] = useState(false);
   const { id: urlParamBoardId } = useParams();
   const { board: locationBoard } = useLocation().state ?? {};
   const { isConnected, sendMessage } = useWebsocketContext();
@@ -33,6 +35,10 @@ function BoardSingle() {
   const loggedInUser = useAppSelector((state) => state.session.currentUser);
 
   const dispatch = useAppDispatch();
+
+  const handleBoardTitleClick = () => {
+    setEditBoardName(true);
+  };
 
   useEffect(() => {
     if (!token) throw redirect("signin");
@@ -58,7 +64,16 @@ function BoardSingle() {
       ) : (
         <div>
           <header className="flex justify-between">
-            <h3>{board.name}</h3>
+            {editBoardName ? (
+              <BoardEditForm
+                boardId={board.id}
+                setEditFormActive={setEditBoardName}
+              />
+            ) : (
+              <button onClick={handleBoardTitleClick}>
+                <h3>{board.name}</h3>
+              </button>
+            )}
             {loggedInUser.id === board.user_id && (
               <BoardMembers board={board} currentUser={loggedInUser} />
             )}

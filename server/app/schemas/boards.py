@@ -8,7 +8,6 @@ from .users import UserPublicResponse
 
 
 class BoardResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     id: int
     uid: uuid.UUID
     user_id: int
@@ -16,7 +15,6 @@ class BoardResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime]
     members: list[UserPublicResponse] = []
-
     model_config = ConfigDict(from_attributes=True)
 
 

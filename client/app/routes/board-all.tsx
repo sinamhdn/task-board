@@ -1,20 +1,21 @@
-import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import type { Route } from "./+types/board-all";
-import { useEffect } from "react";
-import {
-  getAllBoards,
-  deleteBoard,
-  LoadingStatus as BoardLoadingStatusEnum,
-  addBoard,
-  removeBoard,
-} from "~/state/boardSlice";
-import { getToken } from "~/utils";
 import classnames from "classnames";
+import { useEffect } from "react";
+import { Link, redirect } from "react-router";
 import BoardCard from "~/components/board-card-item";
 import BoardNew from "~/components/board-new";
-import { Link, redirect } from "react-router";
 import LoadingSpinner from "~/components/loading-spinner";
+import {
+  addBoardDirect,
+  LoadingStatus as BoardLoadingStatusEnum,
+  deleteBoard,
+  getAllBoards,
+  removeBoardDirect,
+  updateBoardDirect,
+} from "~/state/boardSlice";
+import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import type { BoardChannelPayload } from "~/state/socketSlice";
+import { getToken } from "~/utils";
+import type { Route } from "./+types/board-all";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -52,9 +53,12 @@ function BoardAll() {
     if (!wsData) return;
     const payload: BoardChannelPayload = JSON.parse(wsData.message);
     if (payload.message.event === "member_added")
-      dispatch(addBoard(payload.message.board_data));
-    if (payload.message.event === "member_removed" || payload.message.event === "board_removed")
-      dispatch(removeBoard(payload.message.board_data));
+      dispatch(addBoardDirect(payload.message.board_data));
+    if (
+      payload.message.event === "member_removed" ||
+      payload.message.event === "board_removed"
+    )
+      dispatch(removeBoardDirect(payload.message.board_data));
     console.log(`WSDATA CONTENT ${JSON.stringify(wsData)}`);
   }, [wsData]);
 

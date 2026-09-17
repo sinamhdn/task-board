@@ -1,22 +1,11 @@
-import { useFormContext } from "react-hook-form";
-import type { FieldErrors } from "react-hook-form";
-import { AnimatePresence, motion } from "framer-motion";
-import { MdError } from "react-icons/md";
-import type { AuthFormErrorInterface, ErrorState } from "~/state/errorSlice";
-import { findInputError, isFormInvalid } from "~/utils";
 import cn from "classnames";
+import { AnimatePresence } from "framer-motion";
 
-type InputPropsType = {
-  id: string;
-  name: keyof FormValues;
-  type?: string;
-  label: string;
-  validation: any;
-  placeholder?: string;
-  multiline?: boolean;
-  className?: string;
-  errors: ErrorState;
-};
+import { useFormContext } from "react-hook-form";
+import { twMerge } from "tailwind-merge";
+import type { ErrorState } from "~/state/errorSlice";
+import { findInputError, isFormInvalid } from "~/utils";
+import InputError from "./input-error";
 
 type FormValues = {
   first_name: string;
@@ -29,6 +18,27 @@ type FormValues = {
   list_name: string;
 };
 
+type InputPropsType = {
+  id: string;
+  name: keyof FormValues;
+  type?: string;
+  label: string;
+  validation: any;
+  placeholder?: string;
+  multiline?: boolean;
+  errors: ErrorState;
+  classNameContainerTW: string;
+  classNameInputContainerTW: string;
+  classNameLableTW: string;
+  classNameTextAreaTW: string;
+  classNameInputTW: string;
+  classNameContainer: string;
+  classNameInputContainer: string;
+  classNameLable: string;
+  classNameTextArea: string;
+  classNameInput: string;
+};
+
 export const Input = ({
   id,
   name,
@@ -37,8 +47,17 @@ export const Input = ({
   placeholder,
   validation,
   multiline = false,
-  className,
   errors,
+  classNameContainerTW,
+  classNameInputContainerTW,
+  classNameLableTW,
+  classNameTextAreaTW,
+  classNameInputTW,
+  classNameContainer,
+  classNameInputContainer,
+  classNameLable,
+  classNameTextArea,
+  classNameInput,
 }: InputPropsType) => {
   const {
     register,
@@ -49,28 +68,51 @@ export const Input = ({
   const isInvalid = isFormInvalid(inputError);
   const hasAuthFieldErrors = !!errors.auth_field_errors[name];
   const shouldShowError = isInvalid || hasAuthFieldErrors;
-  const input_tailwind =
-    "p-5 font-medium rounded-md w-full border border-slate-300 placeholder:opacity-60";
 
   return (
-    <div className={cn("input-field flex flex-col w-full gap-2", className)}>
-      <div className=" text-left">
-        <label htmlFor={id} className="font-semibold capitalize">
+    <div
+      className={cn(
+        twMerge("input-field flex flex-col w-full gap-2", classNameContainerTW),
+        classNameContainer,
+      )}
+    >
+      <div
+        className={cn(
+          twMerge("text-left", classNameInputContainerTW),
+          classNameInputContainer,
+        )}
+      >
+        <label
+          htmlFor={id}
+          className={cn(
+            twMerge("font-semibold capitalize", classNameLableTW),
+            classNameLable,
+          )}
+        >
           {label}
         </label>
         {multiline ? (
           <textarea
             id={id}
             className={cn(
-              input_tailwind,
-              "min-h-[10rem] max-h-[20rem] resize-y",
+              twMerge(
+                "p-5 font-medium rounded-md w-full border border-slate-300 placeholder:opacity-60 min-h-[10rem] max-h-[20rem] resize-y",
+                classNameTextAreaTW,
+              ),
+              classNameTextArea,
             )}
             placeholder={placeholder}
             {...register(`${name}`, validation)}
           ></textarea>
         ) : (
           <input
-            className="w-full p-4 font-medium border rounded-md border-slate-300 placeholder:opacity-60 mb-2 mt-2"
+            className={cn(
+              twMerge(
+                "w-full p-4 font-medium border rounded-md border-slate-300 placeholder:opacity-60 mb-2 mt-2",
+                classNameInputTW,
+              ),
+              classNameInput,
+            )}
             id={id}
             type={type}
             placeholder={placeholder}
@@ -89,41 +131,4 @@ export const Input = ({
       </AnimatePresence>
     </div>
   );
-};
-
-const InputError = ({
-  field,
-  errors,
-  formStateErrors,
-}: {
-  field: keyof FormValues;
-  errors: ErrorState;
-  formStateErrors: FieldErrors<FormValues>;
-}) => (
-  <div className="form-error-container">
-    <motion.div
-      className="flex items-center gap-1 px-2 font-semibold text-red-500 bg-red-100 rounded-md"
-      {...framerError}
-    >
-      <MdError />
-      {formStateErrors[field] ? (
-        <p className="form-error first_name-field-error">
-          {formStateErrors[field]?.message}
-        </p>
-      ) : (
-        errors.auth_field_errors[field as keyof AuthFormErrorInterface] && (
-          <p className="form-error first_name-field-error">
-            {errors.auth_field_errors[field as keyof AuthFormErrorInterface]}
-          </p>
-        )
-      )}
-    </motion.div>
-  </div>
-);
-
-const framerError = {
-  initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: 10 },
-  transition: { duration: 0.2 },
 };

@@ -36,6 +36,7 @@ const initialState: {
   getBoardsLoadingStatus: string | null;
   createBoardLoadingStatus: string | null;
   deleteBoardLoadingStatus: string | null;
+  updateBoardsLoadingStatus: string | null;
   addBoardMemberLoadingStatus: string | null;
   deleteBoardMemberLoadingStatus: string | null;
   boards: RecievedBoardsInterface[];
@@ -43,6 +44,7 @@ const initialState: {
   getBoardsLoadingStatus: null,
   createBoardLoadingStatus: null,
   deleteBoardLoadingStatus: null,
+  updateBoardsLoadingStatus: null,
   addBoardMemberLoadingStatus: null,
   deleteBoardMemberLoadingStatus: null,
   boards: [],
@@ -57,17 +59,24 @@ const boardSlice = createSlice({
       state.getBoardsLoadingStatus = null;
       state.createBoardLoadingStatus = null;
       state.deleteBoardLoadingStatus = null;
+      state.updateBoardsLoadingStatus = null;
       state.addBoardMemberLoadingStatus = null;
       state.deleteBoardMemberLoadingStatus = null;
     },
-    addBoard: (state, action) => {
+    addBoardDirect: (state, action) => {
       if (state.boards.find((board) => board.id === action.payload.id)) return;
       state.boards.push(action.payload);
     },
-    removeBoard: (state, action) => {
+    removeBoardDirect: (state, action) => {
       state.boards = state.boards.filter(
         (boards) => boards.id !== action.payload.id,
       );
+    },
+    updateBoardDirect: (state, action) => {
+      const boardIndex = state.boards.findIndex(
+        (board) => board.id === action.payload.id,
+      );
+      state.boards[boardIndex] = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -91,6 +100,19 @@ const boardSlice = createSlice({
       })
       .addCase(getBoardById.rejected, (state, action) => {
         state.getBoardsLoadingStatus = LoadingStatus.rejected;
+      })
+      .addCase(updateBoard.fulfilled, (state, action) => {
+        state.updateBoardsLoadingStatus = LoadingStatus.fulfilled;
+        const boardIndex = state.boards.findIndex(
+          (board) => board.id === action.payload.id,
+        );
+        state.boards[boardIndex] = action.payload;
+      })
+      .addCase(updateBoard.pending, (state) => {
+        state.updateBoardsLoadingStatus = LoadingStatus.pending;
+      })
+      .addCase(updateBoard.rejected, (state, action) => {
+        state.updateBoardsLoadingStatus = LoadingStatus.rejected;
       })
       .addCase(createNewBoard.fulfilled, (state, action) => {
         state.createBoardLoadingStatus = LoadingStatus.fulfilled;
@@ -203,6 +225,37 @@ export const getBoardById = createAsyncThunk<
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/v1/boards/${boardId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data.detail || [];
+        console.log("boardSlice.ts::" + error.response?.data.detail);
+        dispatch(setError(errorMessage));
+        return rejectWithValue(errorMessage);
+      }
+      dispatch(setError([{ field: "server_error", msg: "Unknown error" }]));
+      return rejectWithValue([{ field: "server_error", msg: "Unknown error" }]);
+    }
+  },
+);
+
+export const updateBoard = createAsyncThunk<
+  RecievedBoardsInterface,
+  { board_id: number; token: string; board_name: string },
+  { rejectValue: BackendValidationError[] }
+>(
+  "board/updateboard",
+  async ({ token, board_id, board_name }, { dispatch, rejectWithValue }) => {
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_API_URL}/api/v1/boards/${boardId}`,
+        { board_name: board_name },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -352,6 +405,11 @@ export const deleteBoardMember = createAsyncThunk<
   },
 );
 
-export const { resetBoards, addBoard, removeBoard } = boardSlice.actions;
+export const {
+  resetBoards,
+  addBoardDirect,
+  removeBoardDirect,
+  updateBoardDirect,
+} = boardSlice.actions;
 
 export default boardSlice.reducer;
