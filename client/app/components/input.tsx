@@ -1,11 +1,13 @@
 import cn from "classnames";
 import { AnimatePresence } from "framer-motion";
 
+import { motion } from "framer-motion";
+import type { FieldErrors } from "react-hook-form";
 import { useFormContext } from "react-hook-form";
+import { MdError } from "react-icons/md";
 import { twMerge } from "tailwind-merge";
-import type { ErrorState } from "~/state/errorSlice";
+import type { AuthFormErrorInterface, ErrorState } from "~/state/errorSlice";
 import { findInputError, isFormInvalid } from "~/utils";
-import InputError from "./input-error";
 
 type FormValues = {
   first_name: string;
@@ -27,16 +29,18 @@ type InputPropsType = {
   placeholder?: string;
   multiline?: boolean;
   errors: ErrorState;
-  classNameContainerTW: string;
-  classNameInputContainerTW: string;
-  classNameLableTW: string;
-  classNameTextAreaTW: string;
-  classNameInputTW: string;
-  classNameContainer: string;
-  classNameInputContainer: string;
-  classNameLable: string;
-  classNameTextArea: string;
-  classNameInput: string;
+  classNameContainerTW?: string;
+  classNameInputContainerTW?: string;
+  classNameLableTW?: string;
+  classNameTextAreaTW?: string;
+  classNameInputTW?: string;
+  classNameErrorContainerTW?: string;
+  classNameContainer?: string;
+  classNameInputContainer?: string;
+  classNameLable?: string;
+  classNameTextArea?: string;
+  classNameInput?: string;
+  classNameErrorContainer?: string;
 };
 
 export const Input = ({
@@ -48,16 +52,18 @@ export const Input = ({
   validation,
   multiline = false,
   errors,
-  classNameContainerTW,
-  classNameInputContainerTW,
-  classNameLableTW,
-  classNameTextAreaTW,
-  classNameInputTW,
-  classNameContainer,
-  classNameInputContainer,
-  classNameLable,
-  classNameTextArea,
-  classNameInput,
+  classNameContainerTW = "",
+  classNameInputContainerTW = "",
+  classNameLableTW = "",
+  classNameTextAreaTW = "",
+  classNameInputTW = "",
+  classNameErrorContainerTW = "",
+  classNameContainer = "",
+  classNameInputContainer = "",
+  classNameLable = "",
+  classNameTextArea = "",
+  classNameInput = "",
+  classNameErrorContainer = "",
 }: InputPropsType) => {
   const {
     register,
@@ -126,9 +132,58 @@ export const Input = ({
             field={name}
             errors={errors}
             formStateErrors={formStateErrors}
+            classNameContainerTW={classNameErrorContainerTW}
+            classNameContainer={classNameErrorContainer}
           />
         )}
       </AnimatePresence>
     </div>
   );
 };
+
+const framerError = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: 10 },
+  transition: { duration: 0.2 },
+};
+
+const InputError = ({
+  field,
+  errors,
+  formStateErrors,
+  classNameContainerTW = "",
+  classNameContainer = "",
+}: {
+  field: keyof FormValues;
+  errors: ErrorState;
+  formStateErrors: FieldErrors<FormValues>;
+  classNameContainerTW?: string;
+  classNameContainer?: string;
+}) => (
+  <div className="form-error-container">
+    <motion.div
+      className={cn(
+        twMerge(
+          "flex items-center gap-1 px-2 font-semibold text-red-500 bg-red-100 rounded-md",
+          classNameContainerTW,
+        ),
+        classNameContainer,
+      )}
+      {...framerError}
+    >
+      <MdError />
+      {formStateErrors[field] ? (
+        <p className="form-error first_name-field-error">
+          {formStateErrors[field]?.message}
+        </p>
+      ) : (
+        errors.auth_field_errors[field as keyof AuthFormErrorInterface] && (
+          <p className="form-error first_name-field-error">
+            {errors.auth_field_errors[field as keyof AuthFormErrorInterface]}
+          </p>
+        )
+      )}
+    </motion.div>
+  </div>
+);
