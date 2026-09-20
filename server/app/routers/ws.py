@@ -39,7 +39,7 @@ async def socket(
     # Stop execution
     try:
         while True:
-            print(
+            logger.info(
                 f"WEBSOCKET IS CONNECTED OR NOT ====>>>> {websocket} --- ACTIVE CONNECTIONS {manager.active_connections}"
             )
             try:

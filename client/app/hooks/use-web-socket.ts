@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useAppDispatch } from "~/state/hooks";
 import { setData, setStatus as setSocketStatus } from "~/state/socketSlice";
+import log from "~/utils/logger";
 import { useAppSelector } from "../state/hooks";
 
 interface WebSocketHookInput {
@@ -11,6 +12,9 @@ interface WebSocketHookInput {
 }
 
 type SendFunction = (data: object) => void;
+
+const logger = log.getLogger("WEBSOCKET HOOK LOGGER");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 export function useWebSocket({
   wsurl,
@@ -36,13 +40,13 @@ export function useWebSocket({
   const connect = useCallback(() => {
     // ✅ Guard: reject empty or malformed URLs
     if (!shouldConnect || !wsurl) {
-      console.warn("Websocket url not available");
+      logger.warn("Websocket url not available");
       dispatch(setSocketStatus("close"));
       return;
     }
 
     if (!wsurl.startsWith("ws://") && !wsurl.startsWith("wss://")) {
-      console.warn("Invalid WebSocket URL, skipping connection:", wsurl);
+      logger.warn(`Invalid WebSocket URL, skipping connection: ${wsurl}`);
       dispatch(setSocketStatus("close"));
       return;
     }
@@ -64,7 +68,7 @@ export function useWebSocket({
       if (!ws) return;
 
       ws.onopen = () => {
-        console.log("CONNECTED TO SOCKET");
+        logger.warn(`Connected to websocket (ONOPEN): WEBSOCKET OPENED`);
         // setSocketState("open");
         dispatch(setSocketStatus("open"));
         // Reset retry count on successful connection
@@ -75,14 +79,16 @@ export function useWebSocket({
             ws.send(d);
             return true;
           } catch (err) {
-            console.error("Failed to send websocket message:", err);
+            logger.error(`Failed to send websocket message: ${err}`);
             return false;
           }
         };
       };
 
       ws.onmessage = (event) => {
-        console.log(`WEBSOCKET ONMESSAGE ---> ${event} ${event.data}`);
+        logger.info(
+          `Websocket message recieved (ONMESSAGE): ${event} --> ${event.data}`,
+        );
         try {
           const msg = convertJSONtoObject(event.data);
           // setDataRecieved({
@@ -96,12 +102,12 @@ export function useWebSocket({
             }),
           );
         } catch (err) {
-          console.error("Failed to process message:", err);
+          logger.error(`Failed to process message: ${err}`);
         }
       };
 
       ws.onclose = () => {
-        console.log("WEBSOCKET CLOSED");
+        logger.info(`Websocket disconnected (ONCLOSE): WEBSOCKET CLOSED`);
         // setSocketState("close");
         dispatch(setSocketStatus("close"));
         sendCallback.current = () => false;
@@ -112,11 +118,11 @@ export function useWebSocket({
       };
 
       ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
+        logger.error(`Websocket error (ONERROR): ${error}`);
         // The onclose handler will trigger after this
       };
     } catch (err) {
-      console.error("Failed to create WebSocket connection:", err);
+      logger.error(`Failed to create WebSocket connection: ${err}`);
       // setSocketState("close");
       dispatch(setSocketStatus("close"));
     }
@@ -154,15 +160,15 @@ export function useWebSocket({
   const retrydecrement = useCallback(
     (reconnect: () => void) => {
       if (retryCountRef.current > 0) {
-        console.log(
-          `Reconnecting... ${retryCountRef.current} attempts remaining`,
+        logger.warn(
+          `Websocket Reconnecting... ${retryCountRef.current} attempts remaining`,
         );
         reconnectTimeoutRef.current = window.setTimeout(() => {
           retryCountRef.current = retryCountRef.current - 1;
           reconnect();
         }, retryInterval);
       } else {
-        console.log("No more retry attempts remaining");
+        logger.warn("Websocket no more retry attempts remaining");
       }
     },
     [retryInterval],
@@ -175,6 +181,9 @@ export function useWebSocket({
     const attempts = reconnectAttemptsRef.current;
     const delay = Math.min(1000 * 2 ** attempts, 10000);
     reconnectAttemptsRef.current += 1;
+    logger.warn(
+      `Websocket Reconnecting... attempt number: ${retryCountRef.current}`,
+    );
     reconnectTimeoutRef.current = window.setTimeout(() => {
       reconnect();
     }, delay);
@@ -195,9 +204,8 @@ function convertJSONtoObject(msg: string): unknown {
     const parsed = JSON.parse(msg);
     return parsed;
   } catch (err) {
-    console.error(
-      "Failed to converts a JavaScript Object Notation (JSON) string into an object:",
-      err,
+    logger.error(
+      `Failed to converts a JavaScript Object Notation (JSON) string into an object: ${err}`,
     );
     return msg;
   }
@@ -208,9 +216,8 @@ function convertObjecttoJSON(msg: object): string {
     const parsed = JSON.stringify(msg);
     return parsed;
   } catch (err) {
-    console.error(
-      "Failed to converts an object string into a JavaScript Object Notation (JSON):",
-      err,
+    logger.error(
+      `Failed to converts an object string into a JavaScript Object Notation (JSON): ${err}`,
     );
     return "{}";
   }

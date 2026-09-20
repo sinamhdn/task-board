@@ -17,6 +17,14 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
+// In React, if you pass value, React treats that prop as the single source of truth
+// When you type, the browser tries to change the input, but React immediately re-renders it back to myValue. Since myValue never changes, the input looks read-only. React will usually warn:
+// You provided a value prop to a form field without an onChange handler. This will render a read-only field.
+// Fix 1: Make it controlled properly
+// Add state and update it in onChange
+// Fix 2: If you only want an initial value
+// Use defaultValue instead of value
+
 function BoardSingle() {
   const [editBoardName, setEditBoardName] = useState(false);
   const { id: urlParamBoardId } = useParams();
@@ -63,10 +71,11 @@ function BoardSingle() {
         <LoadingSpinner />
       ) : (
         <div>
-          <header className="flex justify-between">
+          <header className="flex justify-between pl-10 text-2xl text-center">
             {editBoardName ? (
               <BoardEditForm
                 boardId={board.id}
+                boardName={board.name}
                 setEditFormActive={setEditBoardName}
               />
             ) : (

@@ -19,9 +19,11 @@ interface FormValues {
 
 function BoardEditForm({
   boardId,
+  boardName,
   setEditFormActive,
 }: {
   boardId: number;
+  boardName: string;
   setEditFormActive: (arg0: boolean) => void;
 }) {
   const errors = useAppSelector((error: RootState) => error.errors);
@@ -31,7 +33,6 @@ function BoardEditForm({
   if (!token) return <LoadingSpinner />;
 
   const handleSubmitCallback = async (data: FormValues) => {
-    setEditFormActive(false);
     try {
       const result = await dispatch(
         updateBoard({
@@ -48,7 +49,7 @@ function BoardEditForm({
 
   const methods = useForm<FormValues>({
     defaultValues: {
-      board_name: "",
+      board_name: boardName,
     },
     mode: "onChange",
   });
@@ -58,17 +59,23 @@ function BoardEditForm({
   return (
     <ClickAwayListener
       onClickAway={async () => {
+        setEditFormActive(false);
         await onSubmit();
       }}
     >
-      <div className="board-add-form-component p-4 mt-4 bg-blue-800">
+      <div className="board-edit-form-component">
         <FormProvider {...methods}>
           <form
-            className="signup-form xl:w-1/4 lg:w-1/2 sm:w-full mx-auto text-center"
+            className="board-edit-form text-center"
+            onSubmit={onSubmit}
             noValidate
           >
             <div className="grid gap-5">
-              <Input {...board_name_validation} errors={errors} />
+              <Input
+                {...board_name_validation}
+                errors={errors}
+                classNameLableTW="hidden"
+              />
             </div>
           </form>
         </FormProvider>

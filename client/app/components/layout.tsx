@@ -1,14 +1,20 @@
+import { useEffect, useState } from "react";
 import { Outlet } from "react-router";
-import Header from "./header";
-import type { RootState } from "~/state/store";
+import {
+  addBoardDirect,
+  removeBoardDirect,
+  updateBoardDirect,
+} from "~/state/boardSlice";
+import { clearError } from "~/state/errorSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { clearSessionStatus } from "~/state/sessionSlice";
-import { clearError } from "~/state/errorSlice";
-import { useEffect, useState } from "react";
-import FormSubmissionStatusModal from "./form-submission-status-modal";
-import ServerErrorModal from "./server-error-modal";
-import { getToken } from "~/utils/auth";
 import { getCurrentUser } from "~/state/sessionSlice.ts";
+import type { BoardChannelPayload } from "~/state/socketSlice";
+import type { RootState } from "~/state/store";
+import { getToken } from "~/utils/auth";
+import FormSubmissionStatusModal from "./form-submission-status-modal";
+import Header from "./header";
+import ServerErrorModal from "./server-error-modal";
 
 function MainLayout() {
   const dispatch = useAppDispatch();
@@ -16,6 +22,7 @@ function MainLayout() {
   const [showError, setShowError] = useState(false);
   const currentUser = useAppSelector((state) => state.session.currentUser);
   const token = getToken();
+  const wsData = useAppSelector((state) => state.socket.data);
 
   useEffect(() => {
     if (token && !currentUser) {
@@ -34,6 +41,21 @@ function MainLayout() {
       return () => clearTimeout(timer); // Cleanup timeout if component unmounts
     }
   }, [errors, dispatch]);
+
+  useEffect(() => {
+    if (!wsData) return;
+    const payload: BoardChannelPayload = JSON.parse(wsData.message);
+    if (payload.message.event === "member_added")
+      dispatch(addBoardDirect(payload.message.board_data));
+    if (
+      payload.message.event === "member_removed" ||
+      payload.message.event === "board_removed"
+    )
+      dispatch(removeBoardDirect(payload.message.board_data));
+    if (payload.message.event === "board_updated")
+      dispatch(updateBoardDirect(payload.message.board_data));
+    console.log(`WSDATA CONTENT ${JSON.stringify(wsData)}`);
+  }, [wsData]);
 
   return (
     <div className="main-layout-component">

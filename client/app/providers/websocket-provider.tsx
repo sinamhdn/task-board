@@ -6,11 +6,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useLoaderData } from "react-router";
 import { useWebSocket } from "~/hooks";
+import { useAppSelector } from "~/state/hooks";
 import { getToken } from "~/utils";
 import type { Route } from "../+types/root";
-import { useLoaderData } from "react-router";
-import { useAppSelector } from "~/state/hooks";
 
 interface WebsocketContextType {
   disconnect: () => void;
@@ -49,10 +49,7 @@ export function WebsocketProvider({ children }: { children: ReactNode }) {
       : null;
     setWsUrl((prev) => (prev === nextUrl ? prev : nextUrl)); // ← bail if unchanged
     setShouldWebsocketConnect(Boolean(newToken));
-    console.log("currentUser changed — ref:", currentUser);
   }, [currentUser]);
-
-  console.log(`WebsocketProvider URL ${wsUrl}`);
 
   const { disconnect, isConnected, isConnecting, sendMessage } = useWebSocket({
     wsurl: wsUrl,

@@ -5,15 +5,11 @@ import BoardCard from "~/components/board-card-item";
 import BoardNew from "~/components/board-new";
 import LoadingSpinner from "~/components/loading-spinner";
 import {
-  addBoardDirect,
   LoadingStatus as BoardLoadingStatusEnum,
   deleteBoard,
   getAllBoards,
-  removeBoardDirect,
-  updateBoardDirect,
 } from "~/state/boardSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import type { BoardChannelPayload } from "~/state/socketSlice";
 import { getToken } from "~/utils";
 import type { Route } from "./+types/board-all";
 
@@ -31,7 +27,6 @@ function BoardAll() {
   const getBoardsLoadingStatus = useAppSelector(
     (state) => state.board.getBoardsLoadingStatus,
   );
-  const wsData = useAppSelector((state) => state.socket.data);
 
   const iconClasses = classnames({
     fa: true,
@@ -48,19 +43,6 @@ function BoardAll() {
   useEffect(() => {
     console.log("boards returned.", boards);
   }, [boards]);
-
-  useEffect(() => {
-    if (!wsData) return;
-    const payload: BoardChannelPayload = JSON.parse(wsData.message);
-    if (payload.message.event === "member_added")
-      dispatch(addBoardDirect(payload.message.board_data));
-    if (
-      payload.message.event === "member_removed" ||
-      payload.message.event === "board_removed"
-    )
-      dispatch(removeBoardDirect(payload.message.board_data));
-    console.log(`WSDATA CONTENT ${JSON.stringify(wsData)}`);
-  }, [wsData]);
 
   // Show loading state first
   if (getBoardsLoadingStatus === BoardLoadingStatusEnum.pending) {

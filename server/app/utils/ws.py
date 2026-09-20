@@ -6,6 +6,7 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
+from fastapi.websockets import WebSocketState
 
 from ..crud.users import UserCRUD
 from ..utils.auth import verify_access_token
@@ -37,10 +38,7 @@ class ConnectionManager:
         close_reason: str = "Internal server error",
     ):
         try:
-            if (
-                hasattr(websocket, "client_state")
-                and websocket.client_state.value != "DISCONNECTED"
-            ):
+            if websocket.client_state != WebSocketState.DISCONNECTED:
                 await websocket.close(code=close_status_code, reason=close_reason)
         except (RuntimeError, WebSocketDisconnect) as e:
             logger.error(f"Runtime error during disconnect: {e}")
@@ -56,8 +54,8 @@ class ConnectionManager:
     def remove_connection(self, websocket: WebSocket, user_id: int):
         if user_id in self.active_connections:
             self.active_connections[user_id].discard(websocket)
-        if not self.active_connections[user_id]:
-            del self.active_connections[user_id]
+            if not self.active_connections[user_id]:
+                del self.active_connections[user_id]
         for channel in list(self.channels.keys()):
             self.channels[channel].discard(websocket)
             if not self.channels[channel]:
@@ -65,15 +63,12 @@ class ConnectionManager:
 
     async def send_personal_message(self, message: Dict, websocket: WebSocket):
         try:
-            if (
-                hasattr(websocket, "client_state")
-                and websocket.client_state.value != "CONNECTED"
-            ):
+            if websocket.client_state != WebSocketState.CONNECTED:
                 logger.error("Attempted to send message to disconnected client")
                 return False
 
             await websocket.send_json(
-                {"res_type": "Personal Message", "message": message}
+                {"res_type": "personal_message", "message": message}
             )
             return True
         except (WebSocketDisconnect, RuntimeError) as e:

@@ -126,10 +126,10 @@ export const board_name_validation = {
   label: "Board name",
   type: "text",
   id: "board_name",
-  placeholder: "enter a name for your board",
+  placeholder: "",
   validation: {
     required: {
-      value: true,
+      value: false,
       message: "required",
     },
   },

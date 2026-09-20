@@ -73,6 +73,10 @@ const boardSlice = createSlice({
       );
     },
     updateBoardDirect: (state, action) => {
+      console.log(
+        `updateBoardDirect what does it recieve --> ${action.payload}`,
+        action.payload,
+      );
       const boardIndex = state.boards.findIndex(
         (board) => board.id === action.payload.id,
       );
@@ -254,7 +258,7 @@ export const updateBoard = createAsyncThunk<
   async ({ token, board_id, board_name }, { dispatch, rejectWithValue }) => {
     try {
       const response = await axios.patch(
-        `${import.meta.env.VITE_API_URL}/api/v1/boards/${boardId}`,
+        `${import.meta.env.VITE_API_URL}/api/v1/boards/${board_id}`,
         { board_name: board_name },
         {
           headers: {
