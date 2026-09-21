@@ -22,24 +22,28 @@ router = APIRouter(prefix="", tags=["lists"])
 
 
 @router.get("", response_model=list[ListResponse])
-async def get_all_owned_lists(
+async def get_all_lists(
     current_user: CurrentUser,
-    board_id:int,
+    board_id: int,
     db: Annotated[AsyncSession, Depends(get_async_db_session)],
     order: str = "updated_at",
     skip: int = 0,
     limit: int = 100,
 ):
-    board_query = await db.execute(select(Board).options(selectinload(Board.owner), selectinload(Board.members)).where(Board.id == board_id))
-    board = board_query.scalars().first()
-    if not board:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "field": "server_error",
-                    "msg": "Board not found.",
-                },
-            )
+    list_query = await db.execute(
+        select(List)
+        .options(selectinload(Board.owner), selectinload(Board.members))
+        .where(List.board_id == board_id)
+    )
+    board_list = list_query.scalars().first()
+    if not board_list:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "field": "server_error",
+                "msg": "List not found.",
+            },
+        )
     if not current_user and not current_user in board.members:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

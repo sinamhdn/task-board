@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from .users import UserPublicResponse
+from server.app.schemas.card import CardResponse
 
 
 class ListResponse(BaseModel):
@@ -14,5 +14,5 @@ class ListResponse(BaseModel):
     name: str
     created_at: datetime
     updated_at: Optional[datetime]
-    owned_cards: list[UserPublicResponse] = []
+    owned_cards: list[CardResponse] = []
     model_config = ConfigDict(from_attributes=True)
