@@ -46,14 +46,14 @@ function MainLayout() {
     if (!wsData) return;
     const payload: BoardChannelPayload = JSON.parse(wsData.message);
     if (payload.message.event === "member_added")
-      dispatch(addBoardDirect(payload.message.board_data));
+      dispatch(addBoardDirect(payload.message.data));
     if (
       payload.message.event === "member_removed" ||
       payload.message.event === "board_removed"
     )
-      dispatch(removeBoardDirect(payload.message.board_data));
+      dispatch(removeBoardDirect(payload.message.data));
     if (payload.message.event === "board_updated")
-      dispatch(updateBoardDirect(payload.message.board_data));
+      dispatch(updateBoardDirect(payload.message.data));
     console.log(`WSDATA CONTENT ${JSON.stringify(wsData)}`);
   }, [wsData]);
 

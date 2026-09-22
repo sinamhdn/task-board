@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.orm import selectinload
 
+from server.app.models import boards
+
 from ..models import members
 from ..models.boards import Board
 from ..models.users import User
@@ -37,8 +39,7 @@ async def get_all_owned_boards(
                 "msg": "Not authorized to see these boards please login.",
             },
         )
-
-    db_query = await db.execute(
+    boards_query = await db.execute(
         select(Board)
         .options(selectinload(Board.members))
         .order_by(get_order_column(Board, order))
@@ -46,8 +47,8 @@ async def get_all_owned_boards(
         .limit(limit)
         .where(or_(Board.id == current_user.id, Board.members.any(id=current_user.id)))
     )
-
-    return list(db_query.scalars().all())
+    boards = boards_query.scalars().all()
+    return list(boards)
 
 
 @router.get("/{board_id}", response_model=BoardResponse)
@@ -64,26 +65,25 @@ async def get_board_by_id(
                 "msg": "Not authorized to see this board please login.",
             },
         )
-
-    query_db = await db.execute(
+    board_query = await db.execute(
         select(Board)
         .options(selectinload(Board.owner), selectinload(Board.members))
         .where(Board.id == board_id)
     )
-    board = query_db.scalars().first()
-    if board:
-        return board
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail={"field": "server_error", "msg": "Board not found."},
-    )
+    board = board_query.scalars().first()
+    if not board:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"field": "server_error", "msg": "Board not found."},
+        )
+    return board
 
 
 @router.post("", response_model=BoardResponse, status_code=status.HTTP_201_CREATED)
 async def create_owned_board(
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_async_db_session)],
-    board: BoardCreate,
+    board_data: BoardCreate,
 ):
     if not current_user:
         raise HTTPException(
@@ -93,8 +93,15 @@ async def create_owned_board(
                 "msg": "Not authorized to see these boards please login.",
             },
         )
-
-    new_board = Board(name=board.board_name, user_id=current_user.id)
+    if not board_data or not hasattr(board_data, "board_name"):
+        raise HTTPException(
+            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+            detail={
+                "field": "server_error",
+                "msg": "Pass the correct board data to create a new board.",
+            },
+        )
+    new_board = Board(name=board_data.board_name, user_id=current_user.id)
     new_board.members.append(current_user)
     db.add(new_board)
     await db.commit()
@@ -138,14 +145,15 @@ async def update_owned_board(
     await db.refresh(board, attribute_names=["owner"])
     board_data = BoardResponse.model_validate(board).model_dump(mode="json")
     channel_name = f"boards:{board.id}"
-    for websocket in manager.channels[channel_name]:
-        await manager.send_personal_message(
-            websocket=websocket,
-            message={
-                "event": "board_updated",
-                "board_data": board_data,
-            },
-        )
+    if channel_name in manager.channels:
+        for websocket in manager.channels[channel_name]:
+            await manager.send_personal_message(
+                websocket=websocket,
+                message={
+                    "event": "board_updated",
+                    "data": board_data,
+                },
+            )
     return board
 
 
@@ -165,7 +173,6 @@ async def delete_board(
                 "msg": "Board not found",
             },
         )
-
     if board.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -174,14 +181,12 @@ async def delete_board(
                 "msg": "Not authorized to delete this post",
             },
         )
-
     await db.delete(board)
     await db.commit()
-
     board_data = BoardResponse.model_validate(board).model_dump(mode="json")
     channel_name = f"boards:{board.id}"
     for member in board.members:
-        if member.id in manager.active_connections:
+        if member.id in manager.active_connections and channel_name in manager.channels:
             for websocket in manager.channels[channel_name]:
                 # member_data = UserPublicResponse.model_validate(member).model_dump(
                 #     mode="json"
@@ -190,14 +195,14 @@ async def delete_board(
                     websocket=websocket,
                     message={
                         "event": "board_removed",
-                        "board_data": board_data,
+                        "data": board_data,
                     },
                 )
             for connection in manager.active_connections[member.id]:
                 if channel_name in manager.channels:
                     manager.channels[channel_name].discard(connection)
-                if not manager.channels[channel_name]:
-                    manager.channels.pop(channel_name)
+                    if not manager.channels[channel_name]:
+                        manager.channels.pop(channel_name)
 
 
 @router.post(
@@ -224,7 +229,6 @@ async def add_new_board_member(
                 "msg": "Board not found",
             },
         )
-
     if board_member_data.board_member_email == current_user.email:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -233,20 +237,16 @@ async def add_new_board_member(
                 "msg": "You can't add current user to members.",
             },
         )
-
     user_db_query = await db.execute(
         select(User).where(User.email == board_member_data.board_member_email)
     )
     user = user_db_query.scalars().first()
-
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"field": "server_error", "msg": "User not found."},
         )
-
     board_members_email_list = [x.email for x in board.members]
-
     if board_member_data.board_member_email in board_members_email_list:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -255,7 +255,6 @@ async def add_new_board_member(
                 "msg": "Board member already exists.",
             },
         )
-
     if len(board_members_email_list) > 4:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -264,11 +263,9 @@ async def add_new_board_member(
                 "msg": "You can't add more than 4 members to a board.",
             },
         )
-
     board.members.append(user)
     await db.commit()
     await db.refresh(board, attribute_names=["owner"])
-
     # add new added member to board channel if they are online
     # user_data = {
     #     field: getattr(user, field) for field in UserPublicResponse.model_fields.keys()
@@ -292,12 +289,11 @@ async def add_new_board_member(
                 websocket=websocket,
                 message={
                     "event": "member_added",
-                    "board_data": board_data,
+                    "data": board_data,
                 },
             )
     else:
         logger.info("Member is not online.")
-
     return user
 
 
@@ -316,7 +312,6 @@ async def delete_board_member(
         select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
     )
     board = board_db_query.scalars().first()
-
     if not board:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -325,7 +320,6 @@ async def delete_board_member(
                 "msg": "Board not found.",
             },
         )
-
     if member_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -334,18 +328,14 @@ async def delete_board_member(
                 "msg": "You cannot remove yourself from the board.",
             },
         )
-
     user_db_query = await db.execute(select(User).where(User.id == member_id))
     user = user_db_query.scalars().first()
-
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"field": "server_error", "msg": "User not found."},
         )
-
     board_members_id_list = [x.id for x in board.members]
-
     if member_id not in board_members_id_list:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -354,28 +344,24 @@ async def delete_board_member(
                 "msg": "Board member not exists.",
             },
         )
-
     board.members.remove(user)
     await db.commit()
-
     # user_data = UserPublicResponse.model_validate(user).model_dump(mode="json")
     board_data = BoardResponse.model_validate(board).model_dump(mode="json")
     channel_name = f"users:{user.id}"
-    if user.id in manager.active_connections:
+    if user.id in manager.active_connections and channel_name in manager.channels:
         for websocket in manager.channels[channel_name]:
             await manager.send_personal_message(
                 websocket=websocket,
                 message={
                     "event": "member_removed",
-                    "board_data": board_data,
+                    "data": board_data,
                 },
             )
         for connection in manager.active_connections[user.id]:
             if channel_name in manager.channels:
                 manager.channels[channel_name].discard(connection)
-            if not manager.channels[channel_name]:
-                manager.channels.pop(channel_name)
-
+                if not manager.channels[channel_name]:
+                    manager.channels.pop(channel_name)
     await db.refresh(board, attribute_names=["owner"])
-
     return user

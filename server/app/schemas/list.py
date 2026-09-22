@@ -16,3 +16,7 @@ class ListResponse(BaseModel):
     updated_at: Optional[datetime]
     owned_cards: list[CardResponse] = []
     model_config = ConfigDict(from_attributes=True)
+
+
+class ListCreate(BaseModel):
+    list_name: str

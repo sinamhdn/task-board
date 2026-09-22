@@ -43,25 +43,25 @@ export type BroadcastResType = "broadcast_channel";
 export interface EventMemberAddedInterface {
   event: "member_added"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  board_data: RecievedBoardsInterface;
+  data: RecievedBoardsInterface;
 }
 
 export interface EventMemberRemovedInterface {
   event: "member_removed"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  board_data: RecievedBoardsInterface;
+  data: RecievedBoardsInterface;
 }
 
 export interface EventBoardRemovedInterface {
   event: "board_removed"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  board_data: RecievedBoardsInterface;
+  data: RecievedBoardsInterface;
 }
 
 export interface EventBoardUpdatedInterface {
   event: "board_updated"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  board_data: RecievedBoardsInterface;
+  data: RecievedBoardsInterface;
 }
 
 // Add more variants as your backend adds them, e.g.

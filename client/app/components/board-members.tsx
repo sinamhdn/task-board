@@ -1,15 +1,15 @@
+import Tooltip from "@mui/material/Tooltip";
+import { useState } from "react";
 import {
   deleteBoardMember,
   type RecievedBoardsInterface,
 } from "~/state/boardSlice";
-import Tooltip from "@mui/material/Tooltip";
-import { useState } from "react";
-import BoardMemberAddButton from "./board-member-add-btn";
-import BoardMemberAddForm from "./board-member-add-form";
 import { useAppDispatch } from "~/state/hooks";
 import type { UserInterface } from "~/state/sessionSlice";
-import LoadingSpinner from "./loading-spinner";
 import { getToken } from "~/utils";
+import BoardMemberAddButton from "./board-member-add-btn";
+import BoardMemberAddForm from "./board-member-add-form";
+import LoadingSpinner from "./loading-spinner";
 
 function BoardMembers({
   board,
@@ -56,14 +56,15 @@ function BoardMembers({
       <ul className="flex flex-row-reverse relative">
         {board.members.map((member) => (
           <li className="flex-auto m-2 relative" key={member.id}>
-            {member.id !== currentUser.id && (
-              <button
-                className="absolute top-0.5 right-0.5 bg-red-600 rounded-full w-3 h-3 cursor-pointer flex items-center justify-center"
-                onClick={() => handleRemoveMember(member.id, board.id, token)}
-              >
-                <span className="text-white text-[8px] leading-none">✕</span>
-              </button>
-            )}
+            {member.id !== currentUser.id &&
+              currentUser.id === board.user_id && (
+                <button
+                  className="absolute top-0.5 right-0.5 bg-red-600 rounded-full w-3 h-3 cursor-pointer flex items-center justify-center"
+                  onClick={() => handleRemoveMember(member.id, board.id, token)}
+                >
+                  <span className="text-white text-[8px] leading-none">✕</span>
+                </button>
+              )}
             <Tooltip describeChild title={member.email}>
               {member?.image_file ? (
                 <img

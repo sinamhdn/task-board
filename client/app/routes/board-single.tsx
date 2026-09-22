@@ -83,9 +83,7 @@ function BoardSingle() {
                 <h3>{board.name}</h3>
               </button>
             )}
-            {loggedInUser.id === board.user_id && (
-              <BoardMembers board={board} currentUser={loggedInUser} />
-            )}
+            <BoardMembers board={board} currentUser={loggedInUser} />
           </header>
           <div className="canvas-wrapper">
             <div className="canvas">
