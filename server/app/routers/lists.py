@@ -129,22 +129,20 @@ async def create_new_list(
 
 
 @router.patch("/{list_id}", response_model=ListResponse)
-async def update_owned_board(
-    board_id: int,
+async def update_list(
+    list_id: int,
     list_data: BoardCreate,
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_async_db_session)],
 ):
-    query_db = await db.execute(
-        select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
-    )
+    query_db = await db.execute(select(List).where(List.id == list_id))
     board = query_db.scalars().first()
     if not board:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "field": "server_error",
-                "msg": "Board not found.",
+                "msg": "List not found.",
             },
         )
     if board.user_id != current_user.id:
