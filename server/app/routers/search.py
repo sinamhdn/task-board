@@ -1,23 +1,27 @@
-import email
+# import email
 import logging
-from typing import Annotated, List, Union
+from typing import Annotated, Union
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import Response
-from sqlalchemy import or_, select
+
+# from fastapi.responses import Response
+# from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..crud.users import UserCRUD
-from ..models.boards import Board
-from ..models.users import User
+# from ..crud.users import UserCRUD
+# from ..models.boards import Board
+# from ..models.users import User
 from ..schemas.boards import BoardResponse
 from ..schemas.users import (
     UserPublicResponse,
 )
-from ..utils.auth import CurrentUser, oath2_scheme
+
+# from ..utils.auth import CurrentUser, add_token_to_blacklist, oath2_scheme
 from ..utils.db import get_async_db_session
 from ..utils.search import SearchService
-from ..utils.utilities import add_to_blacklist
+
+# , List
+
 
 router = APIRouter(prefix="", tags=["users"])
 logger = logging.getLogger(f"Search router logger: Filename->{__name__}")

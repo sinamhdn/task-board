@@ -2,21 +2,17 @@ import json
 import logging
 from typing import Annotated
 
-from fastapi import (
+from fastapi import (  # WebSocketException,; status,
     APIRouter,
     Depends,
     WebSocket,
     WebSocketDisconnect,
-    WebSocketException,
-    status,
 )
 from pydantic import ValidationError
 
-from ..crud.users import UserCRUD
 from ..schemas.ws import adapter
-from ..utils.auth import verify_access_token
 from ..utils.db import AsyncSession, get_async_db_session
-from ..utils.ws import ClientConnectionManager, manager
+from ..utils.ws import manager
 
 router = APIRouter(prefix="", tags=["ws"])
 logger = logging.getLogger(f"Websocket router logger: Filename->{__name__}")

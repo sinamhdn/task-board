@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { redirect, useLocation, useParams } from "react-router";
 import BoardEditForm from "~/components/board-edit-form";
+import BoardList from "~/components/board-list";
 import BoardListAddButton from "~/components/board-list-add-btn";
 import BoardMembers from "~/components/board-members";
 import LoadingSpinner from "~/components/loading-spinner";
@@ -88,6 +89,13 @@ function BoardSingle() {
           <div className="canvas-wrapper">
             <div className="canvas">
               <div className="lists-wrapper">
+                <BoardList
+                  list={[
+                    { name: "list1" },
+                    { name: "list2" },
+                    { name: "list2" },
+                  ]}
+                />
                 <BoardListAddButton />
                 <ul className="board-lists"></ul>
               </div>

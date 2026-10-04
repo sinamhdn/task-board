@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from server.app.schemas.card import CardResponse
+from ..schemas.card import CardResponse
 
 
 class ListResponse(BaseModel):

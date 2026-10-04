@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..schemas.users import UserPrivateResponse
 from ..utils.auth import create_access_token
 from ..utils.db import get_async_db_session
-from ..utils.settings import settings
+from ..settings import settings
 
 router = APIRouter(prefix="", tags=["users"])
 

@@ -1,7 +1,7 @@
 function BoardListAddButton() {
   return (
     <div className="add-new-list">
-      <button>Add new list...</button>
+      <button>Add list</button>
     </div>
   );
 }

@@ -1,15 +1,15 @@
-import uuid
+# import uuid
 from typing import List, Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import Session, select
+from sqlmodel import select  # Session,
 
 from ..models.users import User
 from ..schemas.users import UserCreate, UserUpdate
 from ..utils.auth import set_password, verify_password
-from ..utils.utilities import get_order_column
+from ..utils.db import get_order_column
 
 
 class UserCRUD:

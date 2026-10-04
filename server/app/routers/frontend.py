@@ -10,7 +10,7 @@ from fastapi import (
 from fastapi.responses import FileResponse
 from fastapi.templating import Jinja2Templates
 
-from ..utils.settings import settings
+from ..settings import settings
 
 router = APIRouter(prefix="", tags=["ws"])
 templates = Jinja2Templates(directory="templates")

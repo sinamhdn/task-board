@@ -1,9 +1,11 @@
+import logging
+import sys
 from pathlib import Path
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-ENV_DIR = Path(__file__).resolve().parent.parent.parent
+ENV_DIR = Path(__file__).resolve().parent.parent
 # from dotenv import dotenv_values
 
 """# --- DEBUGGING BLOCK ---
@@ -34,9 +36,6 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-import logging
-import sys
 
 
 def setup_logging():

@@ -1,10 +1,10 @@
 # import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import asc, create_engine, desc
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Session
 
-from .settings import settings
+from ..settings import settings
 
 # Sync database
 # DATABASE_URL = os.getenv(
@@ -60,3 +60,31 @@ async def get_async_db_session():
     """Get async database session"""
     async with AsyncSessionLocal() as session:
         yield session
+
+
+def get_order_column(model, order_by: str = "updated_at"):
+    # Handle optional descending prefix (e.g., "-created_at")
+
+    order_by = order_by.strip()
+
+    descending = order_by.startswith("-")
+    col_name = order_by[1:] if descending else order_by
+
+    column = getattr(model, col_name, None)
+
+    if column is None:
+        raise ValueError(f"Invalid column: {col_name}")
+
+    return desc(column) if descending else asc(column)
+    # if order_by.startswith("-"):
+    #     col_name = order_by[1:]
+    #     descending = True
+    # else:
+    #     col_name = order_by
+    #     descending = False
+
+    # if not hasattr(model, col_name):
+    #     raise ValueError(f"Invalid column: {col_name}")
+
+    # column = getattr(model, col_name)
+    # return desc(column) if descending else asc(column)

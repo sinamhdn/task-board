@@ -13,9 +13,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.users import User
-from ..utils.auth import CurrentUser, oath2_scheme
+from ..utils.auth import CurrentUser, add_token_to_blacklist, oath2_scheme
 from ..utils.db import get_async_db_session
-from ..utils.utilities import add_to_blacklist
 
 router = APIRouter(prefix="", tags=["users"])
 logger = logging.getLogger(f"Users utilities logger: Filename->{__name__}")
@@ -59,7 +58,7 @@ async def delete_current_user(
             detail={"field": "server_error", "msg": "User not found."},
         )
     await UserCRUD.delete_user(session=session, user=current_user)
-    add_to_blacklist(token)
+    add_token_to_blacklist(token)
     return Response(
         status_code=status.HTTP_204_NO_CONTENT,
         headers={
@@ -151,7 +150,7 @@ async def delete_user(
     await UserCRUD.delete_user(session=session, user=user)
 
     # Blacklist the current token
-    add_to_blacklist(token)
+    add_token_to_blacklist(token)
 
     # Return 204 No Content with a header that tells the client to logout
     # Note: You can't return a body with 204, but you can add headers
