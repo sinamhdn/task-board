@@ -1,22 +1,20 @@
-import {
-  clearSessionStatus,
-  SessionLoadingStatusEnum,
-} from "~/state/sessionSlice";
-import { useSelector } from "react-redux";
-import type { RootState } from "~/state/store";
-import { useAppDispatch } from "~/state/hooks";
-import { clearError } from "~/state/errorSlice";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { LoadingStatusEnum } from "~/state";
+import { clearError } from "~/state/errorSlice";
+import { useAppDispatch } from "~/state/hooks";
+import { clearSessionStatus } from "~/state/sessionSlice";
+import type { RootState } from "~/state/store";
 
 function FormSubmissionStatusModal() {
   const [formSubmitState, setFormSubmitState] = useState("");
   const dispatch = useAppDispatch();
   const authLoadingStatus = useSelector(
-    (state: RootState) => state.session.authStatus,
+    (state: RootState) => state.sessionSlice.authStatus,
   );
 
   useEffect(() => {
-    if (authLoadingStatus === SessionLoadingStatusEnum.fulfilled) {
+    if (authLoadingStatus === LoadingStatusEnum.fulfilled) {
       setFormSubmitState("fulfilled");
       const timer = setTimeout(() => {
         setFormSubmitState("");
@@ -26,7 +24,7 @@ function FormSubmissionStatusModal() {
       return () => clearTimeout(timer); // Cleanup timeout if componeauthLoadingStatusnt unmounts
     }
 
-    if (authLoadingStatus === SessionLoadingStatusEnum.rejected) {
+    if (authLoadingStatus === LoadingStatusEnum.rejected) {
       setFormSubmitState("rejected");
       const timer = setTimeout(() => {
         setFormSubmitState("");

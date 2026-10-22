@@ -11,9 +11,11 @@ class UserBase(BaseModel):
     email: EmailStr = Field(max_length=120)
 
 
-class UserCreate(UserBase):
+class UserCreateRequest(UserBase):
     """schema for creating a new user"""
+
     password: str = Field(min_length=8, max_length=100)
+
     @field_validator("password")
     def validate_password(cls, v: str):
         """validate password complexity"""
@@ -26,8 +28,9 @@ class UserCreate(UserBase):
         return v
 
 
-class UserUpdate(BaseModel):
+class UserUpdateRequest(BaseModel):
     """Schema for updating user"""
+
     first_name: Optional[str] = Field(default=None, max_length=100)
     last_name: Optional[str] = Field(default=None, max_length=100)
     email: Optional[EmailStr] = Field(default=None, max_length=255)
@@ -37,6 +40,7 @@ class UserUpdate(BaseModel):
 
 class UserPublicResponse(BaseModel):
     """Schema for returning user data (excludes sensitive info)"""
+
     id: int
     uid: uuid.UUID
     email: str
@@ -57,6 +61,6 @@ class UserPrivateResponse(UserPublicResponse):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Token(BaseModel):
+class TokenResponse(BaseModel):
     access_token: str
     token_type: str

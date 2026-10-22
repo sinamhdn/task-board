@@ -17,7 +17,7 @@ from ..schemas.users import (
 )
 
 # from ..utils.auth import CurrentUser, add_token_to_blacklist, oath2_scheme
-from ..utils.db import get_async_db_session
+from ..utils.db import AnnotatedAsyncDBSession, get_async_db_session
 from ..utils.search import SearchService
 
 # , List
@@ -31,7 +31,7 @@ logger = logging.getLogger(f"Search router logger: Filename->{__name__}")
 async def search_all(
     search_type: str,
     query: str,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    db: AnnotatedAsyncDBSession,
     limit: int = 20,
 ):
     try:

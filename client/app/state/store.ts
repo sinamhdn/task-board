@@ -1,17 +1,23 @@
 import { configureStore } from "@reduxjs/toolkit";
+import boardMemberSlice from "./boardMemberSlice";
 import boardSlice from "./boardSlice";
+import cardSlice from "./cardSlice";
 import errorSlice from "./errorSlice";
+import listSlice from "./listSlice";
 import searchSlice from "./searchSlice";
 import sessionSlice from "./sessionSlice";
 import socketSlice from "./socketSlice";
 
 export const store = configureStore({
   reducer: {
-    session: sessionSlice,
-    socket: socketSlice,
-    search: searchSlice,
-    board: boardSlice,
-    errors: errorSlice,
+    sessionSlice: sessionSlice,
+    socketSlice: socketSlice,
+    searchSlice: searchSlice,
+    boardSlice: boardSlice,
+    boardMemberSlice: boardMemberSlice,
+    listSlice: listSlice,
+    cardSlice: cardSlice,
+    errorSlice: errorSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

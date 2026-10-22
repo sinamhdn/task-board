@@ -1,21 +1,24 @@
 // import { useSelector } from "react-redux";
-import type { Route } from "./+types/signin";
-import type { RootState } from "~/state/store";
-import { useForm, FormProvider } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { GrMail } from "react-icons/gr";
-import {
-  SessionLoadingStatusEnum as AuthLoadingStatus,
-  signinUser,
-} from "~/state/sessionSlice";
-import { clearError } from "~/state/errorSlice";
-import { Input } from "~/components/input";
 import { Link, useNavigate } from "react-router";
+import { Input } from "~/components/input";
+import { LoadingStatusEnum } from "~/state";
+import { clearError } from "~/state/errorSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
+import { signinUser } from "~/state/sessionSlice";
+import type { RootState } from "~/state/store";
+import { setToken } from "~/utils/auth";
 import {
   email_validation,
   password_validation,
 } from "~/utils/input/input-validations";
-import { setToken } from "~/utils/auth";
+import type { Route } from "./+types/signin";
+
+interface FormValues {
+  email: string;
+  password: string;
+}
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Signin" }, { name: "description", content: "Signin!" }];
@@ -23,15 +26,10 @@ export function meta({}: Route.MetaArgs) {
 
 function Signin() {
   const authLoadingStatus = useAppSelector(
-    (state: RootState) => state.session.authStatus,
+    (state: RootState) => state.sessionSlice.authStatus,
   );
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-
-  interface FormValues {
-    email: string;
-    password: string;
-  }
 
   const methods = useForm<FormValues>({
     defaultValues: {
@@ -57,7 +55,7 @@ function Signin() {
     }
   };
 
-  const errors = useAppSelector((state: RootState) => state.errors);
+  const errors = useAppSelector((state: RootState) => state.errorSlice.errors);
 
   const onSubmit = methods.handleSubmit(handleSubmitCallback);
 
@@ -79,7 +77,7 @@ function Signin() {
               className="flex items-center justify-center gap-1 p-5 mx-auto font-semibold w-48 text-center text-white bg-blue-600 rounded-md hover:bg-blue-800"
             >
               <GrMail />
-              {authLoadingStatus === AuthLoadingStatus.pending
+              {authLoadingStatus === LoadingStatusEnum.pending
                 ? "Signing in..."
                 : "Login"}
             </button>

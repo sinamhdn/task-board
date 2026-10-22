@@ -1,46 +1,17 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import {
+  LoadingStatusEnum,
+  type BackendValidationErrorInterface,
+  type SessionStateInterface,
+  type TokenRecievedInterface,
+  type UserRecievedInterface,
+} from "~/state";
 import { fetchCurrentUser } from "~/utils/auth";
 import { setError } from "./errorSlice";
 
-export interface UserInterface {
-  id: number;
-  uid: string;
-  full_name: string;
-  image_file?: string;
-  image_path?: string;
-  email?: string;
-  is_active?: boolean;
-  is_verified?: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface TokenInterface {
-  access_token: string;
-  token_type: string;
-}
-
-export interface SessionState {
-  websocket: WebSocket | null;
-  currentUser: UserInterface | null;
-  authStatus: string | null;
-  userStatus: string | null;
-}
-
-export interface BackendValidationError {
-  field: string;
-  msg: string;
-}
-
-export const SessionLoadingStatusEnum = {
-  fulfilled: "fulfilled",
-  pending: "pending",
-  rejected: "rejected",
-};
-
-const initialState: SessionState = {
+const initialState: SessionStateInterface = {
   websocket: null,
   currentUser: null,
   authStatus: null,
@@ -51,7 +22,10 @@ const sessionSlice = createSlice({
   name: "session",
   initialState: initialState,
   reducers: {
-    setCurrentUser: (state, action: PayloadAction<UserInterface | null>) => {
+    setCurrentUser: (
+      state,
+      action: PayloadAction<UserRecievedInterface | null>,
+    ) => {
       state.currentUser = action.payload;
     },
     clearCurrentUser: (state) => {
@@ -69,7 +43,7 @@ const sessionSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(signinUser.fulfilled, (state, action) => {
-        state.authStatus = SessionLoadingStatusEnum.fulfilled;
+        state.authStatus = LoadingStatusEnum.fulfilled;
         // state.currentUser = action.payload as User;
         console.log(
           "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
@@ -77,13 +51,13 @@ const sessionSlice = createSlice({
         );
       })
       .addCase(signinUser.pending, (state) => {
-        state.authStatus = SessionLoadingStatusEnum.pending;
+        state.authStatus = LoadingStatusEnum.pending;
       })
       .addCase(signinUser.rejected, (state, action) => {
-        state.authStatus = SessionLoadingStatusEnum.rejected;
+        state.authStatus = LoadingStatusEnum.rejected;
       })
       .addCase(signupUser.fulfilled, (state, action) => {
-        state.authStatus = SessionLoadingStatusEnum.fulfilled;
+        state.authStatus = LoadingStatusEnum.fulfilled;
         // state.currentUser = action.payload as User;
         console.log(
           "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER?",
@@ -91,15 +65,15 @@ const sessionSlice = createSlice({
         );
       })
       .addCase(signupUser.pending, (state) => {
-        state.authStatus = SessionLoadingStatusEnum.pending;
+        state.authStatus = LoadingStatusEnum.pending;
       })
       .addCase(signupUser.rejected, (state, action) => {
-        state.authStatus = SessionLoadingStatusEnum.rejected;
+        state.authStatus = LoadingStatusEnum.rejected;
         // console.log(action.payload);
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
-        state.userStatus = SessionLoadingStatusEnum.fulfilled;
-        state.currentUser = action.payload as UserInterface;
+        state.userStatus = LoadingStatusEnum.fulfilled;
+        state.currentUser = action.payload as UserRecievedInterface;
         console.log(
           "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN GETCURRENTUSER?",
           action.payload,
@@ -110,22 +84,22 @@ const sessionSlice = createSlice({
         );
       })
       .addCase(getCurrentUser.pending, (state) => {
-        state.userStatus = SessionLoadingStatusEnum.pending;
+        state.userStatus = LoadingStatusEnum.pending;
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
-        state.userStatus = SessionLoadingStatusEnum.rejected;
+        state.userStatus = LoadingStatusEnum.rejected;
       });
   },
 });
 
 export const signinUser = createAsyncThunk<
-  TokenInterface,
+  TokenRecievedInterface,
   {
     email: string;
     password: string;
   },
   {
-    rejectValue: BackendValidationError[];
+    rejectValue: BackendValidationErrorInterface[];
   }
 >("session/signin", async (credentials, { dispatch, rejectWithValue }) => {
   try {
@@ -159,7 +133,7 @@ export const signinUser = createAsyncThunk<
 });
 
 export const signupUser = createAsyncThunk<
-  UserInterface,
+  UserRecievedInterface,
   {
     first_name: string;
     last_name: string;
@@ -167,7 +141,7 @@ export const signupUser = createAsyncThunk<
     password: string;
   },
   {
-    rejectValue: BackendValidationError[];
+    rejectValue: BackendValidationErrorInterface[];
   }
 >("session/signup", async (credentials, { dispatch, rejectWithValue }) => {
   try {
@@ -197,10 +171,10 @@ export const signupUser = createAsyncThunk<
 });
 
 export const getCurrentUser = createAsyncThunk<
-  UserInterface,
+  UserRecievedInterface,
   string,
   {
-    rejectValue: BackendValidationError[];
+    rejectValue: BackendValidationErrorInterface[];
   }
 >("session/getcurrentuser", async (token, { dispatch, rejectWithValue }) => {
   // if (!getToken()) {

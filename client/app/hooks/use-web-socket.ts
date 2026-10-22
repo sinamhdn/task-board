@@ -35,7 +35,7 @@ export function useWebSocket({
   const reconnectAttemptsRef = useRef(0);
 
   const dispatch = useAppDispatch();
-  const socketState = useAppSelector((state) => state.socket.status);
+  const socketState = useAppSelector((state) => state.socketSlice.status);
 
   const connect = useCallback(() => {
     // ✅ Guard: reject empty or malformed URLs

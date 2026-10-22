@@ -1,88 +1,14 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type {
-  RecievedBoardMemberInterface,
-  RecievedBoardsInterface,
-} from "./boardSlice";
-
-// ---- WebSocket frame (outer) ----
-
-export interface SocketFrame {
-  /** JSON-encoded string of `BoardChannelPayload` */
-  message: string;
-  timestamp: number;
-}
-
-export interface SocketError {
-  type: string;
-  msg: string;
-}
-
-export const socketStatus = {
-  open: "open",
-  connecting: "connecting",
-  close: "close",
-} as const;
-
-export type SocketStatus = (typeof socketStatus)[keyof typeof socketStatus];
-
-export interface SocketState {
-  data: SocketFrame | null;
-  error: SocketError | null;
-  status: SocketStatus | null;
-}
-
-export interface BackendValidationError {
-  field: string;
-  msg: string;
-}
-
-// ---- Broadcast payload (inner) ----
-
-export type BroadcastResType = "broadcast_channel";
-
-export interface EventMemberAddedInterface {
-  event: "member_added"; // ✅ literal
-  // member_data: RecievedBoardMemberInterface;
-  data: RecievedBoardsInterface;
-}
-
-export interface EventMemberRemovedInterface {
-  event: "member_removed"; // ✅ literal
-  // member_data: RecievedBoardMemberInterface;
-  data: RecievedBoardsInterface;
-}
-
-export interface EventBoardRemovedInterface {
-  event: "board_removed"; // ✅ literal
-  // member_data: RecievedBoardMemberInterface;
-  data: RecievedBoardsInterface;
-}
-
-export interface EventBoardUpdatedInterface {
-  event: "board_updated"; // ✅ literal
-  // member_data: RecievedBoardMemberInterface;
-  data: RecievedBoardsInterface;
-}
-
-// Add more variants as your backend adds them, e.g.
-// export interface EventMemberRemovedInterface { event: "member_removed"; ... }
-// export interface EventBoardUpdatedInterface  { event: "board_updated"; ... }
-
-export type BoardChannelMessage =
-  | EventMemberAddedInterface
-  | EventMemberRemovedInterface
-  | EventBoardRemovedInterface
-  | EventBoardUpdatedInterface;
-
-export interface BoardChannelPayload {
-  res_type: BroadcastResType;
-  channel: string;
-  message: BoardChannelMessage;
-}
+  SocketConnectionStatusType,
+  SocketErrorInterface,
+  SocketFrameInterface,
+  SocketStateInterface,
+} from "~/state";
 
 // ---- Slice ----
 
-const initialState: SocketState = {
+const initialState: SocketStateInterface = {
   data: null,
   error: null,
   status: null,
@@ -93,7 +19,7 @@ const socketSlice = createSlice({
   initialState,
   reducers: {
     // Replace the frame (typical for WS frames)
-    setData: (state, action: PayloadAction<SocketFrame>) => {
+    setData: (state, action: PayloadAction<SocketFrameInterface>) => {
       state.data = action.payload;
     },
     // Or, if you need to merge partials:
@@ -105,7 +31,7 @@ const socketSlice = createSlice({
       state.data = null;
     },
 
-    setError: (state, action: PayloadAction<SocketError>) => {
+    setError: (state, action: PayloadAction<SocketErrorInterface>) => {
       state.error = action.payload;
     },
 
@@ -113,7 +39,7 @@ const socketSlice = createSlice({
       state.error = null;
     },
 
-    setStatus: (state, action: PayloadAction<SocketStatus>) => {
+    setStatus: (state, action: PayloadAction<SocketConnectionStatusType>) => {
       state.status = action.payload;
     },
 

@@ -1,4 +1,4 @@
-import type { ErrorState } from "~/state/errorSlice";
+import type { ErrorStateInterface } from "~/state";
 import { clearError } from "~/state/errorSlice";
 import { useAppDispatch } from "~/state/hooks";
 
@@ -9,7 +9,7 @@ function ServerErrorModal({
 }: {
   showError: boolean;
   setShowError: (state: boolean) => void;
-  errors: ErrorState;
+  errors: ErrorStateInterface;
 }) {
   const dispatch = useAppDispatch();
   return (

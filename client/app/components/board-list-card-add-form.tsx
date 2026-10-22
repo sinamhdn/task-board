@@ -1,11 +1,12 @@
 import ClickAwayListener from "react-click-away-listener";
 import { FormProvider, useForm } from "react-hook-form";
-import { Input } from "./input";
+import { LoadingStatusEnum } from "~/state";
+import { addBoardMember } from "~/state/boardMemberSlice";
+import { clearError } from "~/state/errorSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import type { RootState } from "~/state/store";
 import { board_list_name_validation } from "~/utils/input/input-validations";
-import { addBoardMember, LoadingStatus } from "~/state/boardSlice";
-import { clearError } from "~/state/errorSlice";
+import { Input } from "./input";
 
 function BoardMemberAddForm({
   board_id,
@@ -17,9 +18,9 @@ function BoardMemberAddForm({
   handleCancelAddNewBoardClick: () => void;
 }) {
   const addBoardMemberLoadingStatus = useAppSelector(
-    (state) => state.board.addBoardMemberLoadingStatus,
+    (state) => state.boardMemberSlice.addBoardMemberLoadingStatus,
   );
-  const errors = useAppSelector((state: RootState) => state.errors);
+  const errors = useAppSelector((state: RootState) => state.errorSlice.errors);
   const dispatch = useAppDispatch();
 
   const methods = useForm<{ board_member_email: string }>({
@@ -33,8 +34,8 @@ function BoardMemberAddForm({
     try {
       const result = await dispatch(
         addBoardMember({
-          board_member_email: data.board_member_email,
-          board_id: board_id,
+          boardMemberEmail: data.board_member_email,
+          boardId: board_id,
           token: token,
         }),
       ).unwrap();
@@ -64,7 +65,7 @@ function BoardMemberAddForm({
                 type="submit"
                 className="flex items-center justify-center gap-1 mx-auto font-semibold text-center dark:text-white text-black"
               >
-                {addBoardMemberLoadingStatus === LoadingStatus.pending
+                {addBoardMemberLoadingStatus === LoadingStatusEnum.pending
                   ? "Adding..."
                   : "Add list"}
               </button>

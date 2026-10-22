@@ -2,10 +2,10 @@ import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { searchUsers } from "~/state/searchSlice";
 
-function useLiveSearch(query: string) {
+export function useLiveSearch(query: string) {
   const dispatch = useAppDispatch();
   const searchResults = useAppSelector(
-    (state) => state.search.userEmailSearchResults,
+    (state) => state.searchSlice.userEmailSearchResults,
   );
 
   useEffect(() => {
@@ -18,4 +18,4 @@ function useLiveSearch(query: string) {
   return searchResults;
 }
 
-export default useLiveSearch;
+// export default useLiveSearch;

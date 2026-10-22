@@ -14,9 +14,20 @@ class ListResponse(BaseModel):
     name: str
     created_at: datetime
     updated_at: Optional[datetime]
-    owned_cards: list[CardResponse] = []
+    # owned_cards: list[CardResponse] = []
     model_config = ConfigDict(from_attributes=True)
 
 
-class ListCreate(BaseModel):
+class ListCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     list_name: str
+    board_id: int
+
+
+class ListUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    list_name: str
+    board_id: int
+    list_id: int

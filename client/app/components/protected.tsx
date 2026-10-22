@@ -1,16 +1,12 @@
-import { Outlet, redirect, useLoaderData } from "react-router";
-import type { Route } from "./+types/protected";
-import {
-  getCurrentUser,
-  setCurrentUser,
-  type UserInterface,
-} from "~/state/sessionSlice";
-import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { getToken } from "~/utils";
 import { useEffect } from "react";
-import LoadingSpinner from "./loading-spinner";
+import { Outlet, redirect, useLoaderData } from "react-router";
 import { useWebsocketContext } from "~/providers/websocket-provider";
+import { useAppDispatch, useAppSelector } from "~/state/hooks";
+import { getCurrentUser, setCurrentUser } from "~/state/sessionSlice";
+import { getToken } from "~/utils";
 import { fetchCurrentUser, removeToken } from "~/utils/auth";
+import type { Route } from "./+types/protected";
+import LoadingSpinner from "./loading-spinner";
 // import { useEffect } from "react";
 // import { setCurrentUser } from "~/state/sessionSlice";
 

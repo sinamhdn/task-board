@@ -1,283 +1,179 @@
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import exists, select
+from fastapi import APIRouter, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from ..models.boards import Board
+from ..models.cards import Card
 from ..models.lists import List
-from ..schemas.list import ListCreate, ListResponse
-from ..utils.auth import CurrentUser
-from ..utils.db import AsyncSession, get_async_db_session, get_order_column
+from ..schemas.card import CardResponse
+from ..schemas.list import ListResponse
+from ..utils.db import (
+    AnnotatedAsyncDBSession,
+    get_order_column,
+)
+from ..utils.deps import (
+    AnnotatedListForCardBody,
+    AnnotatedListForCardQuery,
+)
 from ..utils.ws import manager
 
 logger = logging.getLogger(f"List router logger: Filename->{__name__}")
 
-router = APIRouter(prefix="", tags=["lists"])
+router = APIRouter(prefix="", tags=["cards"])
 
 
-@router.get("", response_model=list[ListResponse])
-async def get_all_lists(
-    current_user: CurrentUser,
-    board_id: int,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+@router.get("", response_model=list[CardResponse])
+async def get_all_cards(
+    db: AnnotatedAsyncDBSession,
+    available_list: AnnotatedListForCardQuery,
     order: str = "updated_at",
     skip: int = 0,
     limit: int = 100,
 ):
-    board_query = await db.execute(
-        select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
-    )
-    board = board_query.scalars().first()
-    if not board:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "field": "server_error",
-                "msg": "Board not found.",
-            },
-        )
-    if not current_user and (
-        current_user not in board.members or current_user != board.user_id
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "field": "server_error",
-                "msg": "Not authorized please login.",
-            },
-        )
-    list_query = await db.execute(
-        select(List)
-        .options(selectinload(List.owned_cards))
+    if available_list is None:
+        return
+    card_query = await db.execute(
+        select(Card)
+        .options(selectinload(Card.owner))
         .order_by(get_order_column(List, order))
         .offset(skip)
         .limit(limit)
-        .where(List.board_id == board_id)
+        .where(Card.list_id == available_list.id)
     )
-    lists_inside_board = list_query.scalars().all()
-    if not lists_inside_board:
+    cards = card_query.scalars().all()
+    if cards is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "field": "server_error",
-                "msg": "no list item found.",
+                "msg": "no card item found.",
             },
         )
-    return list(lists_inside_board)
+    return list(cards)
 
 
-@router.get("/{list_id}", response_model=ListResponse)
-async def get_list_by_id(
-    list_id: int,
-    board_id: int,
-    current_user: CurrentUser,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+@router.get("/{card_id}", response_model=CardResponse)
+async def get_card_by_id(
+    db: AnnotatedAsyncDBSession,
+    available_list: AnnotatedListForCardQuery,
+    card_id: int,
 ):
-    board_query = await db.execute(
-        select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
-    )
-    board = board_query.scalars().first()
-    if not board:
+    if available_list is None:
+        return
+    card_by_id_query = await db.execute(select(Card).where(Card.id == card_id))
+    card_by_id = card_by_id_query.scalars().first()
+    if not card_by_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "field": "server_error",
-                "msg": "Board not found.",
+                "msg": "Card not found.",
             },
         )
-    if not current_user and (
-        current_user not in board.members or current_user != board.user_id
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "field": "server_error",
-                "msg": "Not authorized please login.",
-            },
-        )
-    list_query = await db.execute(
-        select(List).options(selectinload(List.owned_cards)).where(List.id == list_id)
-    )
-    list_in_board = list_query.scalars().first()
-    if not list_in_board:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"field": "server_error", "msg": "List not found."},
-        )
-    return list
+    return card_by_id
 
 
-@router.post("", response_model=ListResponse, status_code=status.HTTP_201_CREATED)
-async def create_new_list(
-    current_user: CurrentUser,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
-    board_id: int,
-    list_data: ListCreate,
+@router.post("", response_model=CardResponse, status_code=status.HTTP_201_CREATED)
+async def create_new_card(
+    db: AnnotatedAsyncDBSession,
+    data: AnnotatedListForCardBody,
 ):
-    board_exists_query = select(exists().select_from(Board).where(Board.id == board_id))
-    board_exists = await db.scalar(board_exists_query)
-    if not board_exists:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "field": "server_error",
-                "msg": "Board not found.",
-            },
-        )
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "field": "server_error",
-                "msg": "Not authorized to see these boards please login.",
-            },
-        )
-    if not hasattr(list_data, "list_name"):
+    if not hasattr(data["card_data"], "card_name"):
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail={
                 "field": "server_error",
-                "msg": "Pass the correct board data to create a new board.",
+                "msg": "Pass the correct card data to create a new card.",
             },
         )
-    new_list = List(name=list_data.list_name, board_id=board_id)
-    db.add(new_list)
+    new_card = Card(name=data["card_data"].card_name, list_id=data["card_data"].list_id)
+    db.add(new_card)
     await db.commit()
-    await db.refresh(new_list, attribute_names=["owner", "owned_cards"])
-    channel_name = f"boards:{board_id}"
-    list_data_validate = ListResponse.model_validate(new_list).model_dump(mode="json")
+    await db.refresh(new_card, attribute_names=["owner"])
+    channel_name = f"boards:{data["card_data"].board_id}"
+    card_data_validate = CardResponse.model_validate(new_card).model_dump(mode="json")
     if channel_name in manager.channels:
         for websocket in manager.channels[channel_name]:
             await manager.send_personal_message(
                 websocket=websocket,
                 message={
                     "event": "card_added",
-                    "data": list_data_validate,
+                    "data": card_data_validate,
                 },
             )
-    return new_list
+    return new_card
 
 
-@router.patch("/{list_id}", response_model=ListResponse)
-async def update_list(
-    list_id: int,
-    board_id: int,
-    list_data: ListCreate,
-    current_user: CurrentUser,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+@router.patch("", response_model=CardResponse)
+async def update_card(
+    db: AnnotatedAsyncDBSession,
+    data: AnnotatedListForCardBody,
 ):
-    board_query = await db.execute(
-        select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
+    card_query = await db.execute(
+        select(Card)
+        .options(selectinload(List.owned_cards))
+        .where(Card.id == data["card_data"].card_id)
     )
-    board = board_query.scalars().first()
-    if not board:
+    card = card_query.scalars().first()
+    if not card:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "field": "server_error",
-                "msg": "Board not found.",
+                "msg": "Card not found.",
             },
         )
-    if not current_user and (
-        current_user not in board.members or current_user != board.user_id
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "field": "server_error",
-                "msg": "Not authorized please login.",
-            },
-        )
-    list_query = await db.execute(
-        select(List).options(selectinload(List.owned_cards)).where(List.id == list_id)
-    )
-    list_in_board = list_query.scalars().first()
-    if not list_in_board:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "field": "server_error",
-                "msg": "List not found.",
-            },
-        )
-    update_list = list_data.model_dump(exclude_unset=True)
-    for field, value in update_list.items():
-        if field == "list_name":
+    update_card = data["card_data"].model_dump(exclude_unset=True)
+    for field, value in update_card.items():
+        if field == "card_name":
             field = "name"
-        setattr(list_in_board, field, value)
+        setattr(card, field, value)
     await db.commit()
-    await db.refresh(list_in_board, attribute_names=["owner"])
-    channel_name = f"boards:{board_id}"
-    list_data_validate = ListResponse.model_validate(list_in_board).model_dump(
-        mode="json"
-    )
+    await db.refresh(card, attribute_names=["owner"])
+    channel_name = f"boards:{data["card_data"].board_id}"
+    card_data_validate = ListResponse.model_validate(card).model_dump(mode="json")
     if channel_name in manager.channels:
         for websocket in manager.channels[channel_name]:
             await manager.send_personal_message(
                 websocket=websocket,
                 message={
                     "event": "card_updated",
-                    "data": list_data_validate,
+                    "data": card_data_validate,
                 },
             )
-    return list_in_board
+    return card
 
 
-@router.delete("/{list_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_board(
-    list_id: int,
-    board_id: int,
-    current_user: CurrentUser,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    db: AnnotatedAsyncDBSession,
+    data: AnnotatedListForCardBody,
 ):
-    board_query = await db.execute(
-        select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
+    card_query = await db.execute(
+        select(Card)
+        .options(selectinload(Card.owner))
+        .where(Card.id == data["card_data"].card_id)
     )
-    board = board_query.scalars().first()
-    if not board:
+    card = card_query.scalars().first()
+    if not card:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "field": "server_error",
-                "msg": "Board not found.",
+                "msg": "Card not found.",
             },
         )
-    if not current_user and (
-        current_user not in board.members or current_user != board.user_id
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "field": "server_error",
-                "msg": "Not authorized please login.",
-            },
-        )
-    list_query = await db.execute(
-        select(List).options(selectinload(List.owned_cards)).where(List.id == list_id)
-    )
-    list_in_board = list_query.scalars().first()
-    if not list_in_board:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "field": "server_error",
-                "msg": "List not found.",
-            },
-        )
-    await db.delete(list_in_board)
+    await db.delete(card)
     await db.commit()
-    channel_name = f"boards:{board_id}"
-    list_data_validate = ListResponse.model_validate(list_in_board).model_dump(
-        mode="json"
-    )
+    channel_name = f"boards:{data["card_data"].board_id}"
+    card_data_validate = ListResponse.model_validate(card).model_dump(mode="json")
     if channel_name in manager.channels:
         for websocket in manager.channels[channel_name]:
             await manager.send_personal_message(
                 websocket=websocket,
                 message={
                     "event": "card_deleted",
-                    "data": list_data_validate,
+                    "data": card_data_validate,
                 },
             )

@@ -1,15 +1,15 @@
-import { useForm, FormProvider } from "react-hook-form";
-import { createNewBoard } from "~/state/boardSlice";
-import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { clearError } from "~/state/errorSlice";
-import { Input } from "./input";
-import { LoadingStatus as BoardLoadingStatusEnum } from "~/state/boardSlice";
-import { board_name_validation } from "~/utils/input/input-validations";
-import type { RootState } from "~/state/store";
 import ClickAwayListener from "react-click-away-listener";
+import { FormProvider, useForm } from "react-hook-form";
 import { useAddNewBoardForm } from "~/providers/board-add-provider";
-import LoadingSpinner from "./loading-spinner";
+import { LoadingStatusEnum } from "~/state";
+import { createNewBoard } from "~/state/boardSlice";
+import { clearError } from "~/state/errorSlice";
+import { useAppDispatch, useAppSelector } from "~/state/hooks";
+import type { RootState } from "~/state/store";
 import { getToken } from "~/utils";
+import { board_name_validation } from "~/utils/input/input-validations";
+import { Input } from "./input";
+import LoadingSpinner from "./loading-spinner";
 
 interface FormValues {
   board_name: string;
@@ -17,9 +17,9 @@ interface FormValues {
 
 function BoardAddForm() {
   const createBoardLoadingStatus = useAppSelector(
-    (state) => state.board.createBoardLoadingStatus,
+    (state) => state.boardSlice.createNewBoardLoadingStatus,
   );
-  const errors = useAppSelector((error: RootState) => error.errors);
+  const errors = useAppSelector((error: RootState) => error.errorSlice.errors);
   const dispatch = useAppDispatch();
   const { handleCancelAddNewBoardClick } = useAddNewBoardForm();
   const token = getToken();
@@ -30,7 +30,7 @@ function BoardAddForm() {
     try {
       const result = await dispatch(
         createNewBoard({
-          board_name: data.board_name,
+          boardName: data.board_name,
           token: token,
         }),
       ).unwrap();
@@ -68,7 +68,7 @@ function BoardAddForm() {
                 type="submit"
                 className="flex items-center justify-center gap-1 p-5 mx-auto font-semibold w-48 text-center text-white bg-green-600 rounded-md hover:bg-green-800  cursor-pointer"
               >
-                {createBoardLoadingStatus === BoardLoadingStatusEnum.pending
+                {createBoardLoadingStatus === LoadingStatusEnum.pending
                   ? "Adding board..."
                   : "Add board"}
               </button>

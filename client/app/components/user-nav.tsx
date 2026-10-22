@@ -1,15 +1,15 @@
-import { Link, useLocation } from "react-router";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { GiHamburgerMenu } from "react-icons/gi";
+import { Link, useLocation } from "react-router";
+import { useAddNewBoardForm } from "~/providers/board-add-provider";
+import { useAppSelector } from "~/state/hooks";
 import type { RootState } from "~/state/store";
 import BoardAddButton from "./board-add-button";
-import { useAddNewBoardForm } from "~/providers/board-add-provider";
 import LogoutButton from "./logout-button";
-import { useAppSelector } from "~/state/hooks";
 
 function UserNav() {
   const currentUser = useAppSelector(
-    (state: RootState) => state.session.currentUser,
+    (state: RootState) => state.sessionSlice.currentUser,
   );
   const location = useLocation();
   const isHome = location.pathname === "/";

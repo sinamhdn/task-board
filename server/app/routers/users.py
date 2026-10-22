@@ -5,59 +5,61 @@ from app.crud.users import UserCRUD
 from app.schemas.users import (
     UserPrivateResponse,
     UserPublicResponse,
-    UserUpdate,
+    UserUpdateRequest,
 )
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.users import User
-from ..utils.auth import CurrentUser, add_token_to_blacklist, oath2_scheme
-from ..utils.db import get_async_db_session
+from ..utils.auth import (
+    AnnotatedCurrentUser,
+    AnnotatedOauth2Scheme,
+    add_token_to_blacklist,
+    oath2_scheme,
+)
+from ..utils.db import AnnotatedAsyncDBSession
 
 router = APIRouter(prefix="", tags=["users"])
 logger = logging.getLogger(f"Users utilities logger: Filename->{__name__}")
 
 
 @router.get("/me", response_model=UserPrivateResponse)
-async def get_current_user(current_user: CurrentUser):
+async def get_current_user(current_user: AnnotatedCurrentUser):
     return current_user
 
 
 @router.patch("/me", response_model=UserPrivateResponse)
 async def update_current_user(
-    current_user: CurrentUser,
-    user_data: UserUpdate,
-    session: Annotated[AsyncSession, Depends(get_async_db_session)],
+    user_data: UserUpdateRequest,
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
 ):
     """Update user"""
-    user = UserCRUD.get_user_by_id(session, current_user.id)
+    user = UserCRUD.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"field": "server_error", "msg": "User not found."},
         )
-    user = await UserCRUD.update_user(
-        session=session, user=current_user, user_data=user_data
-    )
+    user = await UserCRUD.update_user(db, current_user, user_data)
     return user
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_current_user(
-    current_user: CurrentUser,
-    token: Annotated[str, Depends(oath2_scheme)],
-    session: Annotated[AsyncSession, Depends(get_async_db_session)],
+    token: AnnotatedOauth2Scheme,
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
 ):
     """Delete user"""
-    user = await UserCRUD.get_user_by_id(session, current_user.id)
+    user = await UserCRUD.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"field": "server_error", "msg": "User not found."},
         )
-    await UserCRUD.delete_user(session=session, user=current_user)
+    await UserCRUD.delete_user(db, current_user)
     add_token_to_blacklist(token)
     return Response(
         status_code=status.HTTP_204_NO_CONTENT,
@@ -70,21 +72,19 @@ async def delete_current_user(
 
 @router.get("", response_model=List[UserPublicResponse])
 async def get_all_users(
-    session: Annotated[AsyncSession, Depends(get_async_db_session)],
+    db: AnnotatedAsyncDBSession,
     skip: int = 0,
     limit: int = 100,
     order: str = "updated_at",
 ):
     """Get all users (admin only)"""
-    users = await UserCRUD.get_users(session, skip=skip, limit=limit, order=order)
+    users = await UserCRUD.get_users(db, skip=skip, limit=limit, order=order)
     return users
 
 
 @router.get("/{user_id}", response_model=UserPublicResponse)
-async def get_user(
-    user_id: int, session: Annotated[AsyncSession, Depends(get_async_db_session)]
-):
-    result = await session.execute(select(User).where(User.id == user_id))
+async def get_user(user_id: int, db: AnnotatedAsyncDBSession):
+    result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
     if user:
         return user
@@ -97,9 +97,9 @@ async def get_user(
 @router.patch("/{user_id}", response_model=UserPublicResponse)
 async def update_user(
     user_id: int,
-    user_update: UserUpdate,
-    current_user: CurrentUser,
-    session: Annotated[AsyncSession, Depends(get_async_db_session)],
+    user_update: UserUpdateRequest,
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
 ):
 
     # Log the incoming data for debugging
@@ -114,23 +114,23 @@ async def update_user(
                 "msg": "Not authorized to update this user.",
             },
         )
-    result = await session.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"field": "server_error", "msg": "User not found."},
         )
-    user = await UserCRUD.update_user(session=session, user=user, user_data=user_update)
+    user = await UserCRUD.update_user(db, user, user_update)
     return user
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: int,
-    current_user: CurrentUser,
-    token: Annotated[str, Depends(oath2_scheme)],  # Add this line
-    session: Annotated[AsyncSession, Depends(get_async_db_session)],
+    current_user: AnnotatedCurrentUser,
+    token: AnnotatedOauth2Scheme,  # Add this line
+    db: AnnotatedAsyncDBSession,
 ):
     if user_id != current_user.id:
         raise HTTPException(
@@ -140,14 +140,14 @@ async def delete_user(
                 "msg": "Not authorized to delete this user.",
             },
         )
-    result = await session.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"field": "server_error", "msg": "User not found."},
         )
-    await UserCRUD.delete_user(session=session, user=user)
+    await UserCRUD.delete_user(db, user)
 
     # Blacklist the current token
     add_token_to_blacklist(token)

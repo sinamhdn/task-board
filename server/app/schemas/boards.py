@@ -14,13 +14,13 @@ class BoardResponse(BaseModel):
     name: str
     created_at: datetime
     updated_at: Optional[datetime]
-    members: list[UserPublicResponse] = []
+    # members: list[UserPublicResponse] = []
     model_config = ConfigDict(from_attributes=True)
 
 
-class BoardCreate(BaseModel):
+class BoardCreateRequest(BaseModel):
     board_name: str
 
 
-class BoardMemberAdd(BaseModel):
+class BoardMemberAddRequest(BaseModel):
     board_member_email: EmailStr

@@ -4,11 +4,8 @@ import { redirect } from "react-router";
 import BoardCard from "~/components/board-card";
 import BoardNew from "~/components/board-new";
 import LoadingSpinner from "~/components/loading-spinner";
-import {
-  LoadingStatus as BoardLoadingStatusEnum,
-  deleteBoard,
-  getAllBoards,
-} from "~/state/boardSlice";
+import { LoadingStatusEnum } from "~/state";
+import { deleteBoard, getAllBoards } from "~/state/boardSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getToken } from "~/utils";
 import type { Route } from "./+types/board-all";
@@ -23,16 +20,16 @@ export function meta({}: Route.MetaArgs) {
 function BoardAll() {
   const token = getToken();
   const dispatch = useAppDispatch();
-  const boards = useAppSelector((state) => state.board.boards);
-  const getBoardsLoadingStatus = useAppSelector(
-    (state) => state.board.getBoardsLoadingStatus,
+  const boards = useAppSelector((state) => state.boardSlice.boards);
+  const getAllBoardsLoadingStatus = useAppSelector(
+    (state) => state.boardSlice.getAllBoardsLoadingStatus,
   );
 
   const iconClasses = classnames({
     fa: true,
-    "fa-user": getBoardsLoadingStatus !== BoardLoadingStatusEnum.pending,
-    "fa-spinner": getBoardsLoadingStatus === BoardLoadingStatusEnum.pending,
-    "fa-spin": getBoardsLoadingStatus === BoardLoadingStatusEnum.pending,
+    "fa-user": getAllBoardsLoadingStatus !== LoadingStatusEnum.pending,
+    "fa-spinner": getAllBoardsLoadingStatus === LoadingStatusEnum.pending,
+    "fa-spin": getAllBoardsLoadingStatus === LoadingStatusEnum.pending,
   });
 
   useEffect(() => {
@@ -45,7 +42,7 @@ function BoardAll() {
   }, [boards]);
 
   // Show loading state first
-  if (getBoardsLoadingStatus === BoardLoadingStatusEnum.pending) {
+  if (getAllBoardsLoadingStatus === LoadingStatusEnum.pending) {
     return <LoadingSpinner spinnerIconClasses={iconClasses} />;
   }
 
@@ -62,7 +59,7 @@ function BoardAll() {
   function handleDeleteBoard(board_id: number) {
     if (!token) return;
     console.log("deleteBoard value:", deleteBoard);
-    dispatch(deleteBoard({ token: token, board_id: board_id }));
+    dispatch(deleteBoard({ token: token, boardId: board_id }));
   }
 
   // Show boards

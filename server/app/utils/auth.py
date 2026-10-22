@@ -10,12 +10,13 @@ from pwdlib import PasswordHash
 from sqlalchemy import select
 
 from ..models.users import User
-from .db import AsyncSession, get_async_db_session
 from ..settings import settings
+from .db import AnnotatedAsyncDBSession, AsyncSession, get_async_db_session
 
 logger = logging.getLogger(f"Auth utilities logger: Filename->{__name__}")
 pwd_hash = PasswordHash.recommended()
 oath2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
+AnnotatedOauth2Scheme = Annotated[str, Depends(oath2_scheme)]
 
 
 def set_password(user: User, password: str) -> None:
@@ -65,9 +66,10 @@ def verify_access_token(token: str) -> str | None:
         return payload.get("sub")
 
 
+# token come from body authorization parameter
 async def get_current_user(
-    token: Annotated[str, Depends(oath2_scheme)],
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    token: AnnotatedOauth2Scheme,
+    db: AnnotatedAsyncDBSession,
 ) -> User:
     user_id_str = verify_access_token(token)
     if user_id_str is None:
@@ -150,5 +152,5 @@ async def periodic_token_cleanup(interval_minutes: int = 60):
 #     pass
 
 
-# type alias for current user type hint
-CurrentUser = Annotated[User, Depends(get_current_user)]
+# type alias for type hint
+AnnotatedCurrentUser = Annotated[User, Depends(get_current_user)]

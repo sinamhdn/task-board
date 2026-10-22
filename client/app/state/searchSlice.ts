@@ -1,23 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import type {
+  RecievedSearchUsersInterface,
+  SearchStateInterface,
+} from "~/state";
 import { setError } from "./errorSlice";
 
-export interface RecievedSearchUsersInterface {
-  id: number;
-  uid: string;
-  email: string;
-  full_name: string;
-  image_file?: string;
-  image_path?: string;
-}
-
-interface InitialStateInterface {
-  userEmailSearchResults: RecievedSearchUsersInterface[];
-  isLoading: boolean;
-  query: string;
-}
-
-const initialState: InitialStateInterface = {
+const initialState: SearchStateInterface = {
   userEmailSearchResults: [],
   isLoading: false,
   query: "",

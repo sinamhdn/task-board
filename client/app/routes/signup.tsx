@@ -1,13 +1,13 @@
 // import { useSelector } from "react-redux";
 import { FormProvider, useForm } from "react-hook-form";
 import { GrMail } from "react-icons/gr";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Input } from "~/components/input";
-import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { SessionLoadingStatusEnum, signupUser } from "~/state/sessionSlice";
+import { LoadingStatusEnum } from "~/state";
 import { clearError } from "~/state/errorSlice";
+import { useAppDispatch, useAppSelector } from "~/state/hooks";
+import { signupUser } from "~/state/sessionSlice";
 import type { RootState } from "~/state/store";
-import { useNavigate } from "react-router";
 import {
   confirm_validation,
   email_validation,
@@ -17,22 +17,23 @@ import {
 } from "~/utils/input/input-validations";
 import type { Route } from "./+types/signup";
 
+interface FormValues {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  confirm: string;
+}
+
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Signup" }, { name: "description", content: "Signup!" }];
 }
 
 function Signup() {
-  interface FormValues {
-    first_name: string;
-    last_name: string;
-    email: string;
-    password: string;
-    confirm: string;
-  }
   const loadingState = useAppSelector(
-    (state: RootState) => state.session.authStatus,
+    (state: RootState) => state.sessionSlice.authStatus,
   );
-  const errors = useAppSelector((error: RootState) => error.errors);
+  const errors = useAppSelector((state: RootState) => state.errorSlice.errors);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const methods = useForm<FormValues>({
@@ -95,7 +96,7 @@ function Signup() {
               className="flex items-center justify-center gap-1 p-5 mx-auto font-semibold w-48 text-center text-white bg-blue-600 rounded-md hover:bg-blue-800"
             >
               <GrMail />
-              {loadingState === SessionLoadingStatusEnum.pending
+              {loadingState === LoadingStatusEnum.pending
                 ? "Signing up..."
                 : "Register"}
             </button>

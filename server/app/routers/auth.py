@@ -2,31 +2,29 @@ from datetime import timedelta
 from typing import Annotated
 
 from app.crud.users import UserCRUD
-from app.schemas.users import Token, UserCreate
+from app.schemas.users import TokenResponse, UserCreateRequest
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..schemas.users import UserPrivateResponse
-from ..utils.auth import create_access_token
-from ..utils.db import get_async_db_session
 from ..settings import settings
+from ..utils.auth import create_access_token
+from ..utils.db import AnnotatedAsyncDBSession, get_async_db_session
 
 router = APIRouter(prefix="", tags=["users"])
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=TokenResponse)
 async def login_user(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    session: Annotated[AsyncSession, Depends(get_async_db_session)],
+    db: AnnotatedAsyncDBSession,
 ):
     """Login user"""
 
     # Look up user by email (case-insensitive)
     # Note: OAuth2PasswordRequestForm uses "username" field, but we treat it as email
-    user = await UserCRUD.authenticate_user(
-        session, form_data.username, form_data.password
-    )
+    user = await UserCRUD.authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -38,17 +36,17 @@ async def login_user(
     access_token = create_access_token(
         data={"sub": str(user.id)}, expiration_delta=access_token_expires
     )
-    return Token(access_token=access_token, token_type="bearer")
+    return TokenResponse(access_token=access_token, token_type="bearer")
 
 
 @router.post("/register", response_model=UserPrivateResponse)
 async def register_user(
-    user_data: UserCreate,
-    session: Annotated[AsyncSession, Depends(get_async_db_session)],
+    user_data: UserCreateRequest,
+    db: AnnotatedAsyncDBSession,
 ):
     """Register a new user"""
     try:
-        user = await UserCRUD.create_user(session, user_data)
+        user = await UserCRUD.create_user(db, user_data)
         return user
         # return UserPrivateResponse(**user.model_dump())
         # return UserPrivateResponse.model_validate(user)

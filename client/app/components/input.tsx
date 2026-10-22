@@ -6,7 +6,7 @@ import type { FieldErrors } from "react-hook-form";
 import { useFormContext } from "react-hook-form";
 import { MdError } from "react-icons/md";
 import { twMerge } from "tailwind-merge";
-import type { AuthFormErrorInterface, ErrorState } from "~/state/errorSlice";
+import type { AuthFormErrorInterface, ErrorStateInterface } from "~/state";
 import { findInputError, isFormInvalid } from "~/utils";
 
 type FormValues = {
@@ -28,7 +28,7 @@ type InputPropsType = {
   validation: any;
   placeholder?: string;
   multiline?: boolean;
-  errors: ErrorState;
+  errors: ErrorStateInterface;
   classNameContainerTW?: string;
   classNameInputContainerTW?: string;
   classNameLableTW?: string;
@@ -156,7 +156,7 @@ const InputError = ({
   classNameContainer = "",
 }: {
   field: keyof FormValues;
-  errors: ErrorState;
+  errors: ErrorStateInterface;
   formStateErrors: FieldErrors<FormValues>;
   classNameContainerTW?: string;
   classNameContainer?: string;

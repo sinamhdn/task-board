@@ -1,7 +1,7 @@
-import { useAppDispatch } from "~/state/hooks";
 import { useNavigate } from "react-router";
-import { removeToken } from "~/utils/auth";
+import { useAppDispatch } from "~/state/hooks";
 import { clearCurrentUser } from "~/state/sessionSlice";
+import { removeToken } from "~/utils/auth";
 
 function LogoutButton({ className }: { className?: string }) {
   const dispatch = useAppDispatch();

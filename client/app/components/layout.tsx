@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router";
+import type { BoardChannelPayloadInterface } from "~/state";
 import {
   addBoardDirect,
   removeBoardDirect,
@@ -9,7 +10,6 @@ import { clearError } from "~/state/errorSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { clearSessionStatus } from "~/state/sessionSlice";
 import { getCurrentUser } from "~/state/sessionSlice.ts";
-import type { BoardChannelPayload } from "~/state/socketSlice";
 import type { RootState } from "~/state/store";
 import { getToken } from "~/utils/auth";
 import FormSubmissionStatusModal from "./form-submission-status-modal";
@@ -18,11 +18,11 @@ import ServerErrorModal from "./server-error-modal";
 
 function MainLayout() {
   const dispatch = useAppDispatch();
-  const errors = useAppSelector((state: RootState) => state.errors);
+  const errors = useAppSelector((state: RootState) => state.errorSlice.errors);
   const [showError, setShowError] = useState(false);
-  const currentUser = useAppSelector((state) => state.session.currentUser);
+  const currentUser = useAppSelector((state) => state.sessionSlice.currentUser);
   const token = getToken();
-  const wsData = useAppSelector((state) => state.socket.data);
+  const wsData = useAppSelector((state) => state.socketSlice.data);
 
   useEffect(() => {
     if (token && !currentUser) {
@@ -44,7 +44,7 @@ function MainLayout() {
 
   useEffect(() => {
     if (!wsData) return;
-    const payload: BoardChannelPayload = JSON.parse(wsData.message);
+    const payload: BoardChannelPayloadInterface = JSON.parse(wsData.message);
     if (payload.message.event === "member_added")
       dispatch(addBoardDirect(payload.message.data));
     if (

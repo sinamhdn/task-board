@@ -1,11 +1,13 @@
 import Tooltip from "@mui/material/Tooltip";
 import { useState } from "react";
-import {
-  deleteBoardMember,
-  type RecievedBoardsInterface,
-} from "~/state/boardSlice";
-import { useAppDispatch } from "~/state/hooks";
-import type { UserInterface } from "~/state/sessionSlice";
+// import {
+//   deleteBoardMember,
+//   type RecievedBoardsInterface,
+// } from "~/state/boardSlice";
+import { useAppDispatch, useAppSelector } from "~/state/hooks";
+// import type { UserInterface } from "~/state/sessionSlice";
+import type { BoardRecievedInterface, UserRecievedInterface } from "~/state";
+import { deleteBoardMember } from "~/state/boardMemberSlice";
 import { getToken } from "~/utils";
 import BoardMemberAddButton from "./board-member-add-btn";
 import BoardMemberAddForm from "./board-member-add-form";
@@ -15,12 +17,15 @@ function BoardMembers({
   board,
   currentUser,
 }: {
-  board: RecievedBoardsInterface;
-  currentUser: UserInterface;
+  board: BoardRecievedInterface;
+  currentUser: UserRecievedInterface;
 }) {
   const [showFrom, setShowForm] = useState(false);
   const dispatch = useAppDispatch();
   const token = getToken();
+  const boardMembers = useAppSelector(
+    (state) => state.boardMemberSlice.boardMembers,
+  );
 
   if (!token) return <LoadingSpinner />;
 
@@ -37,7 +42,9 @@ function BoardMembers({
     board_id: number,
     token: string,
   ): void => {
-    dispatch(deleteBoardMember({ board_id, member_id, token }));
+    dispatch(
+      deleteBoardMember({ boardId: board_id, memberId: member_id, token }),
+    );
   };
 
   return (
@@ -54,7 +61,7 @@ function BoardMembers({
         </div>
       </BoardMemberAddButton>
       <ul className="flex flex-row-reverse relative">
-        {board.members.map((member) => (
+        {boardMembers.map((member) => (
           <li className="flex-auto m-2 relative" key={member.id}>
             {member.id !== currentUser.id &&
               currentUser.id === board.user_id && (

@@ -9,10 +9,15 @@ from sqlalchemy.orm import selectinload
 # from ..models import boards, members
 from ..models.boards import Board
 from ..models.users import User
-from ..schemas.boards import BoardCreate, BoardMemberAdd, BoardResponse
+from ..schemas.boards import BoardCreateRequest, BoardMemberAddRequest, BoardResponse
 from ..schemas.users import UserPublicResponse
-from ..utils.auth import CurrentUser
-from ..utils.db import AsyncSession, get_async_db_session, get_order_column
+from ..utils.auth import AnnotatedCurrentUser
+from ..utils.db import (
+    AnnotatedAsyncDBSession,
+    AsyncSession,
+    get_async_db_session,
+    get_order_column,
+)
 from ..utils.ws import manager
 
 logger = logging.getLogger(f"Board router logger: Filename->{__name__}")
@@ -22,8 +27,8 @@ router = APIRouter(prefix="", tags=["boards"])
 
 @router.get("", response_model=list[BoardResponse])
 async def get_all_owned_boards(
-    current_user: CurrentUser,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
     order: str = "updated_at",
     skip: int = 0,
     limit: int = 100,
@@ -51,8 +56,8 @@ async def get_all_owned_boards(
 @router.get("/{board_id}", response_model=BoardResponse)
 async def get_board_by_id(
     board_id: int,
-    current_user: CurrentUser,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
 ):
     if not current_user:
         raise HTTPException(
@@ -78,9 +83,9 @@ async def get_board_by_id(
 
 @router.post("", response_model=BoardResponse, status_code=status.HTTP_201_CREATED)
 async def create_owned_board(
-    current_user: CurrentUser,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
-    board_data: BoardCreate,
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
+    board_data: BoardCreateRequest,
 ):
     if not current_user:
         raise HTTPException(
@@ -109,9 +114,9 @@ async def create_owned_board(
 @router.patch("/{board_id}", response_model=BoardResponse)
 async def update_owned_board(
     board_id: int,
-    board_update_data: BoardCreate,
-    current_user: CurrentUser,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    board_update_data: BoardCreateRequest,
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
 ):
     query_db = await db.execute(
         select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
@@ -157,8 +162,8 @@ async def update_owned_board(
 @router.delete("/{board_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_board(
     board_id: int,
-    current_user: CurrentUser,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
 ):
     query_db = await db.execute(select(Board).where(Board.id == board_id))
     board = query_db.scalars().first()
@@ -202,6 +207,98 @@ async def delete_board(
                         manager.channels.pop(channel_name)
 
 
+@router.get(
+    "/{board_id}/members",
+    response_model=list[UserPublicResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_all_board_members(
+    board_id: int,
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
+):
+    board_db_query = await db.execute(
+        select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
+    )
+    board = board_db_query.scalars().first()
+    if not board:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "field": "server_error",
+                "msg": "Board not found",
+            },
+        )
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "field": "server_error",
+                "msg": "Not authorized to get board members please login.",
+            },
+        )
+    if current_user not in board.members or current_user.id != board.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "field": "server_error",
+                "msg": "Not authorized to get board members.",
+            },
+        )
+    return board.members
+
+
+@router.get(
+    "/{board_id}/members/{member_id}",
+    response_model=UserPublicResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_board_member_by_id(
+    board_id: int,
+    member_id: int,
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
+):
+    board_db_query = await db.execute(
+        select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
+    )
+    board = board_db_query.scalars().first()
+    if not board:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "field": "server_error",
+                "msg": "Board not found",
+            },
+        )
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "field": "server_error",
+                "msg": "Not authorized to get this board member please login.",
+            },
+        )
+    if current_user not in board.members or current_user.id != board.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "field": "server_error",
+                "msg": "Not authorized to get this board member.",
+            },
+        )
+    for member in board.members:
+        if member.id == member_id:
+            return member
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail={
+            "field": "server_error",
+            "msg": "No member found with this id.",
+        },
+    )
+
+
 @router.post(
     "/{board_id}/add-member",
     response_model=UserPublicResponse,
@@ -209,15 +306,14 @@ async def delete_board(
 )
 async def add_new_board_member(
     board_id: int,
-    board_member_data: BoardMemberAdd,
-    current_user: CurrentUser,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    board_member_data: BoardMemberAddRequest,
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
 ):
     board_db_query = await db.execute(
         select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
     )
     board = board_db_query.scalars().first()
-
     if not board:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -302,8 +398,8 @@ async def add_new_board_member(
 async def delete_board_member(
     board_id: int,
     member_id: int,
-    current_user: CurrentUser,
-    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    current_user: AnnotatedCurrentUser,
+    db: AnnotatedAsyncDBSession,
 ):
     board_db_query = await db.execute(
         select(Board).options(selectinload(Board.members)).where(Board.id == board_id)
@@ -338,7 +434,7 @@ async def delete_board_member(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
                 "field": "server_error",
-                "msg": "Board member not exists.",
+                "msg": "Board member does not exist.",
             },
         )
     board.members.remove(user)

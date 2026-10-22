@@ -1,5 +1,8 @@
 # import os
 
+from typing import Annotated
+
+from fastapi import Depends
 from sqlalchemy import asc, create_engine, desc
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Session
@@ -88,3 +91,6 @@ def get_order_column(model, order_by: str = "updated_at"):
 
     # column = getattr(model, col_name)
     # return desc(column) if descending else asc(column)
+
+
+AnnotatedAsyncDBSession = Annotated[AsyncSession, Depends(get_async_db_session)]

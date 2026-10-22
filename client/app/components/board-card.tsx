@@ -1,11 +1,11 @@
 import { Link } from "react-router";
-import type { RecievedBoardsInterface } from "~/state/boardSlice";
+import type { BoardRecievedInterface } from "~/state";
 
 const BoardCard = ({
   board,
   handleDeleteBoard,
 }: {
-  board: RecievedBoardsInterface;
+  board: BoardRecievedInterface;
   handleDeleteBoard: (board_id: number) => void;
 }) => {
   return (

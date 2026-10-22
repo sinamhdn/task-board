@@ -11,7 +11,7 @@ from fastapi import (  # WebSocketException,; status,
 from pydantic import ValidationError
 
 from ..schemas.ws import adapter
-from ..utils.db import AsyncSession, get_async_db_session
+from ..utils.db import AnnotatedAsyncDBSession, AsyncSession, get_async_db_session
 from ..utils.ws import manager
 
 router = APIRouter(prefix="", tags=["ws"])
@@ -24,10 +24,10 @@ logger = logging.getLogger(f"Websocket router logger: Filename->{__name__}")
 @router.websocket("")
 async def socket(
     websocket: WebSocket,
-    session: Annotated[AsyncSession, Depends(get_async_db_session)],
+    db: AnnotatedAsyncDBSession,
 ):
     # authenticate and connect websocket
-    user = await manager.connect_and_authenticate(websocket=websocket, session=session)
+    user = await manager.connect_and_authenticate(websocket, db)
     if user is None:
         return
     manager.add_connection(websocket=websocket, user_id=user.id)

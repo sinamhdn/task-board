@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import { redirect, useLocation, useParams } from "react-router";
 import BoardEditForm from "~/components/board-edit-form";
-import BoardList from "~/components/board-list";
-import BoardListAddButton from "~/components/board-list-add-btn";
+import BoardList from "~/components/board-list-item";
+import BoardListAddButton from "~/components/board-list-item-add-btn";
+import BoardListAddForm from "~/components/board-list-item-add-form";
 import BoardMembers from "~/components/board-members";
 import LoadingSpinner from "~/components/loading-spinner";
 import { useWebsocketContext } from "~/providers/websocket-provider";
+import { getAllBoardMembers } from "~/state/boardMemberSlice";
 import { getBoardById } from "~/state/boardSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getToken } from "~/utils";
+import log from "~/utils/logger";
 import type { Route } from "./+types/boardsingle";
+
+const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -28,6 +34,7 @@ export function meta({}: Route.MetaArgs) {
 
 function BoardSingle() {
   const [editBoardName, setEditBoardName] = useState(false);
+  const [newListFormActive, setNewListFormActive] = useState(false);
   const { id: urlParamBoardId } = useParams();
   const { board: locationBoard } = useLocation().state ?? {};
   const { isConnected, sendMessage } = useWebsocketContext();
@@ -35,18 +42,38 @@ function BoardSingle() {
 
   const board = useAppSelector((state) => {
     if (locationBoard)
-      return state.board.boards.find((board) => board.id === locationBoard.id);
-    return state.board.boards.find(
+      return state.boardSlice.boards.find(
+        (board) => board.id === locationBoard.id,
+      );
+    return state.boardSlice.boards.find(
       (board) => board.id === Number(urlParamBoardId),
     );
   });
 
-  const loggedInUser = useAppSelector((state) => state.session.currentUser);
+  const boardMembers = useAppSelector((state) => {
+    return state.boardMemberSlice.boardMembers;
+  });
+
+  const loggedInUser = useAppSelector(
+    (state) => state.sessionSlice.currentUser,
+  );
 
   const dispatch = useAppDispatch();
 
   const handleBoardTitleClick = () => {
     setEditBoardName(true);
+  };
+
+  const addNewListClickHandler = () => {
+    if (newListFormActive) {
+      setNewListFormActive(false);
+      return;
+    }
+    setNewListFormActive(true);
+  };
+
+  const handleCancelAddNewBoardClick = () => {
+    setNewListFormActive(false);
   };
 
   useEffect(() => {
@@ -56,6 +83,20 @@ function BoardSingle() {
         getBoardById({ boardId: Number(urlParamBoardId), token: token }),
       );
   }, [token, board, urlParamBoardId, dispatch]);
+
+  useEffect(() => {
+    if (!token) throw redirect("signin");
+    logger.info(`IS GET ALL BOARD MEMBERS CALLED: ${board && !boardMembers}`);
+    logger.info(
+      `WHAT IS INSIDE BOARDMEMBER: ${boardMembers} and board: ${board}`,
+    );
+    logger.info(
+      `T/F BOARDMEMBER: ${Boolean(boardMembers)} and board: ${Boolean(board)}`,
+    );
+    if (board && boardMembers.length === 0) {
+      dispatch(getAllBoardMembers({ boardId: board.id, token: token }));
+    }
+  }, [token, board, boardMembers, dispatch]);
 
   useEffect(() => {
     if (!isConnected || !urlParamBoardId) return;
@@ -91,12 +132,19 @@ function BoardSingle() {
               <div className="lists-wrapper">
                 <BoardList
                   list={[
-                    { name: "list1" },
-                    { name: "list2" },
-                    { name: "list2" },
+                    { name: "list1", id: 1 },
+                    { name: "list2", id: 2 },
+                    { name: "list2", id: 3 },
                   ]}
                 />
-                <BoardListAddButton />
+                {newListFormActive && token && (
+                  <BoardListAddForm
+                    token={token}
+                    board_id={board.id}
+                    handleCancelAddNewBoardClick={handleCancelAddNewBoardClick}
+                  />
+                )}
+                <BoardListAddButton onClickHandler={addNewListClickHandler} />
                 <ul className="board-lists"></ul>
               </div>
             </div>

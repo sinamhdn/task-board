@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select  # Session,
 
 from ..models.users import User
-from ..schemas.users import UserCreate, UserUpdate
+from ..schemas.users import UserCreateRequest, UserUpdateRequest
 from ..utils.auth import set_password, verify_password
 from ..utils.db import get_order_column
 
@@ -43,7 +43,7 @@ class UserCRUD:
         return list(result.scalars().all())
 
     @staticmethod
-    async def create_user(session: AsyncSession, user_data: UserCreate) -> User:
+    async def create_user(session: AsyncSession, user_data: UserCreateRequest) -> User:
         """Create a new user with hashed password"""
         #     result = await db.execute(select(models.User).where(
         #         func.lower(models.User.username) == user.username.lower(),
@@ -80,7 +80,7 @@ class UserCRUD:
 
     @staticmethod
     async def update_user(
-        session: AsyncSession, user: User, user_data: UserUpdate
+        session: AsyncSession, user: User, user_data: UserUpdateRequest
     ) -> User:
         """Update user information"""
         if (

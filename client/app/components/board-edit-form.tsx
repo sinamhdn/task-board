@@ -1,9 +1,6 @@
 import ClickAwayListener from "react-click-away-listener";
 import { FormProvider, useForm } from "react-hook-form";
-import {
-  LoadingStatus as BoardLoadingStatusEnum,
-  updateBoard,
-} from "~/state/boardSlice";
+import { updateBoard } from "~/state/boardSlice";
 import { clearError } from "~/state/errorSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import type { RootState } from "~/state/store";
@@ -26,7 +23,7 @@ function BoardEditForm({
   boardName: string;
   setEditFormActive: (arg0: boolean) => void;
 }) {
-  const errors = useAppSelector((error: RootState) => error.errors);
+  const errors = useAppSelector((state: RootState) => state.errorSlice.errors);
   const dispatch = useAppDispatch();
   const token = getToken();
 
@@ -36,8 +33,8 @@ function BoardEditForm({
     try {
       const result = await dispatch(
         updateBoard({
-          board_name: data.board_name,
-          board_id: boardId,
+          boardName: data.board_name,
+          boardId: boardId,
           token: token,
         }),
       ).unwrap();
