@@ -6,6 +6,11 @@ import type {
   SocketStateInterface,
 } from "~/state";
 
+import log from "~/utils/logger";
+
+const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
+
 // ---- Slice ----
 
 const initialState: SocketStateInterface = {

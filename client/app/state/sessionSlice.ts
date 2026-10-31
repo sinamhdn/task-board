@@ -9,7 +9,11 @@ import {
   type UserRecievedInterface,
 } from "~/state";
 import { fetchCurrentUser } from "~/utils/auth";
+import log from "~/utils/logger";
 import { setError } from "./errorSlice";
+
+const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const initialState: SessionStateInterface = {
   websocket: null,

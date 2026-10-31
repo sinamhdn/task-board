@@ -39,7 +39,7 @@ export function WebsocketProvider({ children }: { children: ReactNode }) {
   // const clientLoaderToken = useLoaderData<typeof clientLoader>();
   const [wsUrl, setWsUrl] = useState<string | null>(null);
   const [shouldWebsocketConnect, setShouldWebsocketConnect] = useState(false);
-  const currentUser = useAppSelector((state) => state.session.currentUser);
+  const currentUser = useAppSelector((state) => state.sessionSlice.currentUser);
 
   useEffect(() => {
     //only change url if url actually change

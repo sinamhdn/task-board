@@ -1,5 +1,6 @@
+import Tooltip from "@mui/material/Tooltip";
 import type { ReactNode } from "react";
-import AddMemberIcon from "~/assets/add_member.svg?react";
+import AddMemberIcon from "~/assets/add-signs.svg?react";
 
 function BoardMemberAddButton({
   handleAddNewMemberClick,
@@ -14,11 +15,13 @@ function BoardMemberAddButton({
         className="add-new-member-btn cursor-pointer"
         onClick={handleAddNewMemberClick}
       >
-        <AddMemberIcon
-          className="w-12 h-12 dark:fill-white fill-black"
-          aria-label="add new member button."
-          role="img"
-        />
+        <Tooltip describeChild title="Add member">
+          <AddMemberIcon
+            className="w-12 h-12 dark:fill-white fill-black"
+            aria-label="add new member button."
+            role="img"
+          />
+        </Tooltip>
       </button>
       {children}
     </>

@@ -13,8 +13,9 @@ from ..utils.db import (
     get_order_column,
 )
 from ..utils.deps import (
-    AnnotatedListForCardBody,
-    AnnotatedListForCardQuery,
+    AnnotatedAuthorizedListForCardBodyCreate,
+    AnnotatedAuthorizedListForCardBodyUpdate,
+    AnnotatedAuthorizedListForCardQuery,
 )
 from ..utils.ws import manager
 
@@ -26,7 +27,7 @@ router = APIRouter(prefix="", tags=["cards"])
 @router.get("", response_model=list[CardResponse])
 async def get_all_cards(
     db: AnnotatedAsyncDBSession,
-    available_list: AnnotatedListForCardQuery,
+    available_list: AnnotatedAuthorizedListForCardQuery,
     order: str = "updated_at",
     skip: int = 0,
     limit: int = 100,
@@ -56,7 +57,7 @@ async def get_all_cards(
 @router.get("/{card_id}", response_model=CardResponse)
 async def get_card_by_id(
     db: AnnotatedAsyncDBSession,
-    available_list: AnnotatedListForCardQuery,
+    available_list: AnnotatedAuthorizedListForCardQuery,
     card_id: int,
 ):
     if available_list is None:
@@ -77,7 +78,7 @@ async def get_card_by_id(
 @router.post("", response_model=CardResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_card(
     db: AnnotatedAsyncDBSession,
-    data: AnnotatedListForCardBody,
+    data: AnnotatedAuthorizedListForCardBodyCreate,
 ):
     if not hasattr(data["card_data"], "card_name"):
         raise HTTPException(
@@ -108,7 +109,7 @@ async def create_new_card(
 @router.patch("", response_model=CardResponse)
 async def update_card(
     db: AnnotatedAsyncDBSession,
-    data: AnnotatedListForCardBody,
+    data: AnnotatedAuthorizedListForCardBodyUpdate,
 ):
     card_query = await db.execute(
         select(Card)
@@ -148,7 +149,7 @@ async def update_card(
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_board(
     db: AnnotatedAsyncDBSession,
-    data: AnnotatedListForCardBody,
+    data: AnnotatedAuthorizedListForCardBodyUpdate,
 ):
     card_query = await db.execute(
         select(Card)

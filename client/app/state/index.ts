@@ -159,6 +159,42 @@ export interface EventBoardUpdatedInterface {
   data: BoardRecievedInterface;
 }
 
+export interface EventListAddedInterface {
+  event: "list_added"; // ✅ literal
+  // member_data: RecievedBoardMemberInterface;
+  data: ListRecievedInterface;
+}
+
+export interface EventListUpdatedInterface {
+  event: "list_updated"; // ✅ literal
+  // member_data: RecievedBoardMemberInterface;
+  data: ListRecievedInterface;
+}
+
+export interface EventListRemovedInterface {
+  event: "list_removed"; // ✅ literal
+  // member_data: RecievedBoardMemberInterface;
+  data: ListRecievedInterface;
+}
+
+export interface EventCardAddedInterface {
+  event: "card_added"; // ✅ literal
+  // member_data: RecievedBoardMemberInterface;
+  data: CardRecievedInterface;
+}
+
+export interface EventCardUpdatedInterface {
+  event: "card_updated"; // ✅ literal
+  // member_data: RecievedBoardMemberInterface;
+  data: CardRecievedInterface;
+}
+
+export interface EventCardRemovedInterface {
+  event: "card_removed"; // ✅ literal
+  // member_data: RecievedBoardMemberInterface;
+  data: CardRecievedInterface;
+}
+
 // Add more variants as your backend adds them, e.g.
 // export interface EventMemberRemovedInterface { event: "member_removed"; ... }
 // export interface EventBoardUpdatedInterface  { event: "board_updated"; ... }
@@ -167,7 +203,13 @@ export type BoardChannelMessageType =
   | EventMemberAddedInterface
   | EventMemberRemovedInterface
   | EventBoardRemovedInterface
-  | EventBoardUpdatedInterface;
+  | EventBoardUpdatedInterface
+  | EventListAddedInterface
+  | EventListUpdatedInterface
+  | EventListRemovedInterface
+  | EventCardAddedInterface
+  | EventCardUpdatedInterface
+  | EventCardRemovedInterface;
 
 export interface BoardChannelPayloadInterface {
   res_type: BroadcastResType;

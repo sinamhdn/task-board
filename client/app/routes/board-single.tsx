@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { redirect, useLocation, useParams } from "react-router";
 import BoardEditForm from "~/components/board-edit-form";
-import BoardList from "~/components/board-list-item";
+import BoardList from "~/components/board-list";
 import BoardListAddButton from "~/components/board-list-item-add-btn";
 import BoardListAddForm from "~/components/board-list-item-add-form";
 import BoardMembers from "~/components/board-members";
@@ -10,6 +10,7 @@ import { useWebsocketContext } from "~/providers/websocket-provider";
 import { getAllBoardMembers } from "~/state/boardMemberSlice";
 import { getBoardById } from "~/state/boardSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
+import { getAllLists, resetLists } from "~/state/listSlice";
 import { getToken } from "~/utils";
 import log from "~/utils/logger";
 import type { Route } from "./+types/boardsingle";
@@ -39,7 +40,6 @@ function BoardSingle() {
   const { board: locationBoard } = useLocation().state ?? {};
   const { isConnected, sendMessage } = useWebsocketContext();
   const token = getToken();
-
   const board = useAppSelector((state) => {
     if (locationBoard)
       return state.boardSlice.boards.find(
@@ -49,14 +49,15 @@ function BoardSingle() {
       (board) => board.id === Number(urlParamBoardId),
     );
   });
-
   const boardMembers = useAppSelector((state) => {
     return state.boardMemberSlice.boardMembers;
   });
-
   const loggedInUser = useAppSelector(
     (state) => state.sessionSlice.currentUser,
   );
+  const loadedBoardId = useAppSelector((s) => s.listSlice.boardId);
+  const lists = useAppSelector((s) => s.listSlice.lists);
+  const listsForThisBoard = loadedBoardId === board?.id ? lists : [];
 
   const dispatch = useAppDispatch();
 
@@ -64,7 +65,7 @@ function BoardSingle() {
     setEditBoardName(true);
   };
 
-  const addNewListClickHandler = () => {
+  const handleAddNewListClick = () => {
     if (newListFormActive) {
       setNewListFormActive(false);
       return;
@@ -72,7 +73,7 @@ function BoardSingle() {
     setNewListFormActive(true);
   };
 
-  const handleCancelAddNewBoardClick = () => {
+  const handleCancelCreateNewList = () => {
     setNewListFormActive(false);
   };
 
@@ -107,6 +108,15 @@ function BoardSingle() {
     });
   }, [isConnected, urlParamBoardId, sendMessage]);
 
+  useEffect(() => {
+    if (!board || !token) return;
+    if (loadedBoardId !== board.id) {
+      // refetch whenever board changes
+      dispatch(resetLists());
+      dispatch(getAllLists({ boardId: board.id, token }));
+    }
+  }, [board?.id, token, loadedBoardId, dispatch]);
+
   return (
     <div className="single-board-component">
       {!board || !loggedInUser ? (
@@ -131,20 +141,18 @@ function BoardSingle() {
             <div className="canvas">
               <div className="lists-wrapper">
                 <BoardList
-                  list={[
-                    { name: "list1", id: 1 },
-                    { name: "list2", id: 2 },
-                    { name: "list2", id: 3 },
-                  ]}
+                  list={listsForThisBoard}
+                  board={board}
+                  token={token}
                 />
                 {newListFormActive && token && (
                   <BoardListAddForm
                     token={token}
                     board_id={board.id}
-                    handleCancelAddNewBoardClick={handleCancelAddNewBoardClick}
+                    handleCancelCreateNewListClick={handleCancelCreateNewList}
                   />
                 )}
-                <BoardListAddButton onClickHandler={addNewListClickHandler} />
+                <BoardListAddButton onClickHandler={handleAddNewListClick} />
                 <ul className="board-lists"></ul>
               </div>
             </div>

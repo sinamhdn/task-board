@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.orm import selectinload
 
 from ..models.lists import List
@@ -11,7 +11,8 @@ from ..utils.db import (
     get_order_column,
 )
 from ..utils.deps import (
-    AnnotatedAuthorizedBoardForListBody,
+    AnnotatedAuthorizedBoardForListBodyCreate,
+    AnnotatedAuthorizedBoardForListBodyUpdate,
     AnnotatedAuthorizedBoardForListQuery,
 )
 from ..utils.ws import manager
@@ -24,7 +25,7 @@ router = APIRouter(prefix="", tags=["lists"])
 @router.get("", response_model=list[ListResponse])
 async def get_all_lists(
     db: AnnotatedAsyncDBSession,
-    authorized_board: AnnotatedAuthorizedBoardForListQuery,
+    board: AnnotatedAuthorizedBoardForListQuery,
     order: str = "updated_at",
     skip: int = 0,
     limit: int = 100,
@@ -35,7 +36,7 @@ async def get_all_lists(
         .order_by(get_order_column(List, order))
         .offset(skip)
         .limit(limit)
-        .where(List.board_id == authorized_board.id)
+        .where(List.board_id == board.id)
     )
     lists_inside_board = list_query.scalars().all()
     if not lists_inside_board:
@@ -52,12 +53,12 @@ async def get_all_lists(
 @router.get("/{list_id}", response_model=ListResponse)
 async def get_list_by_id(
     db: AnnotatedAsyncDBSession,
-    authorized_board: AnnotatedAuthorizedBoardForListQuery,
+    board: AnnotatedAuthorizedBoardForListQuery,
     list_id: int,
 ):
-    if authorized_board is None:
-        return
-    list_by_id_query = await db.execute(select(List).where(List.id == list_id))
+    list_by_id_query = await db.execute(
+        select(List).where(and_(List.id == list_id, List.board_id == board.id))
+    )
     list_by_id = list_by_id_query.scalars().first()
     if not list_by_id:
         raise HTTPException(
@@ -73,7 +74,7 @@ async def get_list_by_id(
 @router.post("", response_model=ListResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_list(
     db: AnnotatedAsyncDBSession,
-    data: AnnotatedAuthorizedBoardForListBody,
+    data: AnnotatedAuthorizedBoardForListBodyCreate,
 ):
     if not hasattr(data["list_data"], "list_name"):
         raise HTTPException(
@@ -103,15 +104,14 @@ async def create_new_list(
     return new_list
 
 
-@router.patch("", response_model=ListResponse)
+@router.patch("/{list_id}", response_model=ListResponse)
 async def update_list(
+    list_id: int,
+    data: AnnotatedAuthorizedBoardForListBodyUpdate,
     db: AnnotatedAsyncDBSession,
-    data: AnnotatedAuthorizedBoardForListBody,
 ):
     list_query = await db.execute(
-        select(List)
-        .options(selectinload(List.owned_cards))
-        .where(List.id == data["list_data"].list_id)
+        select(List).options(selectinload(List.owned_cards)).where(List.id == list_id)
     )
     list_in_board = list_query.scalars().first()
     if not list_in_board:
@@ -145,15 +145,14 @@ async def update_list(
     return list_in_board
 
 
-@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{list_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_list(
+    list_id: int,
+    board: AnnotatedAuthorizedBoardForListQuery,
     db: AnnotatedAsyncDBSession,
-    data: AnnotatedAuthorizedBoardForListBody,
 ):
     list_query = await db.execute(
-        select(List)
-        .options(selectinload(List.owned_cards))
-        .where(List.id == data["list_data"].list_id)
+        select(List).options(selectinload(List.owned_cards)).where(List.id == list_id)
     )
     list_in_board = list_query.scalars().first()
     if not list_in_board:
@@ -165,8 +164,7 @@ async def delete_list(
             },
         )
     await db.delete(list_in_board)
-    await db.commit()
-    channel_name = f"boards:{data["list_data"].board_id}"
+    channel_name = f"boards:{board.id}"
     list_data_validate = ListResponse.model_validate(list_in_board).model_dump(
         mode="json"
     )
@@ -179,3 +177,4 @@ async def delete_list(
                     "data": list_data_validate,
                 },
             )
+    await db.commit()

@@ -7,7 +7,11 @@ import {
   // type BoardMemberRecievedInterface,
   type BoardRecievedInterface,
 } from "~/state";
+import log from "~/utils/logger";
 import { setError } from "./errorSlice";
+
+const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const initialState: {
   getAllBoardsLoadingStatus: string | null;
@@ -47,7 +51,7 @@ const boardSlice = createSlice({
       );
     },
     updateBoardDirect: (state, action) => {
-      console.log(
+      logger.info(
         `updateBoardDirect what does it recieve --> ${action.payload}`,
         action.payload,
       );
@@ -141,7 +145,7 @@ export const getAllBoards = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("boardSlice.ts::" + error.response?.data.detail);
+        logger.error("boardSlice.ts::" + error.response?.data.detail);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -171,7 +175,7 @@ export const getBoardById = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("boardSlice.ts::" + error.response?.data.detail);
+        logger.error("boardSlice.ts::" + error.response?.data.detail);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -188,7 +192,7 @@ export const createNewBoard = createAsyncThunk<
 >(
   "board/newboard",
   async ({ token, boardName }, { dispatch, rejectWithValue }) => {
-    console.log("createNewBoard name", boardName);
+    logger.info("createNewBoard name", boardName);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/v1/boards`,
@@ -205,7 +209,7 @@ export const createNewBoard = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("boardSlice.ts::" + error);
+        logger.error("boardSlice.ts::" + error);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -236,7 +240,7 @@ export const updateBoard = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("boardSlice.ts::" + error.response?.data.detail);
+        logger.error("boardSlice.ts::" + error.response?.data.detail);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -266,7 +270,7 @@ export const deleteBoard = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("boardSlice.ts::" + error);
+        logger.error("boardSlice.ts::" + error);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }

@@ -6,6 +6,12 @@ from pydantic import BaseModel, ConfigDict
 
 
 class CardCreateRequest(BaseModel):
+    card_name: str
+    list_id: int
+    board_id: int
+
+
+class CardUpdateRequest(BaseModel):
     card_id: int
     card_name: str
     list_id: int

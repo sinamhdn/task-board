@@ -30,4 +30,3 @@ class ListUpdateRequest(BaseModel):
 
     list_name: str
     board_id: int
-    list_id: int

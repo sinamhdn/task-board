@@ -47,7 +47,9 @@ async def get_all_owned_boards(
         .order_by(get_order_column(Board, order))
         .offset(skip)
         .limit(limit)
-        .where(or_(Board.id == current_user.id, Board.members.any(id=current_user.id)))
+        .where(
+            or_(Board.user_id == current_user.id, Board.members.any(id=current_user.id))
+        )
     )
     boards = boards_query.scalars().all()
     return list(boards)
@@ -237,7 +239,9 @@ async def get_all_board_members(
                 "msg": "Not authorized to get board members please login.",
             },
         )
-    if current_user not in board.members or current_user.id != board.user_id:
+    is_owner = current_user.id == board.user_id
+    is_member = any(member.id == current_user.id for member in board.members)
+    if not is_owner and not is_member:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
@@ -279,7 +283,9 @@ async def get_board_member_by_id(
                 "msg": "Not authorized to get this board member please login.",
             },
         )
-    if current_user not in board.members or current_user.id != board.user_id:
+    is_owner = current_user.id == board.user_id
+    is_member = any(member.id == current_user.id for member in board.members)
+    if not is_owner and not is_member:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={

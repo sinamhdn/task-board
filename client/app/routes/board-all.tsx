@@ -1,6 +1,7 @@
 import classnames from "classnames";
 import { useEffect } from "react";
 import { redirect } from "react-router";
+import BackgroundImage from "~/components/background-image";
 import BoardCard from "~/components/board-card";
 import BoardNew from "~/components/board-new";
 import LoadingSpinner from "~/components/loading-spinner";
@@ -9,6 +10,8 @@ import { deleteBoard, getAllBoards } from "~/state/boardSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getToken } from "~/utils";
 import type { Route } from "./+types/board-all";
+
+import bg from "~/assets/all-boards-bg.webp";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -50,6 +53,7 @@ function BoardAll() {
   if (boards.length === 0) {
     return (
       <div className="all-boards-component">
+        <BackgroundImage src={bg} alt="Nature Background Image" />
         <p>No Boards Available!</p>
         <BoardNew />
       </div>
@@ -65,6 +69,7 @@ function BoardAll() {
   // Show boards
   return (
     <div className="all-boards-component container mx-auto text-center">
+      <BackgroundImage src={bg} alt="Nature Background Image" />
       <div className="board-new-button-container bg-blue-700">
         <BoardNew />
       </div>

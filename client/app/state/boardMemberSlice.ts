@@ -158,7 +158,7 @@ export const getAllBoardMembers = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("boardSlice.ts::" + error.response?.data.detail);
+        logger.info("boardMemberSlice.ts::" + error.response?.data.detail);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -226,7 +226,7 @@ export const deleteBoardMember = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("boardSlice.ts::" + error);
+        logger.info("boardMemberSlice.ts::" + error);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }

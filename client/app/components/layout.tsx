@@ -6,8 +6,18 @@ import {
   removeBoardDirect,
   updateBoardDirect,
 } from "~/state/boardSlice";
+import {
+  addCardDirect,
+  removeCardDirect,
+  updateCardDirect,
+} from "~/state/cardSlice";
 import { clearError } from "~/state/errorSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
+import {
+  addListDirect,
+  removeListDirect,
+  updateListDirect,
+} from "~/state/listSlice";
 import { clearSessionStatus } from "~/state/sessionSlice";
 import { getCurrentUser } from "~/state/sessionSlice.ts";
 import type { RootState } from "~/state/store";
@@ -54,6 +64,18 @@ function MainLayout() {
       dispatch(removeBoardDirect(payload.message.data));
     if (payload.message.event === "board_updated")
       dispatch(updateBoardDirect(payload.message.data));
+    if (payload.message.event === "list_added")
+      dispatch(addListDirect(payload.message.data));
+    if (payload.message.event === "list_updated")
+      dispatch(updateListDirect(payload.message.data));
+    if (payload.message.event === "list_removed")
+      dispatch(removeListDirect(payload.message.data));
+    if (payload.message.event === "card_added")
+      dispatch(addCardDirect(payload.message.data));
+    if (payload.message.event === "card_updated")
+      dispatch(updateCardDirect(payload.message.data));
+    if (payload.message.event === "card_removed")
+      dispatch(removeCardDirect(payload.message.data));
     console.log(`WSDATA CONTENT ${JSON.stringify(wsData)}`);
   }, [wsData]);
 

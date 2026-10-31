@@ -5,7 +5,11 @@ import {
   type BackendValidationErrorInterface,
   type ListRecievedInterface,
 } from "~/state";
+import log from "~/utils/logger";
 import { setError } from "./errorSlice";
+
+const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const initialState: {
   getAllListsLoadingStatus: string | null;
@@ -13,6 +17,7 @@ const initialState: {
   createNewListLoadingStatus: string | null;
   updateListLoadingStatus: string | null;
   deleteListLoadingStatus: string | null;
+  boardId: number;
   lists: ListRecievedInterface[];
 } = {
   getAllListsLoadingStatus: null,
@@ -20,6 +25,7 @@ const initialState: {
   createNewListLoadingStatus: null,
   updateListLoadingStatus: null,
   deleteListLoadingStatus: null,
+  boardId: 0,
   lists: [],
 };
 
@@ -36,7 +42,7 @@ const listSlice = createSlice({
       state.deleteListLoadingStatus = null;
     },
     addListDirect: (state, action) => {
-      if (state.lists.find((list) => list.id === action.payload.id)) return;
+      if (state.lists.some((list) => list.id === action.payload.id)) return;
       state.lists.push(action.payload);
     },
     removeListDirect: (state, action) => {
@@ -57,6 +63,7 @@ const listSlice = createSlice({
     builder
       .addCase(getAllLists.fulfilled, (state, action) => {
         state.getAllListsLoadingStatus = LoadingStatusEnum.fulfilled;
+        state.boardId = action.meta.arg.boardId;
         state.lists = action.payload;
       })
       .addCase(getAllLists.pending, (state) => {
@@ -67,7 +74,9 @@ const listSlice = createSlice({
       })
       .addCase(getListById.fulfilled, (state, action) => {
         state.getListByIdLoadingStatus = LoadingStatusEnum.fulfilled;
-        state.lists.push(action.payload);
+        if (!state.lists.some((list) => list.id === action.payload.id)) {
+          state.lists.push(action.payload);
+        }
       })
       .addCase(getListById.pending, (state) => {
         state.getListByIdLoadingStatus = LoadingStatusEnum.pending;
@@ -77,7 +86,9 @@ const listSlice = createSlice({
       })
       .addCase(createNewList.fulfilled, (state, action) => {
         state.createNewListLoadingStatus = LoadingStatusEnum.fulfilled;
-        state.lists.push(action.payload);
+        if (!state.lists.some((list) => list.id === action.payload.id)) {
+          state.lists.push(action.payload);
+        }
       })
       .addCase(createNewList.pending, (state) => {
         state.createNewListLoadingStatus = LoadingStatusEnum.pending;
@@ -268,7 +279,7 @@ export const deleteList = createAsyncThunk<
   async ({ token, boardId, listId }, { dispatch, rejectWithValue }) => {
     try {
       const response = await axios.delete(
-        `${import.meta.env.VITE_API_URL}/api/v1/boards/${listId}`,
+        `${import.meta.env.VITE_API_URL}/api/v1/lists/${listId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

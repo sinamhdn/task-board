@@ -135,6 +135,20 @@ export const board_name_validation = {
   },
 };
 
+export const list_name_validation = {
+  name: "list_name" as const,
+  label: "List name",
+  type: "text",
+  id: "list_name",
+  placeholder: "",
+  validation: {
+    required: {
+      value: false,
+      message: "required",
+    },
+  },
+};
+
 export const board_member_email_validation = {
   name: "board_member_email" as const,
   label: "",
