@@ -45,15 +45,17 @@ async def _get_board_with_members_or_404(
 
 async def _get_list_with_card_or_404(list_id: int, db: AnnotatedAsyncDBSession) -> List:
     result = await db.execute(
-        select(List).options(selectinload(List.owned_cards)).where(List.id == list_id)
+        select(List)
+        .options(selectinload(List.owned_cards), selectinload(List.owner_board))
+        .where(List.id == list_id)
     )
-    list_in_board = result.scalars().first()
-    if list_in_board is None:
+    blist = result.scalars().first()
+    if blist is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"field": "server_error", "msg": "List not found."},
         )
-    return list_in_board
+    return blist
 
 
 async def get_authorized_board_for_list_query(
@@ -119,12 +121,12 @@ async def get_authorized_list_for_card_query(
 ):
     board = await _get_board_with_members_or_404(board_id=board_id, db=db)
     _authorize_board_access(board=board, current_user=current_user)
-    list_in_board = await _get_list_with_card_or_404(list_id=list_id, db=db)
-    return list_in_board
+    blist = await _get_list_with_card_or_404(list_id=list_id, db=db)
+    return blist
 
 
 AnnotatedAuthorizedListForCardQuery = Annotated[
-    Board, Depends(get_authorized_list_for_card_query)
+    List, Depends(get_authorized_list_for_card_query)
 ]
 
 
@@ -140,8 +142,8 @@ async def get_authorized_list_for_card_body_create(
 ) -> BoardCardCreateContext:
     board = await _get_board_with_members_or_404(board_id=card_data.board_id, db=db)
     _authorize_board_access(board=board, current_user=current_user)
-    list_in_board = await _get_list_with_card_or_404(list_id=card_data.list_id, db=db)
-    return {"board_list": list_in_board, "card_data": card_data}
+    blist = await _get_list_with_card_or_404(list_id=card_data.list_id, db=db)
+    return {"board_list": blist, "card_data": card_data}
 
 
 AnnotatedAuthorizedListForCardBodyCreate = Annotated[
@@ -161,8 +163,8 @@ async def get_authorized_list_for_card_body_update(
 ) -> BoardCardUpdateContext:
     board = await _get_board_with_members_or_404(board_id=card_data.board_id, db=db)
     _authorize_board_access(board=board, current_user=current_user)
-    list_in_board = await _get_list_with_card_or_404(list_id=card_data.list_id, db=db)
-    return {"board_list": list_in_board, "card_data": card_data}
+    blist = await _get_list_with_card_or_404(list_id=card_data.list_id, db=db)
+    return {"board_list": blist, "card_data": card_data}
 
 
 AnnotatedAuthorizedListForCardBodyUpdate = Annotated[

@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
+from email.policy import default
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from .users import UserPublicResponse
 
@@ -19,7 +20,7 @@ class BoardResponse(BaseModel):
 
 
 class BoardCreateRequest(BaseModel):
-    board_name: str
+    board_name: str = Field(min_length=3)
 
 
 class BoardMemberAddRequest(BaseModel):

@@ -4,8 +4,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Index, Integer, String, Uuid, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import CheckConstraint, Index, Integer, String, Uuid, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from ..utils.db import Base
 from .members import members_table
@@ -53,6 +53,13 @@ class User(Base):
         Index(
             "ix_users_email_lower", func.lower(email)
         ),  # Optional: case-insensitive email index
+        CheckConstraint(
+            func.char_length(first_name) >= 3, name="some_string_min_length"
+        ),
+        CheckConstraint(
+            func.char_length(last_name) >= 3, name="some_string_min_length"
+        ),
+        CheckConstraint(func.char_length(email) >= 10, name="some_string_min_length"),
     )
 
     @property
@@ -69,3 +76,15 @@ class User(Base):
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email={self.email})>"
+
+    @validates("first_name")
+    def validate_first_name(self, key, value):
+        if len(value) < 3:
+            raise ValueError("Firstname must be at least 3 characters")
+        return value
+
+    @validates("last_name")
+    def validate_last_name(self, key, value):
+        if len(value) < 3:
+            raise ValueError("Lastname must be at least 3 characters")
+        return value

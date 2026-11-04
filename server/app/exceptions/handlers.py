@@ -20,7 +20,15 @@ class ErrorMessage(TypedDict):
     msg: str
 
 
-form_fields = ["email", "password", "first_name", "last_name", "board_name"]
+form_fields = [
+    "email",
+    "password",
+    "first_name",
+    "last_name",
+    "board_name",
+    "list_name",
+    "card_name",
+]
 
 
 # fix pydantic error return format to be consistant
@@ -49,11 +57,15 @@ def general_http_exception_handler(request: Request, exception: Exception) -> Re
         if message["field"] not in form_fields:
             return JSONResponse(
                 status_code=exc.status_code,
-                content={"detail": [{"field": "server_error", "msg": message["msg"]}]},
+                content={
+                    "detail": [{"field": "server_error", "msg": f"{message["msg"]}."}]
+                },
             )
         return JSONResponse(
             status_code=exc.status_code,
-            content={"detail": [{"field": message["field"], "msg": message["msg"]}]},
+            content={
+                "detail": [{"field": message["field"], "msg": f"{message["msg"]}."}]
+            },
         )
 
     return templates.TemplateResponse(
@@ -71,6 +83,7 @@ def general_http_exception_handler(request: Request, exception: Exception) -> Re
 # @app.exception_handler(RequestValidationError)
 def validation_exception_handler(request: Request, exception: Exception) -> Response:
     exc = cast(RequestValidationError, exception)
+    logger.error(f"what does validation_exception_handler recieve: {exc}")
 
     request_validation_errors = []
     for error in exc.errors():
@@ -80,7 +93,7 @@ def validation_exception_handler(request: Request, exception: Exception) -> Resp
             else {"field": "server_error", "msg": "Unknown Validation Error"}
         )
         if error["loc"][-1] not in form_fields:
-            error_item = {"field": "server_error", "msg": error["msg"]}
+            error_item = {"field": "server_error", "msg": f"{error["msg"]}."}
         request_validation_errors.append(error_item)
     if request.url.path.startswith("/api"):
         return JSONResponse(

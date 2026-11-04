@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import ClickAwayListener from "react-click-away-listener";
 import { FormProvider, useForm } from "react-hook-form";
+import { Input } from "~/components/input";
+import SearchResultModal from "~/components/search-result-modal";
 import { useLiveSearch } from "~/hooks";
 import { LoadingStatusEnum } from "~/state";
 import { addBoardMember } from "~/state/boardMemberSlice";
@@ -9,8 +11,6 @@ import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { clearQuery, setQuery } from "~/state/searchSlice";
 import type { RootState } from "~/state/store";
 import { board_member_email_validation } from "~/utils/input/input-validations";
-import { Input } from "./input";
-import SearchResultModal from "./search-result-modal";
 
 function BoardMemberAddForm({
   board_id,

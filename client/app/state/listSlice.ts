@@ -8,7 +8,7 @@ import {
 import log from "~/utils/logger";
 import { setError } from "./errorSlice";
 
-const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+const logger = log.getLogger("LIST SLICE LOGGER");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const initialState: {
@@ -260,7 +260,7 @@ export const updateList = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("listSlice.ts::" + error.response?.data.detail);
+        logger.info("listSlice.ts::updateError::", error.response?.data.detail);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }

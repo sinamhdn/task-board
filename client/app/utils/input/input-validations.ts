@@ -132,6 +132,7 @@ export const board_name_validation = {
       value: false,
       message: "required",
     },
+    minLength: { value: 4, message: "Min length is 4" },
   },
 };
 
@@ -146,6 +147,7 @@ export const list_name_validation = {
       value: false,
       message: "required",
     },
+    minLength: { value: 4, message: "Min length is 4" },
   },
 };
 

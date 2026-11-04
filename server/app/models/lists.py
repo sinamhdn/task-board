@@ -4,8 +4,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, Integer, String, Uuid
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import CheckConstraint, ForeignKey, Integer, String, Uuid, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from ..utils.db import Base
 
@@ -30,14 +30,24 @@ class List(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     board_id: Mapped[int] = mapped_column(ForeignKey("boards.id"), nullable=False)
-    owner: Mapped[Board] = relationship(
+    owner_board: Mapped[Board] = relationship(
         "Board", foreign_keys=[board_id], back_populates="owned_lists"
     )
     owned_cards: Mapped[list[Card]] = relationship(
         "Card",
-        back_populates="owner",
+        back_populates="owner_list",
         cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:
         return f"<List(id={self.id}, name={self.name})>"
+
+    __table_args__ = (
+        CheckConstraint(func.char_length(name) >= 3, name="some_string_min_length"),
+    )
+
+    @validates("name")
+    def validate_name(self, key, value):
+        if len(value) < 3:
+            raise ValueError("List name must be at least 3 characters")
+        return value

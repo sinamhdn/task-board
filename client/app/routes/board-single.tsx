@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { redirect, useLocation, useParams } from "react-router";
-import BoardEditForm from "~/components/board-edit-form";
-import BoardList from "~/components/board-list";
-import BoardListAddButton from "~/components/board-list-item-add-btn";
-import BoardListAddForm from "~/components/board-list-item-add-form";
-import BoardMembers from "~/components/board-members";
+import BoardEditForm from "~/components/boards/board-edit-form";
+import BoardMembers from "~/components/boards/board-members";
+import BoardList from "~/components/lists/board-list";
+import BoardListAddButton from "~/components/lists/board-list-item-add-btn";
+import BoardListAddForm from "~/components/lists/board-list-item-add-form";
 import LoadingSpinner from "~/components/loading-spinner";
 import { useWebsocketContext } from "~/providers/websocket-provider";
 import { getAllBoardMembers } from "~/state/boardMemberSlice";

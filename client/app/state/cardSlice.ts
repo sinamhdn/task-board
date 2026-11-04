@@ -4,8 +4,13 @@ import {
   LoadingStatusEnum,
   type BackendValidationErrorInterface,
   type CardRecievedInterface,
+  type ListRecievedInterface,
 } from "~/state";
+import log from "~/utils/logger";
 import { setError } from "./errorSlice";
+
+const logger = log.getLogger("CARD SLICE LOGGER");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const initialState: {
   getAllCardsLoadingStatus: string | null;
@@ -13,6 +18,7 @@ const initialState: {
   createNewCardLoadingStatus: string | null;
   updateCardLoadingStatus: string | null;
   deleteCardLoadingStatus: string | null;
+  boardId: number;
   cards: CardRecievedInterface[];
 } = {
   getAllCardsLoadingStatus: null,
@@ -20,6 +26,7 @@ const initialState: {
   createNewCardLoadingStatus: null,
   updateCardLoadingStatus: null,
   deleteCardLoadingStatus: null,
+  boardId: 0,
   cards: [],
 };
 
@@ -27,7 +34,7 @@ const cardSlice = createSlice({
   name: "card",
   initialState: initialState,
   reducers: {
-    resetLists: (state) => {
+    resetCards: (state) => {
       state.cards = [];
       state.getAllCardsLoadingStatus = null;
       state.getCardByIdLoadingStatus = null;
@@ -36,7 +43,7 @@ const cardSlice = createSlice({
       state.deleteCardLoadingStatus = null;
     },
     addCardDirect: (state, action) => {
-      if (state.cards.find((card) => card.list_id === action.payload.list_id)) return;
+      if (state.cards.some((card) => card.id === action.payload.id)) return;
       state.cards.push(action.payload);
     },
     removeCardDirect: (state, action) => {
@@ -57,6 +64,7 @@ const cardSlice = createSlice({
     builder
       .addCase(getAllCards.fulfilled, (state, action) => {
         state.getAllCardsLoadingStatus = LoadingStatusEnum.fulfilled;
+        state.boardId = action.meta.arg.boardId;
         state.cards = action.payload;
       })
       .addCase(getAllCards.pending, (state) => {
@@ -67,7 +75,9 @@ const cardSlice = createSlice({
       })
       .addCase(getCardById.fulfilled, (state, action) => {
         state.getCardByIdLoadingStatus = LoadingStatusEnum.fulfilled;
-        state.cards.push(action.payload);
+        if (!state.cards.some((card) => card.id === action.payload.id)) {
+          state.cards.push(action.payload);
+        }
       })
       .addCase(getCardById.pending, (state) => {
         state.getCardByIdLoadingStatus = LoadingStatusEnum.pending;
@@ -77,7 +87,9 @@ const cardSlice = createSlice({
       })
       .addCase(createNewCard.fulfilled, (state, action) => {
         state.createNewCardLoadingStatus = LoadingStatusEnum.fulfilled;
-        state.cards.push(action.payload);
+        if (!state.cards.some((card) => card.id === action.payload.id)) {
+          state.cards.push(action.payload);
+        }
       })
       .addCase(createNewCard.pending, (state) => {
         state.createNewCardLoadingStatus = LoadingStatusEnum.pending;
@@ -235,23 +247,23 @@ export const createNewCard = createAsyncThunk<
 export const updateCard = createAsyncThunk<
   CardRecievedInterface,
   {
-    listId: number;
-    token: string;
+    cardId: number;
     cardName: string;
     boardId: number;
-    cardId: number;
+    listId: number;
+    token: string;
   },
   { rejectValue: BackendValidationErrorInterface[] }
 >(
   "card/updatecard",
   async (
-    { token, listId, cardName, boardId, cardId },
+    { token, listId, cardName, cardId, boardId },
     { dispatch, rejectWithValue },
   ) => {
     try {
       const response = await axios.patch(
         `${import.meta.env.VITE_API_URL}/api/v1/cards/${cardId}`,
-        { card_name: cardName, list_id: listId, board_id: boardId },
+        { card_name: cardName, board_id: boardId, list_id: listId },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -262,7 +274,7 @@ export const updateCard = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("cardSlice.ts::" + error.response?.data.detail);
+        logger.info("cardSlice.ts::updateError::", error.response?.data.detail);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -274,7 +286,7 @@ export const updateCard = createAsyncThunk<
 
 export const deleteCard = createAsyncThunk<
   CardRecievedInterface,
-  { boardId: number; listId: number; token: string; cardId: number },
+  { boardId: number; listId: number; cardId: number; token: string },
   { rejectValue: BackendValidationErrorInterface[] }
 >(
   "card/deletecard",
@@ -306,7 +318,7 @@ export const deleteCard = createAsyncThunk<
   },
 );
 
-export const { resetLists, addCardDirect, removeCardDirect, updateCardDirect } =
+export const { resetCards, addCardDirect, removeCardDirect, updateCardDirect } =
   cardSlice.actions;
 
 export default cardSlice.reducer;

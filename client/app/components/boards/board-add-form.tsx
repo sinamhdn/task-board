@@ -8,8 +8,8 @@ import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import type { RootState } from "~/state/store";
 import { getToken } from "~/utils";
 import { board_name_validation } from "~/utils/input/input-validations";
-import { Input } from "./input";
-import LoadingSpinner from "./loading-spinner";
+import { Input } from "../input";
+import LoadingSpinner from "../loading-spinner";
 
 interface FormValues {
   board_name: string;

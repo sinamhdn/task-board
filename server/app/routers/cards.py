@@ -36,7 +36,7 @@ async def get_all_cards(
         return
     card_query = await db.execute(
         select(Card)
-        .options(selectinload(Card.owner))
+        .options(selectinload(Card.owner_board), selectinload(Card.owner_list))
         .order_by(get_order_column(List, order))
         .offset(skip)
         .limit(limit)
@@ -106,15 +106,14 @@ async def create_new_card(
     return new_card
 
 
-@router.patch("", response_model=CardResponse)
+@router.patch("/{card_id}", response_model=CardResponse)
 async def update_card(
+    card_id: int,
     db: AnnotatedAsyncDBSession,
     data: AnnotatedAuthorizedListForCardBodyUpdate,
 ):
     card_query = await db.execute(
-        select(Card)
-        .options(selectinload(List.owned_cards))
-        .where(Card.id == data["card_data"].card_id)
+        select(Card).options(selectinload(List.owned_cards)).where(Card.id == card_id)
     )
     card = card_query.scalars().first()
     if not card:
@@ -146,15 +145,16 @@ async def update_card(
     return card
 
 
-@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{card_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_board(
+    card_id: int,
     db: AnnotatedAsyncDBSession,
-    data: AnnotatedAuthorizedListForCardBodyUpdate,
+    blist: AnnotatedAuthorizedListForCardQuery,
 ):
     card_query = await db.execute(
         select(Card)
-        .options(selectinload(Card.owner))
-        .where(Card.id == data["card_data"].card_id)
+        .options(selectinload(Card.owner_board), selectinload(Card.owner_list))
+        .where(Card.id == card_id)
     )
     card = card_query.scalars().first()
     if not card:
@@ -166,8 +166,7 @@ async def delete_board(
             },
         )
     await db.delete(card)
-    await db.commit()
-    channel_name = f"boards:{data["card_data"].board_id}"
+    channel_name = f"boards:{blist.board_id}"
     card_data_validate = ListResponse.model_validate(card).model_dump(mode="json")
     if channel_name in manager.channels:
         for websocket in manager.channels[channel_name]:
@@ -178,3 +177,4 @@ async def delete_board(
                     "data": card_data_validate,
                 },
             )
+    await db.commit()

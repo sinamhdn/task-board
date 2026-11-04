@@ -1,5 +1,9 @@
 import { useState } from "react";
+import log from "~/utils/logger";
 import BoardListEditForm from "./board-list-edit-form";
+
+const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const BoardListItem = ({
   id,
@@ -15,6 +19,8 @@ const BoardListItem = ({
   const handleListTitleClick = () => {
     setEditBoardListName(true);
   };
+
+  logger.info(`WHAT BOARD ID DOES BOARD-LIST-ITEM RECIEVE ${boardId}`);
 
   return (
     <div className="board-list-item">

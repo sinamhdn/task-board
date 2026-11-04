@@ -1,6 +1,6 @@
 import type { Route } from "./+types/boardnew";
 
-import BoardAddForm from "~/components/board-add-form";
+import BoardAddForm from "~/components/boards/board-add-form";
 import { useAddNewBoardForm } from "~/providers/board-add-provider";
 // import BoardAddButton from "~/components/board-add-button";
 

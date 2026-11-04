@@ -1,29 +1,26 @@
 import ClickAwayListener from "react-click-away-listener";
 import { FormProvider, useForm } from "react-hook-form";
+import { Input } from "~/components/input";
+import LoadingSpinner from "~/components/loading-spinner";
+import { updateBoard } from "~/state/boardSlice";
 import { clearError } from "~/state/errorSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { updateList } from "~/state/listSlice";
 import type { RootState } from "~/state/store";
 import { getToken } from "~/utils";
-import { list_name_validation } from "~/utils/input/input-validations";
-import { Input } from "./input";
-import LoadingSpinner from "./loading-spinner";
+import { board_name_validation } from "~/utils/input/input-validations";
 
 interface FormValues {
-  list_id: number;
-  list_name: string;
+  board_name: string;
   board_id: number;
 }
 
-function BoardListEditForm({
-  listId,
-  listName,
+function BoardEditForm({
   boardId,
+  boardName,
   setEditFormActive,
 }: {
-  listId: number;
-  listName: string;
   boardId: number;
+  boardName: string;
   setEditFormActive: (arg0: boolean) => void;
 }) {
   const errors = useAppSelector((state: RootState) => state.errorSlice.errors);
@@ -35,9 +32,8 @@ function BoardListEditForm({
   const handleSubmitCallback = async (data: FormValues) => {
     try {
       const result = await dispatch(
-        updateList({
-          listId: listId,
-          listName: data.list_name,
+        updateBoard({
+          boardName: data.board_name,
           boardId: boardId,
           token: token,
         }),
@@ -50,7 +46,7 @@ function BoardListEditForm({
 
   const methods = useForm<FormValues>({
     defaultValues: {
-      list_name: listName,
+      board_name: boardName,
     },
     mode: "onChange",
   });
@@ -64,16 +60,16 @@ function BoardListEditForm({
         await onSubmit();
       }}
     >
-      <div className="list-edit-form-component">
+      <div className="board-edit-form-component">
         <FormProvider {...methods}>
           <form
-            className="list-edit-form text-center"
+            className="board-edit-form text-center"
             onSubmit={onSubmit}
             noValidate
           >
             <div className="grid gap-5">
               <Input
-                {...list_name_validation}
+                {...board_name_validation}
                 errors={errors}
                 classNameLableTW="hidden"
               />
@@ -85,4 +81,4 @@ function BoardListEditForm({
   );
 }
 
-export default BoardListEditForm;
+export default BoardEditForm;

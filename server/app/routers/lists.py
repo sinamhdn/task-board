@@ -89,8 +89,8 @@ async def create_new_list(
     )
     db.add(new_list)
     await db.commit()
-    await db.refresh(new_list, attribute_names=["owner", "owned_cards"])
-    channel_name = f"boards:{data["list_data"].board_id}"
+    await db.refresh(new_list, attribute_names=["owner_board", "owned_cards"])
+    channel_name = f"boards:{data['list_data'].board_id}"
     list_data_validate = ListResponse.model_validate(new_list).model_dump(mode="json")
     if channel_name in manager.channels:
         for websocket in manager.channels[channel_name]:
@@ -110,6 +110,7 @@ async def update_list(
     data: AnnotatedAuthorizedBoardForListBodyUpdate,
     db: AnnotatedAsyncDBSession,
 ):
+    logger.info(f"data recieved in list update : {data}")
     list_query = await db.execute(
         select(List).options(selectinload(List.owned_cards)).where(List.id == list_id)
     )
@@ -128,8 +129,8 @@ async def update_list(
             field = "name"
         setattr(list_in_board, field, value)
     await db.commit()
-    await db.refresh(list_in_board, attribute_names=["owner"])
-    channel_name = f"boards:{data["list_data"].board_id}"
+    await db.refresh(list_in_board, attribute_names=["owner_board"])
+    channel_name = f"boards:{data['list_data'].board_id}"
     list_data_validate = ListResponse.model_validate(list_in_board).model_dump(
         mode="json"
     )

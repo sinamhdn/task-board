@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router";
 import { useAddNewBoardForm } from "~/providers/board-add-provider";
 import { useAppSelector } from "~/state/hooks";
 import type { RootState } from "~/state/store";
-import BoardAddButton from "./board-add-button";
+import BoardAddButton from "./boards/board-add-button";
 import LogoutButton from "./logout-button";
 
 function UserNav() {

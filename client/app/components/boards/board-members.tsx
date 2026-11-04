@@ -13,9 +13,9 @@ import {
   resetBoardMembers,
 } from "~/state/boardMemberSlice";
 import { getToken } from "~/utils";
+import LoadingSpinner from "../loading-spinner";
 import BoardMemberAddButton from "./board-member-add-btn";
 import BoardMemberAddForm from "./board-member-add-form";
-import LoadingSpinner from "./loading-spinner";
 
 function BoardMembers({
   board,

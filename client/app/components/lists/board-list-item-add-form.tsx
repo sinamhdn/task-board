@@ -1,12 +1,12 @@
 import ClickAwayListener from "react-click-away-listener";
 import { FormProvider, useForm } from "react-hook-form";
+import { Input } from "~/components/input";
 import { LoadingStatusEnum } from "~/state";
 import { clearError } from "~/state/errorSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { createNewList } from "~/state/listSlice";
 import type { RootState } from "~/state/store";
 import { board_list_name_validation } from "~/utils/input/input-validations";
-import { Input } from "./input";
 
 function BoardListAddForm({
   board_id,
