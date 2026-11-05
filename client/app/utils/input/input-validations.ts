@@ -151,6 +151,21 @@ export const list_name_validation = {
   },
 };
 
+export const card_name_validation = {
+  name: "card_name" as const,
+  label: "Card name",
+  type: "text",
+  id: "card_name",
+  placeholder: "",
+  validation: {
+    required: {
+      value: false,
+      message: "required",
+    },
+    minLength: { value: 4, message: "Min length is 4" },
+  },
+};
+
 export const board_member_email_validation = {
   name: "board_member_email" as const,
   label: "",
@@ -176,6 +191,20 @@ export const board_list_name_validation = {
   type: "text",
   id: "list_name",
   placeholder: "enter title of the list",
+  validation: {
+    required: {
+      value: true,
+      message: "required",
+    },
+  },
+};
+
+export const board_card_name_validation = {
+  name: "card_name" as const,
+  label: "Card title",
+  type: "text",
+  id: "card_name",
+  placeholder: "enter title of the card",
   validation: {
     required: {
       value: true,

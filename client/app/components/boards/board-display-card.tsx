@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import type { BoardRecievedInterface } from "~/state";
 import { useAppSelector } from "~/state/hooks";
 
-const BoardCard = ({
+const BoardDisplayCard = ({
   board,
   handleDeleteBoard,
 }: {
@@ -53,4 +53,4 @@ const BoardCard = ({
   );
 };
 
-export default BoardCard;
+export default BoardDisplayCard;

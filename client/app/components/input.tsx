@@ -18,6 +18,7 @@ type FormValues = {
   board_name: string;
   board_member_email: string;
   list_name: string;
+  card_name: string;
 };
 
 type InputPropsType = {

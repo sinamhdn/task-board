@@ -19,6 +19,9 @@ const initialState: { errors: ErrorStateInterface } = {
     board_list_add_field_errors: {
       list_name: "",
     },
+    board_card_add_field_errors: {
+      card_name: "",
+    },
     server_error: "",
     ws_error: "",
   },
@@ -54,6 +57,10 @@ const errorSlice = createSlice({
               state.errors.board_list_add_field_errors[
                 field as keyof { list_name: string }
               ] = error.msg;
+            } else if (field in state.errors.board_card_add_field_errors) {
+              state.errors.board_card_add_field_errors[
+                field as keyof { card_name: string }
+              ] = error.msg;
             } else {
               state.errors.server_error = error.msg;
             }
@@ -85,6 +92,9 @@ const errorSlice = createSlice({
           },
           board_list_add_field_errors: {
             list_name: "",
+          },
+          board_card_add_field_errors: {
+            card_name: "",
           },
           server_error: "",
           ws_error: "",

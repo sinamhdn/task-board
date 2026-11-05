@@ -39,6 +39,7 @@ export interface ErrorStateInterface {
   board_add_field_errors: { [key: string]: string | undefined };
   board_member_add_field_errors: { [key: string]: string | undefined };
   board_list_add_field_errors: { [key: string]: string | undefined };
+  board_card_add_field_errors: { [key: string]: string | undefined };
   server_error?: string;
   ws_error?: string;
 }

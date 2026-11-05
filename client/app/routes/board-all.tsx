@@ -2,7 +2,7 @@ import classnames from "classnames";
 import { useEffect } from "react";
 import { redirect } from "react-router";
 import BackgroundImage from "~/components/background-image";
-import BoardCard from "~/components/cards/board-card";
+import BoardCard from "~/components/boards/board-display-card";
 import BoardNew from "~/components/boards/board-new";
 import LoadingSpinner from "~/components/loading-spinner";
 import { LoadingStatusEnum } from "~/state";

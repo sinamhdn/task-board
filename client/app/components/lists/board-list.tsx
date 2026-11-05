@@ -26,18 +26,31 @@ const BoardList = ({
     setNewCardFormActive(true);
   };
 
+  const [activeCardFormListId, setActiveCardFormListId] = useState<
+    number | null
+  >(null);
+
+  const toggleCardForm = (listId: number) => {
+    setActiveCardFormListId((prev) => (prev === listId ? null : listId));
+  };
+
   return (
     <div className="board-list-item">
       <ul>
         {list.map((item: any) => (
           <li key={item.id}>
             <BoardListItem
-              id={item.id}
-              name={item.name}
+              listId={item.id}
+              listName={item.name}
               boardId={item.board_id}
+              token={token}
+              newCardFormActive={activeCardFormListId === item.id}
+              onCancelCardForm={() => setActiveCardFormListId(null)}
             />
             <div className="list-btn-container flex">
-              <BoardCardAddButton onClickHandler={handleAddNewCardClick} />
+              <BoardCardAddButton
+                onClickHandler={() => toggleCardForm(item.id)}
+              />
               <BoardListDeleteButton
                 board={board}
                 listId={item.id}
