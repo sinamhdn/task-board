@@ -32,7 +32,7 @@ export const links: Route.LinksFunction = () => [
 export const meta: Route.MetaFunction = () => [
   {
     name: "description",
-    content: "Trello Clone App",
+    content: "Task Board",
   },
   {
     name: "author",

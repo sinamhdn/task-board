@@ -1,10 +1,13 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import axios from "axios";
 import {
   LoadingStatusEnum,
   type BackendValidationErrorInterface,
   type CardRecievedInterface,
-  type ListRecievedInterface,
 } from "~/state";
 import log from "~/utils/logger";
 import { setError } from "./errorSlice";
@@ -13,21 +16,21 @@ const logger = log.getLogger("CARD SLICE LOGGER");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const initialState: {
-  getAllCardsLoadingStatus: string | null;
+  getAllCardsLoadingStatusByList: Record<number, string>;
   getCardByIdLoadingStatus: string | null;
   createNewCardLoadingStatus: string | null;
   updateCardLoadingStatus: string | null;
   deleteCardLoadingStatus: string | null;
   boardId: number;
-  cards: CardRecievedInterface[];
+  cardsByList: Record<number, CardRecievedInterface[]>;
 } = {
-  getAllCardsLoadingStatus: null,
+  getAllCardsLoadingStatusByList: {},
   getCardByIdLoadingStatus: null,
   createNewCardLoadingStatus: null,
   updateCardLoadingStatus: null,
   deleteCardLoadingStatus: null,
   boardId: 0,
-  cards: [],
+  cardsByList: {},
 };
 
 const cardSlice = createSlice({
@@ -35,90 +38,122 @@ const cardSlice = createSlice({
   initialState: initialState,
   reducers: {
     resetCards: (state) => {
-      state.cards = [];
-      state.getAllCardsLoadingStatus = null;
+      state.cardsByList = {};
+      state.getAllCardsLoadingStatusByList = {};
       state.getCardByIdLoadingStatus = null;
       state.createNewCardLoadingStatus = null;
       state.updateCardLoadingStatus = null;
       state.deleteCardLoadingStatus = null;
     },
-    addCardDirect: (state, action) => {
-      if (state.cards.some((card) => card.id === action.payload.id)) return;
-      state.cards.push(action.payload);
+    addCardDirect: (
+      state,
+      action: PayloadAction<{ listId: number; card: CardRecievedInterface }>,
+    ) => {
+      const { listId, card } = action.payload;
+      if (!state.cardsByList[listId]) state.cardsByList[listId] = [];
+      if (!state.cardsByList[listId].some((c) => c.id === card.id))
+        state.cardsByList[listId].push(card);
     },
-    removeCardDirect: (state, action) => {
-      state.cards = state.cards.filter((card) => card.id !== action.payload.id);
+    removeCardDirect: (
+      state,
+      action: PayloadAction<{ listId: number; card: CardRecievedInterface }>,
+    ) => {
+      const { listId, card } = action.payload;
+      if (!state.cardsByList[listId]) return;
+      state.cardsByList[listId] = state.cardsByList[listId].filter(
+        (c) => c.id !== card.id,
+      );
     },
-    updateCardDirect: (state, action) => {
+    updateCardDirect: (
+      state,
+      action: PayloadAction<{ listId: number; card: CardRecievedInterface }>,
+    ) => {
       console.log(
         `updateCardDirect what does it recieve --> ${action.payload}`,
         action.payload,
       );
-      const cardIndex = state.cards.findIndex(
-        (card) => card.id === action.payload.id,
+      const { listId, card } = action.payload;
+      if (!state.cardsByList[listId]) return;
+      const cardIndex = state.cardsByList[listId].findIndex(
+        (c) => c.id === card.id,
       );
-      state.cards[cardIndex] = action.payload;
+      state.cardsByList[listId][cardIndex] = card;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(getAllCards.fulfilled, (state, action) => {
-        state.getAllCardsLoadingStatus = LoadingStatusEnum.fulfilled;
+        const listId = action.meta.arg.listId;
+        state.getAllCardsLoadingStatusByList[listId] =
+          LoadingStatusEnum.fulfilled;
         state.boardId = action.meta.arg.boardId;
-        state.cards = action.payload;
+        state.cardsByList[listId] = action.payload;
       })
-      .addCase(getAllCards.pending, (state) => {
-        state.getAllCardsLoadingStatus = LoadingStatusEnum.pending;
+      .addCase(getAllCards.pending, (state, action) => {
+        state.getAllCardsLoadingStatusByList[action.meta.arg.listId] =
+          LoadingStatusEnum.pending;
       })
       .addCase(getAllCards.rejected, (state, action) => {
-        state.getAllCardsLoadingStatus = LoadingStatusEnum.rejected;
+        state.getAllCardsLoadingStatusByList[action.meta.arg.listId] =
+          LoadingStatusEnum.rejected;
       })
       .addCase(getCardById.fulfilled, (state, action) => {
         state.getCardByIdLoadingStatus = LoadingStatusEnum.fulfilled;
-        if (!state.cards.some((card) => card.id === action.payload.id)) {
-          state.cards.push(action.payload);
+        const listId = action.meta.arg.listId;
+        if (
+          !state.cardsByList[listId].some(
+            (card) => card.id === action.payload.id,
+          )
+        ) {
+          state.cardsByList[listId].push(action.payload);
         }
       })
       .addCase(getCardById.pending, (state) => {
         state.getCardByIdLoadingStatus = LoadingStatusEnum.pending;
       })
-      .addCase(getCardById.rejected, (state, action) => {
+      .addCase(getCardById.rejected, (state) => {
         state.getCardByIdLoadingStatus = LoadingStatusEnum.rejected;
       })
       .addCase(createNewCard.fulfilled, (state, action) => {
         state.createNewCardLoadingStatus = LoadingStatusEnum.fulfilled;
-        if (!state.cards.some((card) => card.id === action.payload.id)) {
-          state.cards.push(action.payload);
+        const listId = action.meta.arg.listId;
+        if (!state.cardsByList[listId]) state.cardsByList[listId] = [];
+        if (
+          !state.cardsByList[listId].some((c) => c.id === action.payload.id)
+        ) {
+          state.cardsByList[listId].push(action.payload);
         }
       })
       .addCase(createNewCard.pending, (state) => {
         state.createNewCardLoadingStatus = LoadingStatusEnum.pending;
       })
-      .addCase(createNewCard.rejected, (state, action) => {
+      .addCase(createNewCard.rejected, (state) => {
         state.createNewCardLoadingStatus = LoadingStatusEnum.rejected;
       })
       .addCase(updateCard.fulfilled, (state, action) => {
         state.updateCardLoadingStatus = LoadingStatusEnum.fulfilled;
-        const cardIndex = state.cards.findIndex(
-          (card) => card.id === action.payload.id,
-        );
-        state.cards[cardIndex] = action.payload;
+        const listId = action.payload.list_id;
+        const arr = state.cardsByList[listId];
+        if (!arr) return;
+        const i = arr.findIndex((c) => c.id === action.payload.id);
+        if (i !== -1) arr[i] = action.payload;
       })
       .addCase(updateCard.pending, (state) => {
         state.updateCardLoadingStatus = LoadingStatusEnum.pending;
       })
-      .addCase(updateCard.rejected, (state, action) => {
+      .addCase(updateCard.rejected, (state) => {
         state.updateCardLoadingStatus = LoadingStatusEnum.rejected;
       })
       .addCase(deleteCard.fulfilled, (state, action) => {
         state.deleteCardLoadingStatus = LoadingStatusEnum.fulfilled;
-        const cardId = action.meta.arg.cardId; // from the original thunk call
-        state.cards = state.cards.filter((card) => card.id !== cardId);
+        const { listId, cardId } = action.meta.arg; // listId is already in the thunk arg
+        const arr = state.cardsByList[listId];
+        if (arr) state.cardsByList[listId] = arr.filter((c) => c.id !== cardId);
       })
       .addCase(deleteCard.pending, (state) => {
         state.deleteCardLoadingStatus = LoadingStatusEnum.pending;
       })
-      .addCase(deleteCard.rejected, (state, action) => {
+      .addCase(deleteCard.rejected, (state) => {
         state.deleteCardLoadingStatus = LoadingStatusEnum.rejected;
       });
   },
@@ -215,7 +250,15 @@ export const createNewCard = createAsyncThunk<
     { token, cardName, boardId, listId },
     { dispatch, rejectWithValue },
   ) => {
-    console.log("createNewCard name", cardName);
+    logger.info(
+      "createNewCard ",
+      "CARDNAME:",
+      cardName,
+      " BOARD ID:",
+      boardId,
+      " LIST ID:",
+      listId,
+    );
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/v1/cards`,

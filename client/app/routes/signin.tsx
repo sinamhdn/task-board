@@ -20,8 +20,18 @@ interface FormValues {
   password: string;
 }
 
-export function meta({}: Route.MetaArgs) {
-  return [{ title: "Signin" }, { name: "description", content: "Signin!" }];
+export function meta({ matches }: Route.MetaArgs) {
+  // Find the root match
+  const rootMatch = matches.find((match) => match?.id === "root");
+  // Extract the root's meta descriptors (if any)
+  const rootMeta = rootMatch?.meta ?? [];
+  // Define this route's meta
+  const pageMeta = [
+    { title: "Signin" },
+    { name: "description", content: "Signin!" },
+  ];
+  // Merge: root first, then page-specific (page wins on duplicates)
+  return [...rootMeta, ...pageMeta];
 }
 
 function Signin() {

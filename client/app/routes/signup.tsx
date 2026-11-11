@@ -25,8 +25,18 @@ interface FormValues {
   confirm: string;
 }
 
-export function meta({}: Route.MetaArgs) {
-  return [{ title: "Signup" }, { name: "description", content: "Signup!" }];
+export function meta({ matches }: Route.MetaArgs) {
+  // Find the root match
+  const rootMatch = matches.find((match) => match?.id === "root");
+  // Extract the root's meta descriptors (if any)
+  const rootMeta = rootMatch?.meta ?? [];
+  // Define this route's meta
+  const pageMeta = [
+    { title: "Signup" },
+    { name: "description", content: "Signup!" },
+  ];
+  // Merge: root first, then page-specific (page wins on duplicates)
+  return [...rootMeta, ...pageMeta];
 }
 
 function Signup() {

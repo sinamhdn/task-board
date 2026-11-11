@@ -46,6 +46,7 @@ const listSlice = createSlice({
       state.lists.push(action.payload);
     },
     removeListDirect: (state, action) => {
+      logger.info("removeListDirect payload", action.payload);
       state.lists = state.lists.filter((list) => list.id !== action.payload.id);
     },
     updateListDirect: (state, action) => {

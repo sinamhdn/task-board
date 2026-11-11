@@ -13,11 +13,18 @@ import type { Route } from "./+types/board-all";
 
 import bg from "~/assets/all-boards-bg.webp";
 
-export function meta({}: Route.MetaArgs) {
-  return [
+export function meta({ matches }: Route.MetaArgs) {
+  // Find the root match
+  const rootMatch = matches.find((match) => match?.id === "root");
+  // Extract the root's meta descriptors (if any)
+  const rootMeta = rootMatch?.meta ?? [];
+  // Define this route's meta
+  const pageMeta = [
     { title: "All Boards" },
     { name: "description", content: "All Boards!" },
   ];
+  // Merge: root first, then page-specific (page wins on duplicates)
+  return [...rootMeta, ...pageMeta];
 }
 
 function BoardAll() {
@@ -70,15 +77,21 @@ function BoardAll() {
   return (
     <div className="all-boards-component container mx-auto text-center">
       <BackgroundImage src={bg} alt="Nature Background Image" />
-      <div className="board-new-button-container bg-blue-700">
+      <div className="board-new-button-container ">
         <BoardNew />
       </div>
       {boards.length > 0 && (
         <section className="board-card-list">
-          <h3 className="mt-4 mb-4 text-4xl">My boards</h3>
-          <div className="my-boards-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xl">
+          <h3 className="mt-4 mb-4 text-4xl bg-gray-300 dark:bg-gray-700 pt-1 pb-1">
+            MY BOARDS
+          </h3>
+          <div className="my-boards-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xl px-2">
             {boards.map((board) => (
-              <BoardCard board={board} handleDeleteBoard={handleDeleteBoard} />
+              <BoardCard
+                board={board}
+                handleDeleteBoard={handleDeleteBoard}
+                key={board.id}
+              />
             ))}
           </div>
         </section>

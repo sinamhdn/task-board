@@ -24,17 +24,17 @@ function BoardListDeleteButton({
   };
 
   return (
-    <div className="delete-list-btn">
+    <div className="delete-list-btn mx-1">
       {board.user_id === currentUser?.id ? (
         <button
-          className="bg-red-600 text-xs rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 p-1"
+          className="bg-red-600 text-md rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 py-2 px-10"
           onClick={() => handleDeleteList(board, listId, token)}
         >
           Delete List
         </button>
       ) : (
         <button
-          className="bg-gray-400 text-xs rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 p-1"
+          className="bg-gray-400 text-md rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 py-2 px-10"
           onClick={() => handleDeleteList(board, listId, token)}
           disabled
         >

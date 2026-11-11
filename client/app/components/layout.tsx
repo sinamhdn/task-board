@@ -71,11 +71,26 @@ function MainLayout() {
     if (payload.message.event === "list_removed")
       dispatch(removeListDirect(payload.message.data));
     if (payload.message.event === "card_added")
-      dispatch(addCardDirect(payload.message.data));
+      dispatch(
+        addCardDirect({
+          listId: payload.message.data.list_id,
+          card: payload.message.data,
+        }),
+      );
     if (payload.message.event === "card_updated")
-      dispatch(updateCardDirect(payload.message.data));
+      dispatch(
+        updateCardDirect({
+          listId: payload.message.data.list_id,
+          card: payload.message.data,
+        }),
+      );
     if (payload.message.event === "card_removed")
-      dispatch(removeCardDirect(payload.message.data));
+      dispatch(
+        removeCardDirect({
+          listId: payload.message.data.list_id,
+          card: payload.message.data,
+        }),
+      );
     console.log(`WSDATA CONTENT ${JSON.stringify(wsData)}`);
   }, [wsData]);
 

@@ -1,23 +1,23 @@
 import { useState } from "react";
-import BoardCardAddForm from "./board-list-card-add-form";
+import type { BoardRecievedInterface } from "~/state";
+import log from "~/utils/logger";
+import BoardCardDeleteButton from "./board-list-card-delete-btn";
 import BoardCardEditForm from "./board-list-card-edit-form";
+const logger = log.getLogger("BOARD-LIST-CARD-ITEM LOGGER");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 function BoardCardItem({
   cardId,
   cardName,
   listId,
-  boardId,
   token,
-  newCardFormActive,
-  onCancelCardForm,
+  board,
 }: {
   cardId: number;
   cardName: string;
   listId: number;
-  boardId: number;
   token: string;
-  newCardFormActive: boolean;
-  onCancelCardForm: () => void;
+  board: BoardRecievedInterface;
 }) {
   const [editBoardCardName, setEditCardName] = useState(false);
 
@@ -26,30 +26,26 @@ function BoardCardItem({
   };
 
   return (
-    <div className="board-card-item">
-      <div>
+    <div className="board-card-item h-full w-full p-5 bg-white/40 backdrop-blur-md backdrop-saturate-100 border border-white/30 rounded-sm shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] my-1">
+      <div className="board-card-item-edit-container">
         {editBoardCardName ? (
           <BoardCardEditForm
             cardId={cardId}
             cardName={cardName}
             listId={listId}
-            boardId={boardId}
+            boardId={board.id}
             setEditFormActive={setEditCardName}
           />
         ) : (
           <button onClick={handleListTitleClick}>
-            <h2 className="text-4xl">{cardName}</h2>
+            <BoardCardDeleteButton
+              board={board}
+              listId={listId}
+              cardId={cardId}
+              token={token}
+            />
+            <h2 className="text-4xl wrap-anywhere text-left">{cardName}</h2>
           </button>
-        )}
-      </div>
-      <div>
-        {newCardFormActive && token && (
-          <BoardCardAddForm
-            boardId={boardId}
-            listId={listId}
-            token={token}
-            handleCancelAddNewCardClick={onCancelCardForm}
-          />
         )}
       </div>
     </div>

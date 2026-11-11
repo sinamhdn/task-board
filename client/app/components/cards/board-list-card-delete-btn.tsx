@@ -1,3 +1,4 @@
+import { ImCross } from "react-icons/im";
 import type { BoardRecievedInterface } from "~/state";
 import { deleteCard } from "~/state/cardSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
@@ -34,13 +35,13 @@ function BoardCardDeleteButton({
   };
 
   return (
-    <div className="delete-list-btn">
+    <div className="delete-list-btn absolute -top-2 right-1">
       {board.user_id === currentUser?.id ? (
         <button
           className="bg-red-600 text-xs rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 p-1"
           onClick={() => handleDeleteCard(board, listId, cardId, token)}
         >
-          Delete List
+          <ImCross />
         </button>
       ) : (
         <button
@@ -48,7 +49,7 @@ function BoardCardDeleteButton({
           onClick={() => handleDeleteCard(board, listId, cardId, token)}
           disabled
         >
-          Delete List
+          <ImCross />
         </button>
       )}
     </div>

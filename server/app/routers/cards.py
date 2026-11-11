@@ -37,7 +37,7 @@ async def get_all_cards(
     card_query = await db.execute(
         select(Card)
         .options(selectinload(Card.owner_board), selectinload(Card.owner_list))
-        .order_by(get_order_column(List, order))
+        .order_by(get_order_column(Card, order))
         .offset(skip)
         .limit(limit)
         .where(Card.list_id == available_list.id)
@@ -88,10 +88,14 @@ async def create_new_card(
                 "msg": "Pass the correct card data to create a new card.",
             },
         )
-    new_card = Card(name=data["card_data"].card_name, list_id=data["card_data"].list_id)
+    new_card = Card(
+        name=data["card_data"].card_name,
+        list_id=data["card_data"].list_id,
+        board_id=data["card_data"].board_id,
+    )
     db.add(new_card)
     await db.commit()
-    await db.refresh(new_card, attribute_names=["owner"])
+    await db.refresh(new_card, attribute_names=["owner_board", "owner_list"])
     channel_name = f"boards:{data["card_data"].board_id}"
     card_data_validate = CardResponse.model_validate(new_card).model_dump(mode="json")
     if channel_name in manager.channels:
@@ -113,7 +117,9 @@ async def update_card(
     data: AnnotatedAuthorizedListForCardBodyUpdate,
 ):
     card_query = await db.execute(
-        select(Card).options(selectinload(List.owned_cards)).where(Card.id == card_id)
+        select(Card)
+        .options(selectinload(Card.owner_list), selectinload(Card.owner_board))
+        .where(Card.id == card_id)
     )
     card = card_query.scalars().first()
     if not card:
@@ -130,7 +136,7 @@ async def update_card(
             field = "name"
         setattr(card, field, value)
     await db.commit()
-    await db.refresh(card, attribute_names=["owner"])
+    await db.refresh(card, attribute_names=["owner_board", "owner_list"])
     channel_name = f"boards:{data["card_data"].board_id}"
     card_data_validate = ListResponse.model_validate(card).model_dump(mode="json")
     if channel_name in manager.channels:

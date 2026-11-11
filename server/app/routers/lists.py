@@ -174,7 +174,7 @@ async def delete_list(
             await manager.send_personal_message(
                 websocket=websocket,
                 message={
-                    "event": "list_deleted",
+                    "event": "list_removed",
                     "data": list_data_validate,
                 },
             )

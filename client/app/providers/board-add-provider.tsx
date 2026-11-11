@@ -1,4 +1,8 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import log from "~/utils/logger";
+
+const logger = log.getLogger("BOARD ADD PROVIDER LOGGER");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 interface BoardAddNewContextType {
   showAddNewBoardForm: boolean;
@@ -16,6 +20,7 @@ export function BoardAddProvider({ children }: { children: ReactNode }) {
   }
 
   function handleCancelAddNewBoardClick() {
+    logger.info("handleCancelAddNewBoardClick clicked");
     setShowAddNewBoardForm(false);
   }
 

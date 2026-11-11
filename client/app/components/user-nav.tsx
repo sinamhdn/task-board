@@ -49,8 +49,10 @@ function UserNav() {
             )}
             <li className="p-2 m-2 rounded-sm content-center bg-gray-300 dark:bg-gray-700">
               <Link to="/users/edit" className="flex">
-                <span className="pr-2 content-center">
-                  {currentUser.full_name}
+                <span className="ml-2 content-center w-24">
+                  <p className="truncate group-hover:animate-scroll-left">
+                    {currentUser.full_name}
+                  </p>
                 </span>
                 {currentUser?.image_file ? (
                   <img
@@ -73,12 +75,14 @@ function UserNav() {
       <div className="user-nav-mobile block md:hidden">
         <Menu as="div" className="relative">
           <MenuButton>
-            <GiHamburgerMenu className="w-6 h-6 md;w-6 md:h-6" />
+            <div className="p-2 rounded bg-gray-300 dark:bg-gray-700">
+              <GiHamburgerMenu className="w-6 h-6 md;w-6 md:h-6" />
+            </div>
           </MenuButton>
           {!currentUser ? (
             <MenuItems
-              anchor="bottom end"
-              className="mt-2 w-56 rounded-md dark:bg-gray-700 bg-gray-300 text-black dark:text-white shadow-lg border-black dark:border-white border-2"
+              anchor="bottom start"
+              className="w-full mt-14 dark:bg-gray-700 bg-gray-300 text-black dark:text-white shadow-lg z-10"
             >
               <MenuItem>
                 <Link
@@ -99,14 +103,14 @@ function UserNav() {
             </MenuItems>
           ) : (
             <MenuItems
-              anchor="bottom end"
-              className="mt-2 w-56 rounded-md dark:bg-gray-700 bg-gray-300 text-black dark:text-white shadow-lg border-black dark:border-white border-2"
+              anchor="bottom start"
+              className="w-full mt-14 dark:bg-gray-700 bg-gray-300 text-black dark:text-white shadow-lg z-10"
             >
               <MenuItem>
-                <Link to="/users/edit" className="flex justify-end px-4 py-2">
-                  <span className="pr-2 content-center">
-                    {currentUser.full_name}
-                  </span>
+                <Link
+                  to="/users/edit"
+                  className="flex justify-center px-4 py-2"
+                >
                   {currentUser?.image_file ? (
                     <img
                       className="max-w-10 rounded-full"
@@ -120,22 +124,29 @@ function UserNav() {
                       alt="signed in user profile image."
                     />
                   )}
+                  <span className="ml-2 content-center w-24">
+                    <p className="truncate group-hover:animate-scroll-left">
+                      {currentUser.full_name}
+                    </p>
+                  </span>
                 </Link>
               </MenuItem>
-              <MenuItem>
-                <div className="block w-full px-4 py-2 text-right">
-                  {showAddNewBoardForm ? (
-                    <button
-                      className="cursor-pointer w-full pt-2 pb-2"
-                      onClick={handleCancelAddNewBoardClick}
-                    >
-                      Close Form
-                    </button>
-                  ) : (
-                    <BoardAddButton />
-                  )}
-                </div>
-              </MenuItem>
+              {isHome && (
+                <MenuItem>
+                  <div className="block w-full px-4 py-2 text-right">
+                    {showAddNewBoardForm ? (
+                      <button
+                        className="cursor-pointer w-full pt-2 pb-2"
+                        onClick={handleCancelAddNewBoardClick}
+                      >
+                        Close Form
+                      </button>
+                    ) : (
+                      <BoardAddButton />
+                    )}
+                  </div>
+                </MenuItem>
+              )}
               <MenuItem>
                 <LogoutButton className="block w-full px-4 py-2 text-center cursor-pointer" />
               </MenuItem>

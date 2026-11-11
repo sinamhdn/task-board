@@ -103,7 +103,7 @@ export const Input = ({
             id={id}
             className={cn(
               twMerge(
-                "p-5 font-medium rounded-md w-full border border-slate-300 placeholder:opacity-60 min-h-[10rem] max-h-[20rem] resize-y",
+                "p-5 font-medium w-full border border-slate-300 placeholder:opacity-60 min-h-[10rem] max-h-[20rem] resize-y",
                 classNameTextAreaTW,
               ),
               classNameTextArea,
@@ -115,7 +115,7 @@ export const Input = ({
           <input
             className={cn(
               twMerge(
-                "w-full p-4 font-medium border rounded-md border-slate-300 placeholder:opacity-60 mb-2 mt-2",
+                "w-full p-4 font-medium border border-slate-300 placeholder:opacity-60 mb-2 mt-2",
                 classNameInputTW,
               ),
               classNameInput,

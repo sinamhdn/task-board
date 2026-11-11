@@ -80,6 +80,7 @@ function BoardCardEditForm({
                 {...card_name_validation}
                 errors={errors}
                 classNameLableTW="hidden"
+                multiline
               />
             </div>
           </form>

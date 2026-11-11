@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { redirect, useLocation, useParams } from "react-router";
+import BackgroundImage from "~/components/background-image";
 import BoardEditForm from "~/components/boards/board-edit-form";
 import BoardMembers from "~/components/boards/board-members";
 import BoardList from "~/components/lists/board-list";
@@ -10,19 +11,27 @@ import { useWebsocketContext } from "~/providers/websocket-provider";
 import { getAllBoardMembers } from "~/state/boardMemberSlice";
 import { getBoardById } from "~/state/boardSlice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { getAllLists, resetLists } from "~/state/listSlice";
 import { getToken } from "~/utils";
 import log from "~/utils/logger";
 import type { Route } from "./+types/boardsingle";
 
-const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+import bg from "~/assets/single-board-bg.webp";
+
+const logger = log.getLogger("BOARD-SINGLE LOGGER");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
-export function meta({}: Route.MetaArgs) {
-  return [
+export function meta({ matches }: Route.MetaArgs) {
+  // Find the root match
+  const rootMatch = matches.find((match) => match?.id === "root");
+  // Extract the root's meta descriptors (if any)
+  const rootMeta = rootMatch?.meta ?? [];
+  // Define this route's meta
+  const pageMeta = [
     { title: "Single Boards" },
     { name: "description", content: "Single Boards!" },
   ];
+  // Merge: root first, then page-specific (page wins on duplicates)
+  return [...rootMeta, ...pageMeta];
 }
 
 // In React, if you pass value, React treats that prop as the single source of truth
@@ -55,9 +64,6 @@ function BoardSingle() {
   const loggedInUser = useAppSelector(
     (state) => state.sessionSlice.currentUser,
   );
-  const loadedBoardId = useAppSelector((s) => s.listSlice.boardId);
-  const lists = useAppSelector((s) => s.listSlice.lists);
-  const listsForThisBoard = loadedBoardId === board?.id ? lists : [];
 
   const dispatch = useAppDispatch();
 
@@ -108,22 +114,17 @@ function BoardSingle() {
     });
   }, [isConnected, urlParamBoardId, sendMessage]);
 
-  useEffect(() => {
-    if (!board || !token) return;
-    if (loadedBoardId !== board.id) {
-      // refetch whenever board changes
-      dispatch(resetLists());
-      dispatch(getAllLists({ boardId: board.id, token }));
-    }
-  }, [board?.id, token, loadedBoardId, dispatch]);
-
   return (
     <div className="single-board-component">
+      <BackgroundImage src={bg} alt="Coast Background Image" />
       {!board || !loggedInUser ? (
         <LoadingSpinner />
       ) : (
         <div>
-          <header className="flex justify-between pl-10 text-2xl text-center">
+          <header className="hidden md:block pl-10 text-2xl text-center">
+            <div className="flex justify-center md:block md:absolute md:right-0 md:top-25">
+              <BoardMembers board={board} currentUser={loggedInUser} />
+            </div>
             {editBoardName ? (
               <BoardEditForm
                 boardId={board.id}
@@ -132,19 +133,36 @@ function BoardSingle() {
               />
             ) : (
               <button onClick={handleBoardTitleClick}>
-                <h3>{board.name}</h3>
+                <h3 className="mt-4 mb-4 text-4xl dark:border-b-gray-300 border-b-gray-700 border-b-2 pt-1 pb-1 pl-5 pr-5 wrap-anywhere w-full">
+                  {board.name}
+                </h3>
               </button>
             )}
-            <BoardMembers board={board} currentUser={loggedInUser} />
+          </header>
+          <header className=" md:hidden text-2xl text-center">
+            {editBoardName ? (
+              <BoardEditForm
+                boardId={board.id}
+                boardName={board.name}
+                setEditFormActive={setEditBoardName}
+              />
+            ) : (
+              <button onClick={handleBoardTitleClick}>
+                <h3 className="mt-4 mb-4 text-4xl dark:border-b-gray-300 border-b-gray-700 border-b-2 pt-1 pb-1 pl-5 pr-5">
+                  {board.name}
+                </h3>
+              </button>
+            )}
+            <div className="flex justify-center md:block md:absolute md:right-0 md:top-25">
+              <BoardMembers board={board} currentUser={loggedInUser} />
+            </div>
           </header>
           <div className="canvas-wrapper">
             <div className="canvas">
               <div className="lists-wrapper">
-                <BoardList
-                  list={listsForThisBoard}
-                  board={board}
-                  token={token}
-                />
+                <div className="flex justify-center text-center">
+                  <BoardListAddButton onClickHandler={handleAddNewListClick} />
+                </div>
                 {newListFormActive && token && (
                   <BoardListAddForm
                     token={token}
@@ -152,8 +170,7 @@ function BoardSingle() {
                     handleCancelCreateNewListClick={handleCancelCreateNewList}
                   />
                 )}
-                <BoardListAddButton onClickHandler={handleAddNewListClick} />
-                <ul className="board-lists"></ul>
+                <BoardList board={board} token={token} />
               </div>
             </div>
           </div>

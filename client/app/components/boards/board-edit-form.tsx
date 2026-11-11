@@ -60,14 +60,14 @@ function BoardEditForm({
         await onSubmit();
       }}
     >
-      <div className="board-edit-form-component">
+      <div className="board-edit-form-component w-1/2 m-auto">
         <FormProvider {...methods}>
           <form
             className="board-edit-form text-center"
             onSubmit={onSubmit}
             noValidate
           >
-            <div className="grid gap-5">
+            <div className="grid gap-5 text-center">
               <Input
                 {...board_name_validation}
                 errors={errors}
