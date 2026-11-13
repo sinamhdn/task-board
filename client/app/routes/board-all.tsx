@@ -61,7 +61,7 @@ function BoardAll() {
     return (
       <div className="all-boards-component">
         <BackgroundImage src={bg} alt="Nature Background Image" />
-        <p>No Boards Available!</p>
+        <p className="text-center text-2xl">No Boards Available!</p>
         <BoardNew />
       </div>
     );

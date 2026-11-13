@@ -8,7 +8,7 @@ function BoardAddButton() {
         className="w-full pt-2 pb-2 cursor-pointer"
         onClick={handleAddNewBoardClick}
       >
-        New board
+        Add new board
       </button>
     </div>
   );
