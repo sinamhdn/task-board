@@ -56,8 +56,7 @@ class ConnectionManager:
             self.active_connections[user_id].discard(websocket)
             if not self.active_connections[user_id]:
                 del self.active_connections[user_id]
-        # for channel in list(self.channels.keys()):
-        for channel in self.channels:
+        for channel in list(self.channels.keys()):
             self.channels[channel].discard(websocket)
             if not self.channels[channel]:
                 del self.channels[channel]

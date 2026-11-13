@@ -8,6 +8,7 @@ import {
   type TokenRecievedInterface,
   type UserRecievedInterface,
 } from "~/state";
+import { axios_base } from "~/utils/api";
 import { fetchCurrentUser } from "~/utils/auth";
 import log from "~/utils/logger";
 import { setError } from "./errorSlice";
@@ -57,7 +58,7 @@ const sessionSlice = createSlice({
       .addCase(signinUser.pending, (state) => {
         state.authStatus = LoadingStatusEnum.pending;
       })
-      .addCase(signinUser.rejected, (state, action) => {
+      .addCase(signinUser.rejected, (state) => {
         state.authStatus = LoadingStatusEnum.rejected;
       })
       .addCase(signupUser.fulfilled, (state, action) => {
@@ -71,7 +72,7 @@ const sessionSlice = createSlice({
       .addCase(signupUser.pending, (state) => {
         state.authStatus = LoadingStatusEnum.pending;
       })
-      .addCase(signupUser.rejected, (state, action) => {
+      .addCase(signupUser.rejected, (state) => {
         state.authStatus = LoadingStatusEnum.rejected;
         // console.log(action.payload);
       })
@@ -90,7 +91,7 @@ const sessionSlice = createSlice({
       .addCase(getCurrentUser.pending, (state) => {
         state.userStatus = LoadingStatusEnum.pending;
       })
-      .addCase(getCurrentUser.rejected, (state, action) => {
+      .addCase(getCurrentUser.rejected, (state) => {
         state.userStatus = LoadingStatusEnum.rejected;
       });
   },
@@ -113,8 +114,8 @@ export const signinUser = createAsyncThunk<
     form.append("password", credentials.password);
     form.append("grant_type", "password");
 
-    const tokenResponse = await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/v1/auth/login`,
+    const tokenResponse = await axios_base.post(
+      `/api/v1/auth/login`,
       form,
       {
         headers: {
@@ -149,8 +150,8 @@ export const signupUser = createAsyncThunk<
   }
 >("session/signup", async (credentials, { dispatch, rejectWithValue }) => {
   try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/v1/auth/register`,
+    const response = await axios_base.post(
+      `/api/v1/auth/register`,
       credentials,
     );
     return response.data;

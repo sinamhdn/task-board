@@ -17,6 +17,9 @@ import {
 } from "~/utils/input/input-validations";
 import type { Route } from "./+types/signup";
 
+import bg from "~/assets/log-bg.webp";
+import BackgroundImage from "~/components/background-image";
+
 interface FormValues {
   first_name: string;
   last_name: string;
@@ -78,42 +81,45 @@ function Signup() {
   const pass_field = methods.watch("password");
 
   return (
-    <div className="signup-page p-10">
-      <FormProvider {...methods}>
-        <form
-          className="signup-form xl:w-1/4 lg:w-1/2 sm:w-full mx-auto text-center"
-          noValidate
-          onSubmit={onSubmit}
-        >
-          <div className="grid gap-5">
-            <Input {...first_name_validation} errors={errors} />
-            <Input {...last_name_validation} errors={errors} />
-            <Input {...email_validation} errors={errors} />
-            <Input {...password_validation} errors={errors} />
-            <Input
-              {...confirm_validation}
-              validation={{
-                ...confirm_validation.validation,
-                validate: (value: string) =>
-                  value === pass_field || "Passwords do not match",
-              }}
-              errors={errors}
-            />
-          </div>
-          <div className="submit-button mt-5 mb-5">
-            <button
-              type="submit"
-              className="flex items-center justify-center gap-1 p-5 mx-auto font-semibold w-48 text-center text-white bg-blue-600 rounded-md hover:bg-blue-800"
-            >
-              <GrMail />
-              {loadingState === LoadingStatusEnum.pending
-                ? "Signing up..."
-                : "Register"}
-            </button>
-          </div>
-          <Link to="/signin">Login</Link>
-        </form>
-      </FormProvider>
+    <div>
+      <BackgroundImage src={bg} alt="Coast Background Image" />
+      <div className="signup-page p-10">
+        <FormProvider {...methods}>
+          <form
+            className="signup-form xl:w-1/4 lg:w-1/2 sm:w-full mx-auto text-center"
+            noValidate
+            onSubmit={onSubmit}
+          >
+            <div className="grid gap-5">
+              <Input {...first_name_validation} errors={errors} />
+              <Input {...last_name_validation} errors={errors} />
+              <Input {...email_validation} errors={errors} />
+              <Input {...password_validation} errors={errors} />
+              <Input
+                {...confirm_validation}
+                validation={{
+                  ...confirm_validation.validation,
+                  validate: (value: string) =>
+                    value === pass_field || "Passwords do not match",
+                }}
+                errors={errors}
+              />
+            </div>
+            <div className="submit-button mt-5 mb-5">
+              <button
+                type="submit"
+                className="flex items-center justify-center gap-1 p-2 mx-auto font-semibold w-48 text-center text-white bg-blue-600/50 hover:bg-blue-800/50 cursor-pointer backdrop-blur-lg"
+              >
+                {/* <GrMail /> */}
+                {loadingState === LoadingStatusEnum.pending
+                  ? "Signing up..."
+                  : "Register"}
+              </button>
+            </div>
+            <Link to="/signin">Login</Link>
+          </form>
+        </FormProvider>
+      </div>
     </div>
   );
 }

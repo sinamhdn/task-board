@@ -5,7 +5,6 @@ import BoardEditForm from "~/components/boards/board-edit-form";
 import BoardMembers from "~/components/boards/board-members";
 import BoardList from "~/components/lists/board-list";
 import BoardListAddButton from "~/components/lists/board-list-item-add-btn";
-import BoardListAddForm from "~/components/lists/board-list-item-add-form";
 import LoadingSpinner from "~/components/loading-spinner";
 import { useWebsocketContext } from "~/providers/websocket-provider";
 import { getAllBoardMembers } from "~/state/boardMemberSlice";
@@ -121,55 +120,41 @@ function BoardSingle() {
         <LoadingSpinner />
       ) : (
         <div>
-          <header className="hidden md:block pl-10 text-2xl text-center">
-            <div className="flex justify-center md:block md:absolute md:right-0 md:top-25">
+          <header className="md:pl-10 text-2xl text-center w-full md:w-1/0.5 m-auto">
+            <div className="flex justify-center md:absolute md:right-0 md:top-25">
               <BoardMembers board={board} currentUser={loggedInUser} />
             </div>
             {editBoardName ? (
-              <BoardEditForm
-                boardId={board.id}
-                boardName={board.name}
-                setEditFormActive={setEditBoardName}
-              />
+              <div className="md:w-1/2 md:px-0 px-2 m-auto">
+                <BoardEditForm
+                  boardId={board.id}
+                  boardName={board.name}
+                  setEditFormActive={setEditBoardName}
+                />
+              </div>
             ) : (
-              <button onClick={handleBoardTitleClick}>
-                <h3 className="mt-4 mb-4 text-4xl dark:border-b-gray-300 border-b-gray-700 border-b-2 pt-1 pb-1 pl-5 pr-5 wrap-anywhere w-full">
+              <button
+                onClick={handleBoardTitleClick}
+                className="w-full px-2 md:w-1/2 md:px-0"
+              >
+                <h3 className="mt-4 mb-4 text-4xl dark:border-b-gray-300 border-b-gray-700 border-b-2 bg-gray-300 dark:bg-gray-700 pt-1 pb-1 wrap-anywhere w-full m-auto">
                   {board.name}
                 </h3>
               </button>
             )}
-          </header>
-          <header className=" md:hidden text-2xl text-center">
-            {editBoardName ? (
-              <BoardEditForm
-                boardId={board.id}
-                boardName={board.name}
-                setEditFormActive={setEditBoardName}
-              />
-            ) : (
-              <button onClick={handleBoardTitleClick}>
-                <h3 className="mt-4 mb-4 text-4xl dark:border-b-gray-300 border-b-gray-700 border-b-2 pt-1 pb-1 pl-5 pr-5">
-                  {board.name}
-                </h3>
-              </button>
-            )}
-            <div className="flex justify-center md:block md:absolute md:right-0 md:top-25">
-              <BoardMembers board={board} currentUser={loggedInUser} />
-            </div>
           </header>
           <div className="canvas-wrapper">
             <div className="canvas">
               <div className="lists-wrapper">
                 <div className="flex justify-center text-center">
-                  <BoardListAddButton onClickHandler={handleAddNewListClick} />
-                </div>
-                {newListFormActive && token && (
-                  <BoardListAddForm
+                  <BoardListAddButton
+                    newListFormActive={newListFormActive}
+                    boardId={board.id}
                     token={token}
-                    board_id={board.id}
-                    handleCancelCreateNewListClick={handleCancelCreateNewList}
+                    onClickHandler={handleAddNewListClick}
+                    onCancelHandler={handleCancelCreateNewList}
                   />
-                )}
+                </div>
                 <BoardList board={board} token={token} />
               </div>
             </div>

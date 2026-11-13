@@ -86,7 +86,7 @@ function BoardAddForm() {
 
         <FormProvider {...methods}>
           <form
-            className="board-add-form xl:w-1/4 lg:w-1/2 w-full mx-auto text-center"
+            className="board-add-form xl:w-1/4 lg:w-1/2 w-full mx-auto text-center z-10"
             noValidate
             onSubmit={onSubmit}
           >

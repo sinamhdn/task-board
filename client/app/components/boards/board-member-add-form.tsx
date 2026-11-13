@@ -71,17 +71,25 @@ function BoardMemberAddForm({
 
   return (
     <ClickAwayListener onClickAway={handleCancelAddNewBoardClick}>
-      <div className="add-new-member-form absolute text-center bg-gray-300 dark:bg-gray-700 w-100">
-        <p>ADD NEW MEMBER FORM</p>
+      <div
+        className="add-new-member-form relative text-center
+      w-full max-w-[min(22rem,calc(100vw-2rem))]
+      bg-gray-100/30 dark:bg-gray-700/40 border border-white/40 dark:border-white/10
+      shadow-[0_8px_32px_rgba(31,38,135,0.15)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)]
+      ring-1 ring-inset ring-white/20 dark:ring-white/5
+      transition-colors duration-300 backdrop-blur-md
+      z-10 pt-3 pb-1"
+      >
+        <p>Add new member</p>
         <FormProvider {...methods}>
           <form
-            className="board-member-add-form pl-5 pr-5 mx-auto text-center"
+            className="board-member-add-form px-5 mx-auto text-center w-full"
             noValidate
             onSubmit={onSubmit}
           >
-            <div className="member-add-form-inputs">
+            <div className="member-add-form-inputs w-full">
               <Input {...board_member_email_validation} errors={errors} />
-              <div className="search-result-modal">
+              <div className="search-result-modal relative w-full">
                 <SearchResultModal
                   searchResults={searchResults}
                   handleSearchResultSelection={(value: string) =>
@@ -93,7 +101,16 @@ function BoardMemberAddForm({
             <div className="submit-button mt-5 mb-5">
               <button
                 type="submit"
-                className="flex items-center justify-center gap-1 mx-auto font-semibold text-center dark:text-white text-black"
+                className="flex items-center justify-center gap-1 px-4 mx-auto font-semibold text-center rounded-full
+                  bg-emerald-500/80 hover:bg-emerald-500
+                  dark:bg-emerald-400/70 dark:hover:bg-emerald-400/90
+                  backdrop-blur-md
+                  border border-white/30 dark:border-white/20
+                  shadow-lg shadow-emerald-500/20
+                  hover:shadow-emerald-500/40
+                  transition-all duration-200
+                  cursor-pointer
+                  disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {addBoardMemberLoadingStatus === LoadingStatusEnum.pending
                   ? "Adding..."

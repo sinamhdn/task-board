@@ -9,6 +9,7 @@ import {
   type BackendValidationErrorInterface,
   type CardRecievedInterface,
 } from "~/state";
+import { axios_base } from "~/utils/api";
 import log from "~/utils/logger";
 import { setError } from "./errorSlice";
 
@@ -177,21 +178,18 @@ export const getAllCards = createAsyncThunk<
     { dispatch, rejectWithValue },
   ) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/v1/cards`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            board_id: boardId,
-            list_id: listId,
-            skip,
-            limit,
-            order,
-          },
+      const response = await axios_base.get(`/api/v1/cards`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+        params: {
+          board_id: boardId,
+          list_id: listId,
+          skip,
+          limit,
+          order,
+        },
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -214,18 +212,15 @@ export const getCardById = createAsyncThunk<
   "card/cardbyid",
   async ({ token, boardId, listId, cardId }, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/v1/cards/${cardId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            board_id: boardId,
-            list_id: listId,
-          },
+      const response = await axios_base.get(`/api/v1/cards/${cardId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+        params: {
+          board_id: boardId,
+          list_id: listId,
+        },
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -260,8 +255,8 @@ export const createNewCard = createAsyncThunk<
       listId,
     );
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/v1/cards`,
+      const response = await axios_base.post(
+        `/api/v1/cards`,
         {
           board_id: boardId,
           list_id: listId,
@@ -304,8 +299,8 @@ export const updateCard = createAsyncThunk<
     { dispatch, rejectWithValue },
   ) => {
     try {
-      const response = await axios.patch(
-        `${import.meta.env.VITE_API_URL}/api/v1/cards/${cardId}`,
+      const response = await axios_base.patch(
+        `/api/v1/cards/${cardId}`,
         { card_name: cardName, board_id: boardId, list_id: listId },
         {
           headers: {
@@ -335,18 +330,15 @@ export const deleteCard = createAsyncThunk<
   "card/deletecard",
   async ({ token, boardId, listId, cardId }, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axios.delete(
-        `${import.meta.env.VITE_API_URL}/api/v1/cards/${cardId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            board_id: boardId,
-            list_id: listId,
-          },
+      const response = await axios_base.delete(`/api/v1/cards/${cardId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+        params: {
+          board_id: boardId,
+          list_id: listId,
+        },
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {

@@ -39,7 +39,7 @@ function FormSubmissionStatusModal() {
 
   if (formSubmitState === "fulfilled") {
     return (
-      <div className="success-message m-5 bg-green-500 text-white p-1 flex max-w-100 h-20 items-center absolute rounded-sm">
+      <div className="success-message m-5 bg-green-500 text-white p-1 flex max-w-100 h-20 items-center absolute rounded-sm z-100">
         <button
           onClick={() => {
             setFormSubmitState("");

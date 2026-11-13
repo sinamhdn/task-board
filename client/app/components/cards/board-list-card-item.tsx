@@ -26,7 +26,7 @@ function BoardCardItem({
   };
 
   return (
-    <div className="board-card-item h-full w-full p-5 bg-white/40 backdrop-blur-md backdrop-saturate-100 border border-white/30 rounded-sm shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] my-1">
+    <div className="board-card-item h-full w-full p-5 bg-white/40 dark:bg-black/40 backdrop-blur-md backdrop-saturate-100 border border-white/30 dark:border-black/30 rounded-sm shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] my-1">
       <div className="board-card-item-edit-container">
         {editBoardCardName ? (
           <BoardCardEditForm

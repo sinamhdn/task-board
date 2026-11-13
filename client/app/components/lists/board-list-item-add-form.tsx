@@ -51,11 +51,11 @@ function BoardListAddForm({
   return (
     <ClickAwayListener onClickAway={handleCancelCreateNewListClick}>
       <div
-        className="add-new-list-form absolute inset-0 -top-1/8 md:-top-1/4 p-2 h-46 m-auto z-10 text-center bg-gray-100/30 dark:bg-gray-700/40 border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(31,38,135,0.15)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)]
+        className="add-new-list-form p-2 m-auto z-10 text-center bg-gray-100/30 dark:bg-gray-700/40 border border-white/40 dark:border-white/10 shadow-[0_8px_32px_rgba(31,38,135,0.15)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)]
           ring-1 ring-inset ring-white/20 dark:ring-white/5
-          transition-colors duration-300 w-full md:w-1/2 backdrop-blur-md"
+          transition-colors duration-300 w-full relative backdrop-blur-md"
       >
-        <p>ADD NEW LIST</p>
+        <p>Add new list</p>
         <FormProvider {...methods}>
           <form
             className="board-list-add-form pl-5 pr-5 mx-auto text-center"
@@ -68,7 +68,16 @@ function BoardListAddForm({
             <div className="submit-button mt-5 mb-5">
               <button
                 type="submit"
-                className="flex items-center justify-center gap-1 mx-auto font-semibold text-center dark:text-gray-100 text-gray-700 cursor-pointer"
+                className="flex items-center justify-center gap-1 px-4 mx-auto font-semibold text-center dark:text-gray-100 text-gray-700 rounded-full
+                  bg-emerald-500/80 hover:bg-emerald-500
+                  dark:bg-emerald-400/70 dark:hover:bg-emerald-400/90
+                  backdrop-blur-md
+                  border border-white/30 dark:border-white/20
+                  shadow-lg shadow-emerald-500/20
+                  hover:shadow-emerald-500/40
+                  transition-all duration-200
+                  cursor-pointer
+                  disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {createNewListLoadingStatus === LoadingStatusEnum.pending
                   ? "Adding..."

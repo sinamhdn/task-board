@@ -38,14 +38,14 @@ function BoardCardDeleteButton({
     <div className="delete-list-btn absolute -top-2 right-1">
       {board.user_id === currentUser?.id ? (
         <button
-          className="bg-red-600 text-xs rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 p-1"
+          className="bg-red-600 text-xs rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 p-1 text-white"
           onClick={() => handleDeleteCard(board, listId, cardId, token)}
         >
           <ImCross />
         </button>
       ) : (
         <button
-          className="bg-gray-400 text-xs rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 p-1"
+          className="bg-gray-400 text-xs rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 p-1 text-white/50"
           onClick={() => handleDeleteCard(board, listId, cardId, token)}
           disabled
         >

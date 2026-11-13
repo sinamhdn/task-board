@@ -58,7 +58,7 @@ function BoardCardAddForm({
           ring-1 ring-inset ring-white/20 dark:ring-white/5
           transition-colors duration-300 w-full backdrop-blur-md relative bottom-0"
       >
-        <p>ADD NEW CARD</p>
+        <p>Add new card</p>
         <FormProvider {...methods}>
           <form
             className="board-card-add-form pl-5 pr-5 mx-auto text-center"
@@ -75,7 +75,16 @@ function BoardCardAddForm({
             <div className="submit-button mt-5 mb-5">
               <button
                 type="submit"
-                className="flex items-center justify-center gap-1 mx-auto font-semibold text-center dark:text-white text-black cursor-pointer"
+                className="flex items-center justify-center gap-1 px-4 mx-auto font-semibold text-center rounded-full
+                  bg-emerald-500/80 hover:bg-emerald-500
+                  dark:bg-emerald-400/70 dark:hover:bg-emerald-400/90
+                  backdrop-blur-md
+                  border border-white/30 dark:border-white/20
+                  shadow-lg shadow-emerald-500/20
+                  hover:shadow-emerald-500/40
+                  transition-all duration-200
+                  cursor-pointer
+                  disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {createNewCardLoadingStatus === LoadingStatusEnum.pending
                   ? "Adding..."

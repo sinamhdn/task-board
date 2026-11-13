@@ -1,6 +1,7 @@
 import logging
 import os
-from typing import TypedDict, cast
+from dataclasses import field
+from typing import Any, TypedDict, cast
 
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
@@ -23,49 +24,42 @@ class ErrorMessage(TypedDict):
 form_fields = [
     "email",
     "password",
+    "confirm",
     "first_name",
     "last_name",
+    "board_member_email",
     "board_name",
     "list_name",
     "card_name",
 ]
 
 
+def _with_period(msg: str) -> str:
+    return msg.rstrip(".") + "."
+
+
 # fix pydantic error return format to be consistant
 # @app.exception_handler(StarletteHTTPException)
 def general_http_exception_handler(request: Request, exception: Exception) -> Response:
     exc = cast(StarletteHTTPException, exception)
+    detail: Any = cast(dict[str, Any], exc.detail)
 
-    detail = exc.detail
-    if isinstance(detail, dict):
-        message = (
-            detail
-            if detail
-            else {
-                "field": "server_error",
-                "msg": "An error occurred. Please check your request and try again.",
-            }
-        )
-        message = cast(ErrorMessage, detail)
+    if isinstance(detail, dict) and detail.get("field") and detail.get("msg"):
+        field, msg = str(detail["field"]), str(detail["msg"])
     else:
-        message = {
-            "field": "server_error",
-            "msg": str(detail),
-        }
+        field, msg = "server_error", (
+            str(detail)
+            if detail
+            else ("An error occurred. Please check your request and try again.")
+        )
+
+    if field not in form_fields:
+        field = "server_error"
 
     if request.url.path.startswith("/api"):
-        if message["field"] not in form_fields:
-            return JSONResponse(
-                status_code=exc.status_code,
-                content={
-                    "detail": [{"field": "server_error", "msg": f"{message["msg"]}."}]
-                },
-            )
         return JSONResponse(
             status_code=exc.status_code,
-            content={
-                "detail": [{"field": message["field"], "msg": f"{message["msg"]}."}]
-            },
+            content={"detail": [{"field": field, "msg": _with_period(msg)}]},
         )
 
     return templates.TemplateResponse(
@@ -74,7 +68,7 @@ def general_http_exception_handler(request: Request, exception: Exception) -> Re
         {
             "status_code": exc.status_code,
             "title": exc.status_code,
-            "message": message,
+            "message": {"field": field, "msg": msg},
         },
         status_code=exc.status_code,
     )
@@ -85,20 +79,20 @@ def validation_exception_handler(request: Request, exception: Exception) -> Resp
     exc = cast(RequestValidationError, exception)
     logger.error(f"what does validation_exception_handler recieve: {exc}")
 
-    request_validation_errors = []
+    errors: list[ErrorMessage] = []
     for error in exc.errors():
-        error_item = (
-            {"field": error["loc"][-1], "msg": error["msg"]}
-            if error["loc"] and error["msg"]
-            else {"field": "server_error", "msg": "Unknown Validation Error"}
-        )
-        if error["loc"][-1] not in form_fields:
-            error_item = {"field": "server_error", "msg": f"{error["msg"]}."}
-        request_validation_errors.append(error_item)
+        loc = error.get("loc") or ()
+        raw_fields = loc[-1] if loc else None
+        msg = str(error.get("msg") or "Unknown validation error")
+        if isinstance(raw_fields, str) and raw_fields in form_fields:
+            errors.append({"field": raw_fields, "msg": msg})
+        else:
+            errors.append({"field": "server_error", "msg": _with_period(msg)})
+
     if request.url.path.startswith("/api"):
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            content={"detail": request_validation_errors},
+            content={"detail": errors},
         )
 
     return templates.TemplateResponse(

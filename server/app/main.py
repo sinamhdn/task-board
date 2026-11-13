@@ -31,9 +31,9 @@ from .routers.search import router as search_router
 from .routers.tests import router as tests_router
 from .routers.users import router as users_router
 from .routers.ws import router as websocket_router
+from .settings import settings
 from .utils.auth import periodic_token_cleanup
 from .utils.db import create_tables_async, dispose_engine
-from .settings import settings
 
 # import app.models
 
@@ -78,8 +78,8 @@ app.add_middleware(
 )
 
 
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
-app.mount("/media", StaticFiles(directory=media_dir), name="media")
+app.mount("/api/v1/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/api/v1/media", StaticFiles(directory=media_dir), name="media")
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
 app.include_router(boards_router, prefix="/api/v1/boards", tags=["boards"])

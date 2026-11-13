@@ -27,14 +27,14 @@ function BoardListDeleteButton({
     <div className="delete-list-btn mx-1">
       {board.user_id === currentUser?.id ? (
         <button
-          className="bg-red-600 text-md rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 py-2 px-10"
+          className="bg-red-600/50 hover:bg-red-600/80 text-md rounded-xs cursor-pointer w-fit m-auto mt-3 mb-3 py-2 px-10"
           onClick={() => handleDeleteList(board, listId, token)}
         >
           Delete List
         </button>
       ) : (
         <button
-          className="bg-gray-400 text-md rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 py-2 px-10"
+          className="bg-gray-400/50 text-md rounded-xs cursor-pointer w-fit m-auto mt-3 mb-3 py-2 px-10"
           onClick={() => handleDeleteList(board, listId, token)}
           disabled
         >

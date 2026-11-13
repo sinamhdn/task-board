@@ -5,6 +5,7 @@ import {
   type BackendValidationErrorInterface,
   type BoardMemberRecievedInterface,
 } from "~/state";
+import { axios_base } from "~/utils/api";
 import log from "~/utils/logger";
 import { setError } from "./errorSlice";
 
@@ -69,7 +70,7 @@ const boardMemberSlice = createSlice({
         state.addBoardMemberLoadingStatus = LoadingStatusEnum.pending;
         logger.info(`GET ALL BOARD MEMBERS PENDING`);
       })
-      .addCase(getAllBoardMembers.rejected, (state, action) => {
+      .addCase(getAllBoardMembers.rejected, (state) => {
         state.addBoardMemberLoadingStatus = LoadingStatusEnum.rejected;
         logger.info(`GET ALL BOARD MEMBERS REJECTED`);
       })
@@ -104,7 +105,7 @@ const boardMemberSlice = createSlice({
       .addCase(addBoardMember.pending, (state) => {
         state.addBoardMemberLoadingStatus = LoadingStatusEnum.pending;
       })
-      .addCase(addBoardMember.rejected, (state, action) => {
+      .addCase(addBoardMember.rejected, (state) => {
         state.addBoardMemberLoadingStatus = LoadingStatusEnum.rejected;
       })
       .addCase(deleteBoardMember.fulfilled, (state, action) => {
@@ -132,7 +133,7 @@ const boardMemberSlice = createSlice({
       .addCase(deleteBoardMember.pending, (state) => {
         state.deleteBoardMemberLoadingStatus = LoadingStatusEnum.pending;
       })
-      .addCase(deleteBoardMember.rejected, (state, action) => {
+      .addCase(deleteBoardMember.rejected, (state) => {
         state.deleteBoardMemberLoadingStatus = LoadingStatusEnum.rejected;
       });
   },
@@ -146,14 +147,11 @@ export const getAllBoardMembers = createAsyncThunk<
   "board/allboardmembers",
   async ({ token, boardId }, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/v1/boards/${boardId}/members`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await axios_base.get(`/api/v1/boards/${boardId}/members`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -179,8 +177,8 @@ export const addBoardMember = createAsyncThunk<
     { dispatch, rejectWithValue },
   ) => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/v1/boards/${boardId}/add-member`,
+      const response = await axios_base.post(
+        `/api/v1/boards/${boardId}/add-member`,
         {
           board_member_email: boardMemberEmail,
         },
@@ -211,8 +209,8 @@ export const deleteBoardMember = createAsyncThunk<
   "board/deleteboardmember",
   async ({ token, boardId, memberId }, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axios.delete(
-        `${import.meta.env.VITE_API_URL}/api/v1/boards/${boardId}/delete-member`,
+      const response = await axios_base.delete(
+        `/api/v1/boards/${boardId}/delete-member`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -21,7 +21,7 @@ const BoardDisplayCard = ({
       )}
       key={board.id}
     >
-      <div className="h-full w-full p-5 wrap-break-word bg-white/40 backdrop-blur-md backdrop-saturate-100 border border-white/30 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.2)]">
+      <div className="w-full p-5 wrap-break-word bg-white/40 dark:bg-black/40 backdrop-blur-md backdrop-saturate-100 border border-white/30 dark:border-black/30 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.2)]">
         <Link to={`boards/${board.id}`} state={{ board }}>
           <h2 className="text-4xl wrap-anywhere">{board.name}</h2>
         </Link>
@@ -36,7 +36,6 @@ const BoardDisplayCard = ({
       ) : (
         <button
           className="bg-gray-400 text-xs rounded-full cursor-pointer w-fit m-auto mt-3 mb-3 p-1 px-4"
-          onClick={() => handleDeleteBoard(board.id)}
           disabled
         >
           Delete Board

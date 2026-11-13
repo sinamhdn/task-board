@@ -56,11 +56,18 @@ function BoardEditForm({
   return (
     <ClickAwayListener
       onClickAway={async () => {
+        const ok = await methods.trigger(); // validate first
+        if (ok) {
+          await onSubmit();
+        }
         setEditFormActive(false);
-        await onSubmit();
       }}
     >
-      <div className="board-edit-form-component w-1/2 m-auto">
+      <div
+        className="board-edit-form-component m-auto z-20"
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <FormProvider {...methods}>
           <form
             className="board-edit-form text-center"

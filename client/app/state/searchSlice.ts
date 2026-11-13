@@ -4,6 +4,7 @@ import type {
   RecievedSearchUsersInterface,
   SearchStateInterface,
 } from "~/state";
+import { axios_base } from "~/utils/api";
 import { setError } from "./errorSlice";
 
 const initialState: SearchStateInterface = {
@@ -35,7 +36,7 @@ const searchSlice = createSlice({
       .addCase(searchUsers.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(searchUsers.rejected, (state, action) => {
+      .addCase(searchUsers.rejected, (state) => {
         state.isLoading = false;
       });
   },
@@ -47,8 +48,8 @@ export const searchUsers = createAsyncThunk<
   { rejectValue: { field: string; msg: string }[] }
 >("board/searchusers", async ({ query }, { dispatch, rejectWithValue }) => {
   try {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/v1/search?search_type=user&limit=20&query=${query}`,
+    const response = await axios_base.get(
+      `/api/v1/search?search_type=user&limit=20&query=${query}`,
     );
     return response.data;
   } catch (error) {

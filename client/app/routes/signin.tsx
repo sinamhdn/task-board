@@ -2,6 +2,7 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { GrMail } from "react-icons/gr";
 import { Link, useNavigate } from "react-router";
+import BackgroundImage from "~/components/background-image";
 import { Input } from "~/components/input";
 import { LoadingStatusEnum } from "~/state";
 import { clearError } from "~/state/errorSlice";
@@ -14,6 +15,8 @@ import {
   password_validation,
 } from "~/utils/input/input-validations";
 import type { Route } from "./+types/signin";
+
+import bg from "~/assets/log-bg.webp";
 
 interface FormValues {
   email: string;
@@ -70,31 +73,34 @@ function Signin() {
   const onSubmit = methods.handleSubmit(handleSubmitCallback);
 
   return (
-    <div className="signin-component p-10">
-      <FormProvider {...methods}>
-        <form
-          className="signup-form xl:w-1/4 lg:w-1/2 sm:w-full mx-auto text-center"
-          noValidate
-          onSubmit={onSubmit}
-        >
-          <div className="grid gap-5">
-            <Input {...email_validation} errors={errors} />
-            <Input {...password_validation} errors={errors} />
-          </div>
-          <div className="submit-button mt-5 mb-5">
-            <button
-              type="submit"
-              className="flex items-center justify-center gap-1 p-5 mx-auto font-semibold w-48 text-center text-white bg-blue-600 rounded-md hover:bg-blue-800"
-            >
-              <GrMail />
-              {authLoadingStatus === LoadingStatusEnum.pending
-                ? "Signing in..."
-                : "Login"}
-            </button>
-          </div>
-          <Link to="/signup">Register</Link>
-        </form>
-      </FormProvider>
+    <div>
+      <BackgroundImage src={bg} alt="Coast Background Image" />
+      <div className="signin-component p-10">
+        <FormProvider {...methods}>
+          <form
+            className="signup-form xl:w-1/4 lg:w-1/2 sm:w-full mx-auto text-center"
+            noValidate
+            onSubmit={onSubmit}
+          >
+            <div className="grid gap-5">
+              <Input {...email_validation} errors={errors} />
+              <Input {...password_validation} errors={errors} />
+            </div>
+            <div className="submit-button mt-5 mb-5">
+              <button
+                type="submit"
+                className="flex items-center justify-center gap-1 p-2 mx-auto font-semibold w-48 text-center text-white bg-blue-600/50 hover:bg-blue-800/50 cursor-pointer backdrop-blur-lg"
+              >
+                {/* <GrMail /> */}
+                {authLoadingStatus === LoadingStatusEnum.pending
+                  ? "Signing in..."
+                  : "Login"}
+              </button>
+            </div>
+            <Link to="/signup">Register</Link>
+          </form>
+        </FormProvider>
+      </div>
     </div>
   );
 }

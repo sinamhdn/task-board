@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axios_base } from "./api";
 
 interface User {
   id: number;
@@ -48,14 +48,11 @@ export async function getCurrentUser(token: string) {
 }
 
 export async function fetchCurrentUser(token: string): Promise<User> {
-  const response = await axios.get(
-    `${import.meta.env.VITE_API_URL}/api/v1/users/me`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  const response = await axios_base.get(`/api/v1/users/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
     },
-  );
+  });
   return response.data;
 }
 

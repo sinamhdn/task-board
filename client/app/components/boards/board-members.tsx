@@ -69,7 +69,15 @@ function BoardMembers({
     <div className="board-members-list flex flex-row-reverse mt-10 xl:mt-4 p-1 pr-3 size-fit">
       {board.user_id === currentUser.id && (
         <BoardMemberAddButton handleAddNewMemberClick={handleAddNewMemberClick}>
-          <div className="board-member-add-form-container relative right-85 top-18">
+          <div
+            className={cs(
+              "board-member-add-form-container z-50",
+              // mobile: centered modal
+              "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(24rem,calc(100vw-2rem))]",
+              // desktop: anchored popover under the add button
+              "md:absolute md:left-auto md:top-16 md:right-0 md:translate-x-0 md:translate-y-0 md:w-96",
+            )}
+          >
             {showFrom && (
               <BoardMemberAddForm
                 handleCancelAddNewBoardClick={handleCancelAddNewMemberClick}
@@ -107,13 +115,13 @@ function BoardMembers({
                   {member?.image_file ? (
                     <img
                       className="max-w-12 rounded-full"
-                      src={`${import.meta.env.VITE_API_URL}/static/profile_pics/${member.image_file}`}
+                      src={`/api/v1/static/profile_pics/${member.image_file}`}
                       alt="signed in user profile image."
                     />
                   ) : (
                     <img
                       className="max-w-12 rounded-full"
-                      src={`${import.meta.env.VITE_API_URL}/static/profile_pics/default.jpg`}
+                      src={`/api/v1/static/profile_pics/default.jpg`}
                       alt="signed in user profile image."
                     />
                   )}

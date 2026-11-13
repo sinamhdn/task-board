@@ -2,7 +2,6 @@ import classnames from "classnames";
 import { useEffect } from "react";
 import { redirect } from "react-router";
 import BackgroundImage from "~/components/background-image";
-import BoardCard from "~/components/boards/board-display-card";
 import BoardNew from "~/components/boards/board-new";
 import LoadingSpinner from "~/components/loading-spinner";
 import { LoadingStatusEnum } from "~/state";
@@ -12,6 +11,7 @@ import { getToken } from "~/utils";
 import type { Route } from "./+types/board-all";
 
 import bg from "~/assets/all-boards-bg.webp";
+import BoardDisplayCard from "~/components/boards/board-display-card";
 
 export function meta({ matches }: Route.MetaArgs) {
   // Find the root match
@@ -85,9 +85,9 @@ function BoardAll() {
           <h3 className="mt-4 mb-4 text-4xl bg-gray-300 dark:bg-gray-700 pt-1 pb-1">
             MY BOARDS
           </h3>
-          <div className="my-boards-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xl px-2">
+          <div className="my-boards-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xl px-2 items-start">
             {boards.map((board) => (
-              <BoardCard
+              <BoardDisplayCard
                 board={board}
                 handleDeleteBoard={handleDeleteBoard}
                 key={board.id}

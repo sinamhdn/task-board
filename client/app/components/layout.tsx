@@ -22,7 +22,7 @@ import { clearSessionStatus } from "~/state/sessionSlice";
 import { getCurrentUser } from "~/state/sessionSlice.ts";
 import type { RootState } from "~/state/store";
 import { getToken } from "~/utils/auth";
-import FormSubmissionStatusModal from "./form-submission-status-modal";
+// import FormSubmissionStatusModal from "./form-submission-status-modal";
 import Header from "./header";
 import ServerErrorModal from "./server-error-modal";
 
@@ -97,7 +97,7 @@ function MainLayout() {
   return (
     <div className="main-layout-component">
       <Header />
-      <FormSubmissionStatusModal />
+      {/* <FormSubmissionStatusModal /> */}
       <ServerErrorModal
         showError={showError}
         setShowError={setShowError}

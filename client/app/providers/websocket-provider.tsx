@@ -2,14 +2,15 @@ import {
   createContext,
   useContext,
   useEffect,
-  useRef,
+  // useRef,
   useState,
   type ReactNode,
 } from "react";
-import { useLoaderData } from "react-router";
+// import { useLoaderData } from "react-router";
 import { useWebSocket } from "~/hooks";
 import { useAppSelector } from "~/state/hooks";
 import { getToken } from "~/utils";
+import { getSocketUrl } from "~/utils/api";
 import type { Route } from "../+types/root";
 
 interface WebsocketContextType {
@@ -44,9 +45,7 @@ export function WebsocketProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     //only change url if url actually change
     const newToken = getToken();
-    const nextUrl = newToken
-      ? import.meta.env.VITE_SOCKET_URL + newToken
-      : null;
+    const nextUrl = newToken ? getSocketUrl() + newToken : null;
     setWsUrl((prev) => (prev === nextUrl ? prev : nextUrl)); // ← bail if unchanged
     setShouldWebsocketConnect(Boolean(newToken));
   }, [currentUser]);

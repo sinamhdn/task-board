@@ -57,13 +57,13 @@ function UserNav() {
                 {currentUser?.image_file ? (
                   <img
                     className="max-w-10 rounded-full"
-                    src={`${import.meta.env.VITE_API_URL}/static/profile_pics/${currentUser.image_file}`}
+                    src={`/api/v1/static/profile_pics/${currentUser.image_file}`}
                     alt="signed in user profile image."
                   />
                 ) : (
                   <img
                     className="max-w-10 rounded-full"
-                    src={`${import.meta.env.VITE_API_URL}/static/profile_pics/default.jpg`}
+                    src={`/api/v1/static/profile_pics/default.jpg`}
                     alt="signed in user profile image."
                   />
                 )}
@@ -114,13 +114,13 @@ function UserNav() {
                   {currentUser?.image_file ? (
                     <img
                       className="max-w-10 rounded-full"
-                      src={`${import.meta.env.VITE_API_URL}/static/profile_pics/${currentUser.image_file}`}
+                      src={`/api/v1/static/profile_pics/${currentUser.image_file}`}
                       alt="signed in user profile image."
                     />
                   ) : (
                     <img
                       className="max-w-10 rounded-full"
-                      src={`${import.meta.env.VITE_API_URL}/static/profile_pics/default.jpg`}
+                      src={`/api/v1/static/profile_pics/default.jpg`}
                       alt="signed in user profile image."
                     />
                   )}
