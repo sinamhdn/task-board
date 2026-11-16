@@ -1,12 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
-import boardMemberSlice from "./boardMemberSlice";
-import boardSlice from "./boardSlice";
-import cardSlice from "./cardSlice";
-import errorSlice from "./errorSlice";
-import listSlice from "./listSlice";
-import searchSlice from "./searchSlice";
-import sessionSlice from "./sessionSlice";
-import socketSlice from "./socketSlice";
+import boardMemberSlice from "./board-ember-slice";
+import boardSlice from "./board-slice";
+import cardSlice from "./card-slice";
+import errorSlice from "./error-slice";
+import listSlice from "./list-slice";
+import searchSlice from "./search-slice";
+import sessionSlice from "./session-slice";
+import socketSlice from "./socket-slice";
 
 export const store = configureStore({
   reducer: {

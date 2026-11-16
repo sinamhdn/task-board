@@ -1,6 +1,10 @@
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { searchUsers } from "~/state/searchSlice";
+import { searchUsers } from "~/state/search-slice";
+import log from "~/utils/logger";
+
+const logger = log.getLogger("use-live-search logger");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 export function useLiveSearch(query: string) {
   const dispatch = useAppDispatch();
@@ -12,7 +16,12 @@ export function useLiveSearch(query: string) {
     if (query.length < 3) return;
     dispatch(searchUsers({ query: query }))
       .unwrap()
-      .catch((e) => console.log(e));
+      .catch((e) =>
+        logger.info(
+          "use-live-search: dispatch error while searching a user ---> ",
+          e,
+        ),
+      );
   }, [query]);
 
   return searchResults;

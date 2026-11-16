@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import type { BoardRecievedInterface, ListRecievedInterface } from "~/state";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { getAllLists, resetLists } from "~/state/listSlice";
+import { getAllLists, resetLists } from "~/state/list-slice";
 import log from "~/utils/logger";
 import BoardCardAddButton from "../cards/board-list-card-add-btn";
 import BoardListItem from "./board-list-item";
 import BoardListDeleteButton from "./board-list-item-delete-btn";
-const logger = log.getLogger("BOARD-LIST LOGGER");
+
+const logger = log.getLogger("board-list logger");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const BoardList = ({
@@ -49,12 +50,8 @@ const BoardList = ({
     }
   }, [board?.id, token, loadedBoardId, dispatch]);
 
-  logger.info(
-    "LISTS RECIEVED FROM SERVER:: ",
-    listsForThisBoard,
-    " LOADEDBOARDID:: ",
-    loadedBoardId,
-  );
+  logger.info("board-list: listsForThisBoard = ", listsForThisBoard);
+  logger.info("board-list: loadedBoardId = ", loadedBoardId);
 
   return (
     <div className="board-list-item">

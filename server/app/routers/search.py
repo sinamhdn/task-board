@@ -24,7 +24,7 @@ from ..utils.search import SearchService
 
 
 router = APIRouter(prefix="", tags=["users"])
-logger = logging.getLogger(f"Search router logger: Filename->{__name__}")
+logger = logging.getLogger(f"search router logger: filename -> {__name__}")
 
 
 @router.get("", response_model=Union[list[UserPublicResponse], list[BoardResponse]])
@@ -46,7 +46,7 @@ async def search_all(
             detail={"field": "server_error", "msg": str(e)},
         )
     except Exception as e:
-        logger.error(f"Search error: {str(e)}")
+        logger.error("Search error: ", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"field": "server_error", "msg": "An error occurred during search"},

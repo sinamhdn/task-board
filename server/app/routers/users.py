@@ -21,7 +21,7 @@ from ..utils.auth import (
 from ..utils.db import AnnotatedAsyncDBSession
 
 router = APIRouter(prefix="", tags=["users"])
-logger = logging.getLogger(f"Users utilities logger: Filename->{__name__}")
+logger = logging.getLogger(f"users utilities logger: filename -> {__name__}")
 
 
 @router.get("/me", response_model=UserPrivateResponse)
@@ -103,8 +103,8 @@ async def update_user(
 ):
 
     # Log the incoming data for debugging
-    logger.info(f"Received update for user {user_id}: {user_update}")
-    logger.info(f"Update data type: {type(user_update)}")
+    logger.info(f"received update for user {user_id}: {user_update}")
+    logger.info("update data type: ", type(user_update))
 
     if user_id != current_user.id:
         raise HTTPException(

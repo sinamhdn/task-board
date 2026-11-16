@@ -12,7 +12,7 @@ from ..crud.users import UserCRUD
 from ..utils.auth import verify_access_token
 from .db import AsyncSession
 
-logger = logging.getLogger(name=f"Websocket utilities logger: Filename->{__name__}")
+logger = logging.getLogger(name=f"websocket utilities logger: filename -> {__name__}")
 
 
 class ConnectionManager:
@@ -41,9 +41,9 @@ class ConnectionManager:
             if websocket.client_state != WebSocketState.DISCONNECTED:
                 await websocket.close(code=close_status_code, reason=close_reason)
         except (RuntimeError, WebSocketDisconnect) as e:
-            logger.error(f"Runtime error during disconnect: {e}")
+            logger.error(f"runtime error during disconnect: {e}")
         except Exception as e:
-            logger.error(f"Error during disconnect: {e}")
+            logger.error(f"error during disconnect: {e}")
 
     def add_connection(self, websocket: WebSocket, user_id: int):
         # self.active_connections.setdefault(user_id, []).append(websocket)
@@ -64,7 +64,7 @@ class ConnectionManager:
     async def send_personal_message(self, message: Dict, websocket: WebSocket):
         try:
             if websocket.client_state != WebSocketState.CONNECTED:
-                logger.error("Attempted to send message to disconnected client")
+                logger.error("attempted to send message to disconnected client")
                 return False
 
             await websocket.send_json(
@@ -77,7 +77,7 @@ class ConnectionManager:
             )
             return False
         except Exception as e:
-            logger.error(f"Error during sending personal message: {e}")
+            logger.error(f"error during sending personal message: {e}")
             return False
 
     async def broadcast_channel(
@@ -105,7 +105,7 @@ class ConnectionManager:
                 )
             except (WebSocketDisconnect, RuntimeError) as e:
                 logger.info(
-                    f"Client disconnect and runtime error during channel broadcast: {e}"
+                    f"client disconnect and runtime error during channel broadcast: {e}"
                 )
                 # Remove dead connections
                 self.remove_connection(
@@ -128,7 +128,7 @@ class ConnectionManager:
                 )
             except (WebSocketDisconnect, RuntimeError) as e:
                 logger.info(
-                    f"Client disconnect and runtime error during global broadcast: {e}"
+                    f"client disconnect and runtime error during global broadcast: {e}"
                 )
                 # Remove dead connections
                 self.remove_connection(connection, user_id)
@@ -141,7 +141,7 @@ class ConnectionManager:
                 return
             self.channels[channel].add(websocket)
         except Exception as e:
-            logger.error(f"Error during subscription: {e}")
+            logger.error(f"error during subscription: {e}")
         await self.send_personal_message(
             {"type": "ws_notif", "msg": f"Subscribed to {channel}"}, websocket
         )

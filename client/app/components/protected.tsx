@@ -2,16 +2,16 @@ import { useEffect } from "react";
 import { Outlet, redirect, useLoaderData } from "react-router";
 import { useWebsocketContext } from "~/providers/websocket-provider";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { getCurrentUser, setCurrentUser } from "~/state/sessionSlice";
-import { getToken } from "~/utils";
-import { fetchCurrentUser, removeToken } from "~/utils/auth";
+import { getCurrentUser, setCurrentUser } from "~/state/session-slice";
+import { getTokenCookie } from "~/utils";
+import { fetchCurrentUser, removeTokenCookie } from "~/utils/auth";
 import type { Route } from "./+types/protected";
 import LoadingSpinner from "./loading-spinner";
 // import { useEffect } from "react";
 // import { setCurrentUser } from "~/state/sessionSlice";
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
-  const token = getToken();
+  const token = getTokenCookie();
 
   if (!token) {
     // useNavigate is better than this
@@ -24,7 +24,7 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
     // socketioManager.socketConnect(token);
     return { token, currentUser };
   } catch (error) {
-    removeToken();
+    removeTokenCookie();
     throw redirect("/signin");
   }
 }

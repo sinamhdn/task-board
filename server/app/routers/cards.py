@@ -19,7 +19,7 @@ from ..utils.deps import (
 )
 from ..utils.ws import manager
 
-logger = logging.getLogger(f"List router logger: Filename->{__name__}")
+logger = logging.getLogger(f"card router logger: filename -> {__name__}")
 
 router = APIRouter(prefix="", tags=["cards"])
 
@@ -104,7 +104,7 @@ async def create_new_card(
                 websocket=websocket,
                 message={
                     "event": "card_added",
-                    "data": card_data_validate,
+                    "card_data": card_data_validate,
                 },
             )
     return new_card
@@ -145,7 +145,7 @@ async def update_card(
                 websocket=websocket,
                 message={
                     "event": "card_updated",
-                    "data": card_data_validate,
+                    "card_data": card_data_validate,
                 },
             )
     return card
@@ -179,8 +179,9 @@ async def delete_board(
             await manager.send_personal_message(
                 websocket=websocket,
                 message={
-                    "event": "card_deleted",
-                    "data": card_data_validate,
+                    "event": "card_removed",
+                    "card_id": card.id,
+                    "list_id": card.list_id,
                 },
             )
     await db.commit()

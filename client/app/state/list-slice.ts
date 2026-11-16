@@ -1,4 +1,8 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import axios from "axios";
 import {
   LoadingStatusEnum,
@@ -7,9 +11,9 @@ import {
 } from "~/state";
 import { axios_base } from "~/utils/api";
 import log from "~/utils/logger";
-import { setError } from "./errorSlice";
+import { setError } from "./error-slice";
 
-const logger = log.getLogger("LIST SLICE LOGGER");
+const logger = log.getLogger("list-slice logger");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const initialState: {
@@ -34,25 +38,21 @@ const listSlice = createSlice({
   name: "list",
   initialState: initialState,
   reducers: {
-    resetLists: (state) => {
-      state.lists = [];
-      state.getAllListsLoadingStatus = null;
-      state.getListByIdLoadingStatus = null;
-      state.createNewListLoadingStatus = null;
-      state.updateListLoadingStatus = null;
-      state.deleteListLoadingStatus = null;
-    },
-    addListDirect: (state, action) => {
+    resetLists: () => initialState,
+    addListDirect: (state, action: PayloadAction<ListRecievedInterface>) => {
       if (state.lists.some((list) => list.id === action.payload.id)) return;
       state.lists.push(action.payload);
     },
-    removeListDirect: (state, action) => {
-      logger.info("removeListDirect payload", action.payload);
+    removeListDirect: (state, action: PayloadAction<{ id: number }>) => {
+      logger.info(
+        "list-slice: removeListDirect -> action.payload = ",
+        action.payload,
+      );
       state.lists = state.lists.filter((list) => list.id !== action.payload.id);
     },
-    updateListDirect: (state, action) => {
-      console.log(
-        `updateListDirect what does it recieve --> ${action.payload}`,
+    updateListDirect: (state, action: PayloadAction<ListRecievedInterface>) => {
+      logger.info(
+        "list-slice: updateListDirect -> action.payload = ",
         action.payload,
       );
       const listIndex = state.lists.findIndex(
@@ -157,7 +157,10 @@ export const getAllLists = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("listSlice.ts::" + error.response?.data.detail);
+        logger.error(
+          "list-slice: getAllLists -> error.response?.data.detail = ",
+          error.response?.data.detail,
+        );
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -187,7 +190,10 @@ export const getListById = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("listSlice.ts::" + error.response?.data.detail);
+        logger.error(
+          "list-slice: getListById -> error.response?.data.detail = ",
+          error.response?.data.detail,
+        );
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -204,7 +210,7 @@ export const createNewList = createAsyncThunk<
 >(
   "list/newlist",
   async ({ token, listName, boardId }, { dispatch, rejectWithValue }) => {
-    console.log("createNewBoard name", listName);
+    logger.info("list-slice: createNewList -> listName = ", listName);
     try {
       const response = await axios_base.post(
         `/api/v1/lists`,
@@ -222,7 +228,7 @@ export const createNewList = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("listSlice.ts::" + error);
+        logger.error("list-slice: createNewList -> error = ", error);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -256,7 +262,10 @@ export const updateList = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        logger.info("listSlice.ts::updateError::", error.response?.data.detail);
+        logger.error(
+          "list-slice: updateList -> error.response?.data.detail = ",
+          error.response?.data.detail,
+        );
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -286,7 +295,7 @@ export const deleteList = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("listSlice.ts::" + error);
+        logger.error("list-slice: deleteList -> error = ", error);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }

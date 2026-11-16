@@ -1,4 +1,8 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import axios from "axios";
 import {
   LoadingStatusEnum,
@@ -7,9 +11,9 @@ import {
 } from "~/state";
 import { axios_base } from "~/utils/api";
 import log from "~/utils/logger";
-import { setError } from "./errorSlice";
+import { setError } from "./error-slice";
 
-const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+const logger = log.getLogger("board-member-slice logger");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const initialState: {
@@ -30,49 +34,50 @@ const boardMemberSlice = createSlice({
   name: "board-member",
   initialState: initialState,
   reducers: {
-    resetBoardMembers: (state) => {
-      state.boardMembers = [];
-      state.getAllBoardMembersLoadingStatus = null;
-      state.addBoardMemberLoadingStatus = null;
-      state.deleteBoardMemberLoadingStatus = null;
-    },
-    addBoardMemberDirect: (state, action) => {
+    resetBoardMembers: () => initialState,
+    addBoardMemberDirect: (
+      state,
+      action: PayloadAction<BoardMemberRecievedInterface>,
+    ) => {
       if (state.boardMembers.find((member) => member.id === action.payload.id))
         return;
       state.boardMembers.push(action.payload);
     },
-    removeBoardMemberDirect: (state, action) => {
+    removeBoardMemberDirect: (state, action: PayloadAction<{ id: number }>) => {
       state.boardMembers = state.boardMembers.filter(
         (member) => member.id !== action.payload.id,
       );
     },
-    updateBoardDirect: (state, action) => {
+    updateBoardMemberDirect: (
+      state,
+      action: PayloadAction<BoardMemberRecievedInterface>,
+    ) => {
       logger.info(
-        `updateBoardDirect what does it recieve --> ${action.payload}`,
+        "board-member-slice: updateBoardDirect -> action = ",
         action.payload,
       );
-      const boardIndex = state.boardMembers.findIndex(
+      const boardMemberIndex = state.boardMembers.findIndex(
         (member) => member.id === action.payload.id,
       );
-      state.boardMembers[boardIndex] = action.payload;
+      state.boardMembers[boardMemberIndex] = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(getAllBoardMembers.fulfilled, (state, action) => {
-        state.addBoardMemberLoadingStatus = LoadingStatusEnum.fulfilled;
-        logger.info(`GET ALL BOARD MEMBERS FULFILLED`);
-        logger.info(`GET ALL BOARD MEMBERS ACTION: ${action}`);
+        state.getAllBoardMembersLoadingStatus = LoadingStatusEnum.fulfilled;
+        logger.info("board-member-slice: getAllBoardMembers fulfilled");
+        logger.info("board-member-slice: getAllBoardMembers action = ", action);
         state.boardId = action.meta.arg.boardId;
         state.boardMembers = action.payload;
       })
       .addCase(getAllBoardMembers.pending, (state) => {
-        state.addBoardMemberLoadingStatus = LoadingStatusEnum.pending;
-        logger.info(`GET ALL BOARD MEMBERS PENDING`);
+        state.getAllBoardMembersLoadingStatus = LoadingStatusEnum.pending;
+        logger.info("board-member-slice: getAllBoardMembers pending");
       })
       .addCase(getAllBoardMembers.rejected, (state) => {
-        state.addBoardMemberLoadingStatus = LoadingStatusEnum.rejected;
-        logger.info(`GET ALL BOARD MEMBERS REJECTED`);
+        state.getAllBoardMembersLoadingStatus = LoadingStatusEnum.rejected;
+        logger.info("board-member-slice: getAllBoardMembers rejected");
       })
       .addCase(addBoardMember.fulfilled, (state, action) => {
         state.addBoardMemberLoadingStatus = LoadingStatusEnum.fulfilled;
@@ -97,9 +102,12 @@ const boardMemberSlice = createSlice({
         const boardId = action.meta.arg.boardId;
         if (boardId === state.boardId) {
           state.boardMembers.push(action.payload);
-          logger.info("✅ Member added successfully ✅");
+          logger.info("board-member-slice: ✅member added successfully✅");
         } else {
-          logger.warn("Board not found in state:", boardId);
+          logger.warn(
+            "board-member-slice: board not found in state -> ",
+            boardId,
+          );
         }
       })
       .addCase(addBoardMember.pending, (state) => {
@@ -120,14 +128,17 @@ const boardMemberSlice = createSlice({
           );
         }
           */
-        const boardId = action.meta.arg.boardId;
+        const { boardId, memberId } = action.meta.arg;
         if (boardId === state.boardId) {
           state.boardMembers = state.boardMembers.filter(
-            (member) => member.id !== action.payload.id,
+            (member) => member.id !== memberId,
           );
-          logger.info("❎ Member deleted successfully ❎");
+          logger.info("board-member-slice: ❎member deleted successfully❎");
         } else {
-          logger.warn("Board not found in state:", boardId);
+          logger.warn(
+            "board-member-slice: board not found in state -> ",
+            boardId,
+          );
         }
       })
       .addCase(deleteBoardMember.pending, (state) => {
@@ -147,16 +158,22 @@ export const getAllBoardMembers = createAsyncThunk<
   "board/allboardmembers",
   async ({ token, boardId }, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axios_base.get(`/api/v1/boards/${boardId}/members`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await axios_base.get(
+        `/api/v1/boards/${boardId}/members`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        logger.info("boardMemberSlice.ts::" + error.response?.data.detail);
+        logger.info(
+          "board-member-slice: getAllBoardMembers -> error.response?.data.detail = ",
+          error.response?.data.detail,
+        );
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -224,7 +241,10 @@ export const deleteBoardMember = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        logger.info("boardMemberSlice.ts::" + error);
+        logger.info(
+          "board-member-slice: deleteBoardMember -> error.response?.data.detail = ",
+          error.response?.data.detail,
+        );
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -238,7 +258,7 @@ export const {
   resetBoardMembers,
   addBoardMemberDirect,
   removeBoardMemberDirect,
-  updateBoardDirect,
+  updateBoardMemberDirect,
 } = boardMemberSlice.actions;
 
 export default boardMemberSlice.reducer;

@@ -1,7 +1,7 @@
 import cs from "classnames";
 import { useEffect, useState } from "react";
 import { LoadingStatusEnum, type BoardRecievedInterface } from "~/state";
-import { getAllCards } from "~/state/cardSlice";
+import { getAllCards } from "~/state/card-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { randomGradientGenerator } from "~/utils";
 import log from "~/utils/logger";
@@ -9,7 +9,7 @@ import BoardCardAddForm from "../cards/board-list-card-add-form";
 import BoardCardItem from "../cards/board-list-card-item";
 import BoardListEditForm from "./board-list-item-edit-form";
 
-const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+const logger = log.getLogger("board-list-item logger");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const BoardListItem = ({
@@ -41,7 +41,7 @@ const BoardListItem = ({
     setEditBoardListName(true);
   };
 
-  logger.info(`WHAT BOARD ID DOES BOARD-LIST-ITEM RECIEVE ${board.id}`);
+  logger.info("board-list-item: board prop recieved ---> ", board);
 
   useEffect(() => {
     if (token && cardsLoadStatus == null) {
@@ -58,8 +58,9 @@ const BoardListItem = ({
         randomGradientGenerator(),
       )}
     >
-      {editBoardListName ? (
+      {editBoardListName && token ? (
         <BoardListEditForm
+          token={token}
           listId={listId}
           listName={listName}
           boardId={board.id}

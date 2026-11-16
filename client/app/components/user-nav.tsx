@@ -82,7 +82,7 @@ function UserNav() {
           {!currentUser ? (
             <MenuItems
               anchor="bottom start"
-              className="w-full mt-14 dark:bg-gray-700 bg-gray-300 text-black dark:text-white shadow-lg z-10"
+              className="w-full mt-14 bg-gray-200 dark:bg-gray-800 text-black dark:text-white shadow-lg z-10 py-10"
             >
               <MenuItem>
                 <Link
@@ -104,7 +104,7 @@ function UserNav() {
           ) : (
             <MenuItems
               anchor="bottom start"
-              className="w-full mt-14 dark:bg-gray-700 bg-gray-300 text-black dark:text-white shadow-lg z-10"
+              className="w-full mt-14 bg-gray-200 dark:bg-gray-800 text-black dark:text-white shadow-lg z-10 py-10"
             >
               <MenuItem>
                 <Link
@@ -131,7 +131,7 @@ function UserNav() {
                   </span>
                 </Link>
               </MenuItem>
-              {isHome && (
+              {/* {isHome && (
                 <MenuItem>
                   <div className="block w-full px-4 py-2 text-right">
                     {showAddNewBoardForm ? (
@@ -146,7 +146,7 @@ function UserNav() {
                     )}
                   </div>
                 </MenuItem>
-              )}
+              )} */}
               <MenuItem>
                 <LogoutButton className="block w-full px-4 py-2 text-center cursor-pointer" />
               </MenuItem>

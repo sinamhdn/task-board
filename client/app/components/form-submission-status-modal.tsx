@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { LoadingStatusEnum } from "~/state";
-import { clearError } from "~/state/errorSlice";
+import { clearError } from "~/state/error-slice";
 import { useAppDispatch } from "~/state/hooks";
-import { clearSessionStatus } from "~/state/sessionSlice";
+import { clearSessionStatus } from "~/state/session-slice";
 import type { RootState } from "~/state/store";
 
 function FormSubmissionStatusModal() {

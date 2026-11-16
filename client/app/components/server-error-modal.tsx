@@ -1,5 +1,5 @@
 import type { ErrorStateInterface } from "~/state";
-import { clearError } from "~/state/errorSlice";
+import { clearError } from "~/state/error-slice";
 import { useAppDispatch } from "~/state/hooks";
 
 function ServerErrorModal({

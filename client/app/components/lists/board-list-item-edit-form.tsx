@@ -2,12 +2,15 @@ import ClickAwayListener from "react-click-away-listener";
 import { FormProvider, useForm } from "react-hook-form";
 import { Input } from "~/components/input";
 import LoadingSpinner from "~/components/loading-spinner";
-import { clearError } from "~/state/errorSlice";
+import { clearError } from "~/state/error-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { updateList } from "~/state/listSlice";
+import { updateList } from "~/state/list-slice";
 import type { RootState } from "~/state/store";
-import { getToken } from "~/utils";
 import { list_name_validation } from "~/utils/input/input-validations";
+import log from "~/utils/logger";
+
+const logger = log.getLogger("board-list-item-edit-form logger");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 interface FormValues {
   list_id: number;
@@ -16,11 +19,13 @@ interface FormValues {
 }
 
 function BoardListEditForm({
+  token,
   listId,
   listName,
   boardId,
   setEditFormActive,
 }: {
+  token: string;
   listId: number;
   listName: string;
   boardId: number;
@@ -28,7 +33,6 @@ function BoardListEditForm({
 }) {
   const errors = useAppSelector((state: RootState) => state.errorSlice.errors);
   const dispatch = useAppDispatch();
-  const token = getToken();
 
   if (!token) return <LoadingSpinner />;
 
@@ -44,7 +48,10 @@ function BoardListEditForm({
       ).unwrap();
       dispatch(clearError());
     } catch (err) {
-      console.log(err);
+      logger.error(
+        "board-list-item-edit-form: dispatch error while updating a list ---> ",
+        err,
+      );
     }
   };
 

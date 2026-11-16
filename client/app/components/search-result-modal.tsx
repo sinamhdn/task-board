@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { RecievedSearchUsersInterface } from "~/state";
 import { useAppDispatch } from "~/state/hooks";
-import { clearQuery } from "~/state/searchSlice";
+import { clearQuery } from "~/state/search-slice";
 
 function SearchResultModal({
   searchResults,

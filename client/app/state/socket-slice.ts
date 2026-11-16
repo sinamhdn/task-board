@@ -8,7 +8,7 @@ import type {
 
 import log from "~/utils/logger";
 
-const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+const logger = log.getLogger("socket-slice logger");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 // ---- Slice ----

@@ -9,7 +9,7 @@ import {
 // import { useLoaderData } from "react-router";
 import { useWebSocket } from "~/hooks";
 import { useAppSelector } from "~/state/hooks";
-import { getToken } from "~/utils";
+import { getTokenCookie } from "~/utils";
 import { getSocketUrl } from "~/utils/api";
 import type { Route } from "../+types/root";
 
@@ -44,7 +44,7 @@ export function WebsocketProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     //only change url if url actually change
-    const newToken = getToken();
+    const newToken = getTokenCookie();
     const nextUrl = newToken ? getSocketUrl() + newToken : null;
     setWsUrl((prev) => (prev === nextUrl ? prev : nextUrl)); // ← bail if unchanged
     setShouldWebsocketConnect(Boolean(newToken));

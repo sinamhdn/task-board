@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { redirect, useLocation, useParams } from "react-router";
+import {
+  redirect,
+  // replace,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router";
 import BackgroundImage from "~/components/background-image";
 import BoardEditForm from "~/components/boards/board-edit-form";
 import BoardMembers from "~/components/boards/board-members";
@@ -7,21 +13,23 @@ import BoardList from "~/components/lists/board-list";
 import BoardListAddButton from "~/components/lists/board-list-item-add-btn";
 import LoadingSpinner from "~/components/loading-spinner";
 import { useWebsocketContext } from "~/providers/websocket-provider";
-import { getAllBoardMembers } from "~/state/boardMemberSlice";
-import { getBoardById } from "~/state/boardSlice";
+import { getAllBoardMembers } from "~/state/board-ember-slice";
+import { getBoardById } from "~/state/board-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { getToken } from "~/utils";
+import { getTokenCookie } from "~/utils";
 import log from "~/utils/logger";
 import type { Route } from "./+types/boardsingle";
 
 import bg from "~/assets/single-board-bg.webp";
+import { LoadingStatusEnum } from "~/state";
+import { getTokenCookieFromRequest } from "~/utils/auth";
 
-const logger = log.getLogger("BOARD-SINGLE LOGGER");
+const logger = log.getLogger("board-single logger");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 export function meta({ matches }: Route.MetaArgs) {
   // Find the root match
-  const rootMatch = matches.find((match) => match?.id === "root");
+  const rootMatch = matches.find((match: any) => match?.id === "root");
   // Extract the root's meta descriptors (if any)
   const rootMeta = rootMatch?.meta ?? [];
   // Define this route's meta
@@ -41,13 +49,21 @@ export function meta({ matches }: Route.MetaArgs) {
 // Fix 2: If you only want an initial value
 // Use defaultValue instead of value
 
+export async function loader({ request, params }: Route.LoaderArgs) {
+  const token = getTokenCookieFromRequest(request);
+  if (!token) throw redirect("/signin");
+  return null;
+}
+
 function BoardSingle() {
   const [editBoardName, setEditBoardName] = useState(false);
   const [newListFormActive, setNewListFormActive] = useState(false);
   const { id: urlParamBoardId } = useParams();
   const { board: locationBoard } = useLocation().state ?? {};
   const { isConnected, sendMessage } = useWebsocketContext();
-  const token = getToken();
+  const token = getTokenCookie();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const board = useAppSelector((state) => {
     if (locationBoard)
       return state.boardSlice.boards.find(
@@ -60,11 +76,15 @@ function BoardSingle() {
   const boardMembers = useAppSelector((state) => {
     return state.boardMemberSlice.boardMembers;
   });
+  const boardMembersBoardId = useAppSelector((state) => {
+    return state.boardMemberSlice.boardId;
+  });
+  const boardMembersLoadingStatus = useAppSelector(
+    (state) => state.boardMemberSlice.getAllBoardMembersLoadingStatus,
+  );
   const loggedInUser = useAppSelector(
     (state) => state.sessionSlice.currentUser,
   );
-
-  const dispatch = useAppDispatch();
 
   const handleBoardTitleClick = () => {
     setEditBoardName(true);
@@ -82,27 +102,48 @@ function BoardSingle() {
     setNewListFormActive(false);
   };
 
+  // Fetch the board (guard: only if not already in store)
   useEffect(() => {
-    if (!token) throw redirect("signin");
-    if (!board && urlParamBoardId)
-      dispatch(
-        getBoardById({ boardId: Number(urlParamBoardId), token: token }),
-      );
+    if (!token || !urlParamBoardId || board) return;
+    dispatch(getBoardById({ boardId: Number(urlParamBoardId), token: token }));
   }, [token, board, urlParamBoardId, dispatch]);
 
+  // Fetch members for THIS board, regardless of what's in the slice
   useEffect(() => {
-    if (!token) throw redirect("signin");
-    logger.info(`IS GET ALL BOARD MEMBERS CALLED: ${board && !boardMembers}`);
     logger.info(
-      `WHAT IS INSIDE BOARDMEMBER: ${boardMembers} and board: ${board}`,
+      "board-single: is getAllBoardMembers dispatched -> ",
+      board && !boardMembers,
     );
-    logger.info(
-      `T/F BOARDMEMBER: ${Boolean(boardMembers)} and board: ${Boolean(board)}`,
+    logger.info("board-single: boardMember = ", boardMembers);
+    logger.info("board-single: board = ", board);
+    logger.info("board-single: Boolean(boardMember) = ", Boolean(boardMembers));
+    logger.info("board-single: Boolean(board) = ", Boolean(board));
+    if (!token || !board) return;
+    if (boardMembersBoardId === board.id) return;
+    dispatch(getAllBoardMembers({ boardId: board.id, token: token }));
+  }, [token, board, boardMembersLoadingStatus, dispatch]);
+
+  // Authorize ONLY after everything is ready
+  useEffect(() => {
+    if (!board || !loggedInUser) return;
+    if (boardMembersLoadingStatus !== LoadingStatusEnum.fulfilled) return;
+    if (boardMembersBoardId !== board.id) return;
+    const userId = loggedInUser.id;
+    const isOwner = String(board.user_id) === String(userId);
+    const isMember = boardMembers.some(
+      (member) => String(member.id) === String(userId),
     );
-    if (board && boardMembers.length === 0) {
-      dispatch(getAllBoardMembers({ boardId: board.id, token: token }));
-    }
-  }, [token, board, boardMembers, dispatch]);
+    logger.info('board-single: redirected to "/"');
+    if (isOwner || isMember) return;
+    navigate("/", { replace: true });
+  }, [
+    board,
+    loggedInUser,
+    boardMembers,
+    boardMembersLoadingStatus,
+    boardMembersBoardId,
+    navigate,
+  ]);
 
   useEffect(() => {
     if (!isConnected || !urlParamBoardId) return;
@@ -122,11 +163,16 @@ function BoardSingle() {
         <div>
           <header className="md:pl-10 text-2xl text-center w-full md:w-1/0.5 m-auto">
             <div className="flex justify-center md:absolute md:right-0 md:top-25">
-              <BoardMembers board={board} currentUser={loggedInUser} />
+              <BoardMembers
+                token={token}
+                board={board}
+                currentUser={loggedInUser}
+              />
             </div>
             {editBoardName ? (
               <div className="md:w-1/2 md:px-0 px-2 m-auto">
                 <BoardEditForm
+                  token={token}
                   boardId={board.id}
                   boardName={board.name}
                   setEditFormActive={setEditBoardName}

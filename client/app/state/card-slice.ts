@@ -11,9 +11,9 @@ import {
 } from "~/state";
 import { axios_base } from "~/utils/api";
 import log from "~/utils/logger";
-import { setError } from "./errorSlice";
+import { setError } from "./error-slice";
 
-const logger = log.getLogger("CARD SLICE LOGGER");
+const logger = log.getLogger("card-slice logger");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const initialState: {
@@ -38,47 +38,34 @@ const cardSlice = createSlice({
   name: "card",
   initialState: initialState,
   reducers: {
-    resetCards: (state) => {
-      state.cardsByList = {};
-      state.getAllCardsLoadingStatusByList = {};
-      state.getCardByIdLoadingStatus = null;
-      state.createNewCardLoadingStatus = null;
-      state.updateCardLoadingStatus = null;
-      state.deleteCardLoadingStatus = null;
-    },
-    addCardDirect: (
-      state,
-      action: PayloadAction<{ listId: number; card: CardRecievedInterface }>,
-    ) => {
-      const { listId, card } = action.payload;
-      if (!state.cardsByList[listId]) state.cardsByList[listId] = [];
-      if (!state.cardsByList[listId].some((c) => c.id === card.id))
-        state.cardsByList[listId].push(card);
+    resetCards: () => initialState,
+    addCardDirect: (state, action: PayloadAction<CardRecievedInterface>) => {
+      const { list_id, id } = action.payload;
+      if (!state.cardsByList[list_id]) state.cardsByList[list_id] = [];
+      if (!state.cardsByList[list_id].some((c) => c.id === id))
+        state.cardsByList[list_id].push(action.payload);
     },
     removeCardDirect: (
       state,
-      action: PayloadAction<{ listId: number; card: CardRecievedInterface }>,
+      action: PayloadAction<{ id: number; listId: number }>,
     ) => {
-      const { listId, card } = action.payload;
+      const { listId, id } = action.payload;
       if (!state.cardsByList[listId]) return;
       state.cardsByList[listId] = state.cardsByList[listId].filter(
-        (c) => c.id !== card.id,
+        (c) => c.id !== id,
       );
     },
-    updateCardDirect: (
-      state,
-      action: PayloadAction<{ listId: number; card: CardRecievedInterface }>,
-    ) => {
-      console.log(
-        `updateCardDirect what does it recieve --> ${action.payload}`,
+    updateCardDirect: (state, action: PayloadAction<CardRecievedInterface>) => {
+      logger.info(
+        "card-slice: updateCardDirect -> action.payload = ",
         action.payload,
       );
-      const { listId, card } = action.payload;
-      if (!state.cardsByList[listId]) return;
-      const cardIndex = state.cardsByList[listId].findIndex(
-        (c) => c.id === card.id,
+      const { list_id, id } = action.payload;
+      if (!state.cardsByList[list_id]) return;
+      const cardIndex = state.cardsByList[list_id].findIndex(
+        (c) => c.id === id,
       );
-      state.cardsByList[listId][cardIndex] = card;
+      state.cardsByList[list_id][cardIndex] = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -194,7 +181,10 @@ export const getAllCards = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("cardSlice.ts::" + error.response?.data.detail);
+        logger.error(
+          "card-slice: getAllCards -> error.response?.data.detail = " +
+            error.response?.data.detail,
+        );
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -225,7 +215,10 @@ export const getCardById = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("cardSlice.ts::" + error.response?.data.detail);
+        logger.error(
+          "card-slice: getCardById -> error.response?.data.detail = " +
+            error.response?.data.detail,
+        );
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -245,15 +238,9 @@ export const createNewCard = createAsyncThunk<
     { token, cardName, boardId, listId },
     { dispatch, rejectWithValue },
   ) => {
-    logger.info(
-      "createNewCard ",
-      "CARDNAME:",
-      cardName,
-      " BOARD ID:",
-      boardId,
-      " LIST ID:",
-      listId,
-    );
+    logger.info("card-slice: createNewCard -> cardName = ", cardName);
+    logger.info("card-slice: createNewCard -> boardId = ", boardId);
+    logger.info("card-slice: createNewCard -> listId = ", listId);
     try {
       const response = await axios_base.post(
         `/api/v1/cards`,
@@ -272,7 +259,7 @@ export const createNewCard = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("cardSlice.ts::" + error);
+        logger.error("card-slice: createNewCard -> error = ", error);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -312,7 +299,10 @@ export const updateCard = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        logger.info("cardSlice.ts::updateError::", error.response?.data.detail);
+        logger.error(
+          "card-slice: updateCard -> error.response?.data.detail = ",
+          error.response?.data.detail,
+        );
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -343,7 +333,7 @@ export const deleteCard = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        console.log("cardSlice.ts::" + error);
+        logger.error("card-slice: deleteCard -> error = " + error);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }

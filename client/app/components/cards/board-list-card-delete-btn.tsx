@@ -1,6 +1,6 @@
 import { ImCross } from "react-icons/im";
 import type { BoardRecievedInterface } from "~/state";
-import { deleteCard } from "~/state/cardSlice";
+import { deleteCard } from "~/state/card-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 
 function BoardCardDeleteButton({

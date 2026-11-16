@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import Response
 
-logger = logging.getLogger(f"Handlers logger: Filename->{__name__}")
+logger = logging.getLogger(f"handlers logger: filename -> {__name__}")
 templates = Jinja2Templates(
     directory=os.path.join(os.path.dirname(__file__), "../../templates")
 )
@@ -77,7 +77,7 @@ def general_http_exception_handler(request: Request, exception: Exception) -> Re
 # @app.exception_handler(RequestValidationError)
 def validation_exception_handler(request: Request, exception: Exception) -> Response:
     exc = cast(RequestValidationError, exception)
-    logger.error(f"what does validation_exception_handler recieve: {exc}")
+    logger.error("what does validation_exception_handler recieve: ", exc)
 
     errors: list[ErrorMessage] = []
     for error in exc.errors():
@@ -109,7 +109,7 @@ def validation_exception_handler(request: Request, exception: Exception) -> Resp
 
 # @app.exception_handler(Exception)
 def unhandled_exception_handler(request: Request, exc: Exception) -> Response:
-    logger.exception("Unhandled exception", exc_info=exc)
+    logger.exception("unhandled exception", exc_info=exc)
 
     if request.url.path.startswith("/api"):
         return JSONResponse(

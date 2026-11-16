@@ -13,7 +13,7 @@ from ..models.users import User
 from ..settings import settings
 from .db import AnnotatedAsyncDBSession, AsyncSession, get_async_db_session
 
-logger = logging.getLogger(f"Auth utilities logger: Filename->{__name__}")
+logger = logging.getLogger(f"auth utilities logger: filename -> {__name__}")
 pwd_hash = PasswordHash.recommended()
 oath2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 AnnotatedOauth2Scheme = Annotated[str, Depends(oath2_scheme)]
@@ -54,13 +54,13 @@ def verify_access_token(token: str) -> str | None:
             options={"require": ["exp", "sub"]},
         )
     except jwt.ExpiredSignatureError:
-        logger.warning("Token expired")
+        logger.warning("token expired")
         return None
     except jwt.InvalidSignatureError:
-        logger.warning("Invalid signature")
+        logger.warning("invalid signature")
         return None
     except jwt.InvalidTokenError as e:
-        logger.warning(f"Other JWT error: {e}")
+        logger.warning(f"other jwt error: {e}")
         return None
     else:
         return payload.get("sub")
@@ -101,7 +101,7 @@ async def get_current_user(
 
 # In-memory token blacklist with expiration
 TOKEN_BLACKLIST: Dict[str, datetime] = {}  # token -> expiration_time
-logger = logging.getLogger(f"General utilities logger: Filename->{__name__}")
+logger = logging.getLogger(f"general utilities logger: filename -> {__name__}")
 
 
 def add_token_to_blacklist(token: str, expires_in: int = 3600) -> None:
@@ -135,7 +135,7 @@ def cleanup_expired_tokens() -> None:
         del TOKEN_BLACKLIST[token]
 
     if expired_tokens:
-        logger.info(f"Cleaned up {len(expired_tokens)} expired tokens from blacklist")
+        logger.info(f"cleaned up {len(expired_tokens)} expired tokens from blacklist")
 
 
 # Background task to periodically clean up expired tokens

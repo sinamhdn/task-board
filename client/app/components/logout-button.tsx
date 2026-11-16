@@ -1,14 +1,14 @@
 import { useNavigate } from "react-router";
 import { useAppDispatch } from "~/state/hooks";
-import { clearCurrentUser } from "~/state/sessionSlice";
-import { removeToken } from "~/utils/auth";
+import { clearCurrentUser } from "~/state/session-slice";
+import { removeTokenCookie } from "~/utils/auth";
 
 function LogoutButton({ className }: { className?: string }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   function logout() {
-    removeToken();
+    removeTokenCookie();
     dispatch(clearCurrentUser());
     navigate("/");
   }

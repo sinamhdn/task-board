@@ -5,7 +5,7 @@ import type {
   SearchStateInterface,
 } from "~/state";
 import { axios_base } from "~/utils/api";
-import { setError } from "./errorSlice";
+import { setError } from "./error-slice";
 
 const initialState: SearchStateInterface = {
   userEmailSearchResults: [],
@@ -21,11 +21,7 @@ const searchSlice = createSlice({
       state.query = action.payload;
       return state;
     },
-    clearQuery: (state) => {
-      state.userEmailSearchResults = [];
-      state.isLoading = false;
-      state.query = "";
-    },
+    clearQuery: () => initialState,
   },
   extraReducers: (builder) => {
     builder

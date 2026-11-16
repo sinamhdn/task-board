@@ -12,30 +12,28 @@ import {
   deleteBoardMember,
   getAllBoardMembers,
   resetBoardMembers,
-} from "~/state/boardMemberSlice";
-import { getToken, randomGradientGenerator } from "~/utils";
-import LoadingSpinner from "../loading-spinner";
+} from "~/state/board-ember-slice";
+import { randomGradientGenerator } from "~/utils";
 import BoardMemberAddButton from "./board-member-add-btn";
 import BoardMemberAddForm from "./board-member-add-form";
 
 function BoardMembers({
+  token,
   board,
   currentUser,
 }: {
+  token: string | null;
   board: BoardRecievedInterface;
   currentUser: UserRecievedInterface;
 }) {
   const [showFrom, setShowForm] = useState(false);
   const isMember = useRef(false);
-  const token = getToken();
   const boardMembers = useAppSelector(
     (state) => state.boardMemberSlice.boardMembers,
   );
   const boardId = useAppSelector((state) => state.boardMemberSlice.boardId);
   const members = boardId === board.id ? boardMembers : [];
   const dispatch = useAppDispatch();
-
-  if (!token) return <LoadingSpinner />;
 
   if (boardMembers.some((member) => member.id === currentUser.id))
     isMember.current = true;
@@ -60,7 +58,7 @@ function BoardMembers({
 
   useEffect(() => {
     dispatch(resetBoardMembers());
-    if (board.id != boardId) {
+    if (token && board.id != boardId) {
       dispatch(getAllBoardMembers({ boardId: board.id, token: token }));
     }
   }, [board.id, token, dispatch]);
@@ -78,7 +76,7 @@ function BoardMembers({
               "md:absolute md:left-auto md:top-16 md:right-0 md:translate-x-0 md:translate-y-0 md:w-96",
             )}
           >
-            {showFrom && (
+            {showFrom && token && (
               <BoardMemberAddForm
                 handleCancelAddNewBoardClick={handleCancelAddNewMemberClick}
                 board_id={board.id}
@@ -99,7 +97,8 @@ function BoardMembers({
             <div className="rounded-full bg-white dark:bg-gray-900">
               <li key={member.id}>
                 {member.id !== currentUser.id &&
-                  currentUser.id === board.user_id && (
+                  currentUser.id === board.user_id &&
+                  token && (
                     <button
                       className="absolute top-1 right-1 bg-red-600 rounded-full w-3 h-3 cursor-pointer flex items-center justify-center"
                       onClick={() =>

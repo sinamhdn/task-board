@@ -19,6 +19,17 @@ class BoardResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class BoardResponseWithMembers(BaseModel):
+    id: int
+    uid: uuid.UUID
+    user_id: int
+    name: str
+    created_at: datetime
+    updated_at: Optional[datetime]
+    members: list[UserPublicResponse] = []
+    model_config = ConfigDict(from_attributes=True)
+
+
 class BoardCreateRequest(BaseModel):
     board_name: str = Field(min_length=3)
 

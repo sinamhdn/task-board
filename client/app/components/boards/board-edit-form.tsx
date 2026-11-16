@@ -1,13 +1,15 @@
 import ClickAwayListener from "react-click-away-listener";
 import { FormProvider, useForm } from "react-hook-form";
 import { Input } from "~/components/input";
-import LoadingSpinner from "~/components/loading-spinner";
-import { updateBoard } from "~/state/boardSlice";
-import { clearError } from "~/state/errorSlice";
+import { updateBoard } from "~/state/board-slice";
+import { clearError } from "~/state/error-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import type { RootState } from "~/state/store";
-import { getToken } from "~/utils";
 import { board_name_validation } from "~/utils/input/input-validations";
+import log from "~/utils/logger";
+
+const logger = log.getLogger("board-edit-form logger");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 interface FormValues {
   board_name: string;
@@ -15,21 +17,22 @@ interface FormValues {
 }
 
 function BoardEditForm({
+  token,
   boardId,
   boardName,
   setEditFormActive,
 }: {
+  token: string | null;
   boardId: number;
   boardName: string;
   setEditFormActive: (arg0: boolean) => void;
 }) {
   const errors = useAppSelector((state: RootState) => state.errorSlice.errors);
   const dispatch = useAppDispatch();
-  const token = getToken();
-
-  if (!token) return <LoadingSpinner />;
 
   const handleSubmitCallback = async (data: FormValues) => {
+    if (!token) return;
+
     try {
       const result = await dispatch(
         updateBoard({
@@ -40,7 +43,10 @@ function BoardEditForm({
       ).unwrap();
       dispatch(clearError());
     } catch (err) {
-      console.log(err);
+      logger.error(
+        "board-edit-form: dispatch error while updating a board ---> ",
+        err,
+      );
     }
   };
 

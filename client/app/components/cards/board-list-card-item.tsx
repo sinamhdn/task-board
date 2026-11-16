@@ -1,10 +1,7 @@
 import { useState } from "react";
 import type { BoardRecievedInterface } from "~/state";
-import log from "~/utils/logger";
 import BoardCardDeleteButton from "./board-list-card-delete-btn";
 import BoardCardEditForm from "./board-list-card-edit-form";
-const logger = log.getLogger("BOARD-LIST-CARD-ITEM LOGGER");
-logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 function BoardCardItem({
   cardId,
@@ -16,7 +13,7 @@ function BoardCardItem({
   cardId: number;
   cardName: string;
   listId: number;
-  token: string;
+  token: string | null;
   board: BoardRecievedInterface;
 }) {
   const [editBoardCardName, setEditCardName] = useState(false);
@@ -30,6 +27,7 @@ function BoardCardItem({
       <div className="board-card-item-edit-container">
         {editBoardCardName ? (
           <BoardCardEditForm
+            token={token}
             cardId={cardId}
             cardName={cardName}
             listId={listId}

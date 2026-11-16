@@ -2,11 +2,13 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { GrMail } from "react-icons/gr";
 import { Link, useNavigate } from "react-router";
+import bg from "~/assets/log-bg.webp";
+import BackgroundImage from "~/components/background-image";
 import { Input } from "~/components/input";
 import { LoadingStatusEnum } from "~/state";
-import { clearError } from "~/state/errorSlice";
+import { clearError } from "~/state/error-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { signupUser } from "~/state/sessionSlice";
+import { signupUser } from "~/state/session-slice";
 import type { RootState } from "~/state/store";
 import {
   confirm_validation,
@@ -15,10 +17,11 @@ import {
   last_name_validation,
   password_validation,
 } from "~/utils/input/input-validations";
+import log from "~/utils/logger";
 import type { Route } from "./+types/signup";
 
-import bg from "~/assets/log-bg.webp";
-import BackgroundImage from "~/components/background-image";
+const logger = log.getLogger("signup logger");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 interface FormValues {
   first_name: string;
@@ -73,7 +76,7 @@ function Signup() {
       dispatch(clearError());
       throw navigate("/signin");
     } catch (err) {
-      console.log(err);
+      logger.error("signup: dispatch error while signing up user ---> ", err);
     }
   };
 

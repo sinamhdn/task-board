@@ -5,12 +5,16 @@ import { Input } from "~/components/input";
 import SearchResultModal from "~/components/search-result-modal";
 import { useLiveSearch } from "~/hooks";
 import { LoadingStatusEnum } from "~/state";
-import { addBoardMember } from "~/state/boardMemberSlice";
-import { clearError } from "~/state/errorSlice";
+import { addBoardMember } from "~/state/board-ember-slice";
+import { clearError } from "~/state/error-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { clearQuery, setQuery } from "~/state/searchSlice";
+import { clearQuery, setQuery } from "~/state/search-slice";
 import type { RootState } from "~/state/store";
 import { board_member_email_validation } from "~/utils/input/input-validations";
+import log from "~/utils/logger";
+
+const logger = log.getLogger("board-member-add-form logger");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 function BoardMemberAddForm({
   board_id,
@@ -18,7 +22,7 @@ function BoardMemberAddForm({
   handleCancelAddNewBoardClick,
 }: {
   board_id: number;
-  token: string;
+  token: string | null;
   handleCancelAddNewBoardClick: () => void;
 }) {
   const addBoardMemberLoadingStatus = useAppSelector(
@@ -53,6 +57,8 @@ function BoardMemberAddForm({
   };
 
   const handleSubmitCallback = async (data: { board_member_email: string }) => {
+    if (!token) return;
+
     try {
       const result = await dispatch(
         addBoardMember({
@@ -63,7 +69,10 @@ function BoardMemberAddForm({
       ).unwrap();
       dispatch(clearError());
     } catch (err) {
-      console.log(err);
+      logger.error(
+        "board-member-add-form: dispatch error while adding a new board member ---> ",
+        err,
+      );
     }
   };
 

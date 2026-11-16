@@ -5,13 +5,15 @@ import BackgroundImage from "~/components/background-image";
 import BoardNew from "~/components/boards/board-new";
 import LoadingSpinner from "~/components/loading-spinner";
 import { LoadingStatusEnum } from "~/state";
-import { deleteBoard, getAllBoards } from "~/state/boardSlice";
+import { deleteBoard, getAllBoards } from "~/state/board-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { getToken } from "~/utils";
+import { getTokenCookie } from "~/utils";
 import type { Route } from "./+types/board-all";
 
 import bg from "~/assets/all-boards-bg.webp";
 import BoardDisplayCard from "~/components/boards/board-display-card";
+import { useWebsocketContext } from "~/providers/websocket-provider";
+import { getTokenCookieFromRequest } from "~/utils/auth";
 
 export function meta({ matches }: Route.MetaArgs) {
   // Find the root match
@@ -27,10 +29,17 @@ export function meta({ matches }: Route.MetaArgs) {
   return [...rootMeta, ...pageMeta];
 }
 
+export async function loader({ request, params }: Route.LoaderArgs) {
+  const token = getTokenCookieFromRequest(request);
+  if (!token) throw redirect("/signin");
+  return null;
+}
+
 function BoardAll() {
-  const token = getToken();
+  const token = getTokenCookie();
   const dispatch = useAppDispatch();
   const boards = useAppSelector((state) => state.boardSlice.boards);
+  const { isConnected, sendMessage } = useWebsocketContext();
   const getAllBoardsLoadingStatus = useAppSelector(
     (state) => state.boardSlice.getAllBoardsLoadingStatus,
   );
@@ -43,13 +52,9 @@ function BoardAll() {
   });
 
   useEffect(() => {
-    if (!token) throw redirect("signin");
+    if (!token) return;
     dispatch(getAllBoards({ token }));
   }, [token]);
-
-  useEffect(() => {
-    console.log("boards returned.", boards);
-  }, [boards]);
 
   // Show loading state first
   if (getAllBoardsLoadingStatus === LoadingStatusEnum.pending) {
@@ -62,23 +67,33 @@ function BoardAll() {
       <div className="all-boards-component">
         <BackgroundImage src={bg} alt="Nature Background Image" />
         <p className="text-center text-2xl">No Boards Available!</p>
-        <BoardNew />
+        {token && <BoardNew token={token} />}
       </div>
     );
   }
 
   function handleDeleteBoard(board_id: number) {
     if (!token) return;
-    console.log("deleteBoard value:", deleteBoard);
     dispatch(deleteBoard({ token: token, boardId: board_id }));
   }
+
+  useEffect(() => {
+    if (!isConnected) return;
+
+    for (let board of boards) {
+      sendMessage({
+        action: "unsubscribe",
+        channel: `boards:${board.id}`,
+      });
+    }
+  }, [isConnected, sendMessage]);
 
   // Show boards
   return (
     <div className="all-boards-component container mx-auto text-center">
       <BackgroundImage src={bg} alt="Nature Background Image" />
-      <div className="board-new-button-container ">
-        <BoardNew />
+      <div className="board-new-button-container text-2xl md:hidden bg-gray-200 dark:bg-gray-800">
+        {token && <BoardNew token={token} />}
       </div>
       {boards.length > 0 && (
         <section className="board-card-list">

@@ -1,4 +1,9 @@
+import log from "~/utils/logger";
 import { axios_base } from "./api";
+import { createCookie, eraseCookie, readCookie } from "./cookie";
+
+const logger = log.getLogger("utils logger");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 interface User {
   id: number;
@@ -37,7 +42,7 @@ export async function getCurrentUser(token: string) {
       localStorage.removeItem("jwt");
       return null;
     } catch (error) {
-      console.error("Error fetching current user :", error);
+      logger.error("utils: error fetching current user ---> ", error);
       return null;
     } finally {
       fetchPromise = null;
@@ -62,33 +67,54 @@ export function logout() {
   window.location.href = "/";
 }
 
-export function getToken(): string | null {
+export function getTokenLocalstorage(): string | null {
   if (typeof window === "undefined" || !window.localStorage) return null;
   try {
     const token = localStorage.getItem("jwt") || sessionStorage.getItem("jwt");
     return token;
   } catch (error) {
-    console.error("Error reading token from storage:", error);
+    logger.error("utils: error reading token from storage ---> ", error);
     return null;
   }
 }
 
-export function setToken(token: string) {
+export function setTokenLocalstorage(token: string) {
   if (typeof window === "undefined" || !window.localStorage) return;
   try {
     localStorage.setItem("jwt", token);
   } catch (error) {
-    console.error("Error setting token to storage:", error);
+    logger.error("utils: error setting token to storage ---> ", error);
   }
 }
 
-export function removeToken() {
+export function removeTokenLocalstorage() {
   if (typeof window === "undefined" || !window.localStorage) return;
   try {
     localStorage.removeItem("jwt");
   } catch (error) {
-    console.error("Error removing token from storage:", error);
+    logger.error("utils: error removing token from storage ---> ", error);
   }
+}
+
+export function getTokenCookie(): string | null {
+  if (typeof window === "undefined" || !window.document) return null;
+  return readCookie("jwt");
+}
+
+export function setTokenCookie(token: string) {
+  if (typeof window === "undefined" || !window.document) return;
+  createCookie("jwt", token, 1);
+}
+
+export function removeTokenCookie() {
+  if (typeof window === "undefined" || !window.document) return;
+  eraseCookie("jwt");
+}
+
+export function getTokenCookieFromRequest(request: Request): string | null {
+  const cookie = request.headers.get("Cookie") ?? "";
+  const match = cookie.match(/(?:^|;\s*)jwt=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
 export function clearUserCache() {

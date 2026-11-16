@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useAppDispatch } from "~/state/hooks";
-import { setData, setStatus as setSocketStatus } from "~/state/socketSlice";
+import { setData, setStatus as setSocketStatus } from "~/state/socket-slice";
 import log from "~/utils/logger";
 import { useAppSelector } from "../state/hooks";
 
@@ -13,7 +13,7 @@ interface WebSocketHookInput {
 
 type SendFunction = (data: object) => void;
 
-const logger = log.getLogger("WEBSOCKET HOOK LOGGER");
+const logger = log.getLogger("use-web-socket logger");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 export function useWebSocket({
@@ -40,13 +40,16 @@ export function useWebSocket({
   const connect = useCallback(() => {
     // ✅ Guard: reject empty or malformed URLs
     if (!shouldConnect || !wsurl) {
-      logger.warn("Websocket url not available");
+      logger.warn("use-web-socket: websocket url not available");
       dispatch(setSocketStatus("close"));
       return;
     }
 
     if (!wsurl.startsWith("ws://") && !wsurl.startsWith("wss://")) {
-      logger.warn(`Invalid WebSocket URL, skipping connection: ${wsurl}`);
+      logger.warn(
+        "use-web-socket: invalid WebSocket URL, skipping connection ---> ",
+        wsurl,
+      );
       dispatch(setSocketStatus("close"));
       return;
     }
@@ -68,7 +71,9 @@ export function useWebSocket({
       if (!ws) return;
 
       ws.onopen = () => {
-        logger.warn(`Connected to websocket (ONOPEN): WEBSOCKET OPENED`);
+        logger.warn(
+          "use-web-socket: connected to websocket (onopen) - websocket connection opened",
+        );
         // setSocketState("open");
         dispatch(setSocketStatus("open"));
         // Reset retry count on successful connection
@@ -79,7 +84,10 @@ export function useWebSocket({
             ws.send(d);
             return true;
           } catch (err) {
-            logger.error(`Failed to send websocket message: ${err}`);
+            logger.error(
+              "use-web-socket: failed to send websocket message ---> ",
+              err,
+            );
             return false;
           }
         };
@@ -87,7 +95,12 @@ export function useWebSocket({
 
       ws.onmessage = (event) => {
         logger.info(
-          `Websocket message recieved (ONMESSAGE): ${event} --> ${event.data}`,
+          "use-web-socket: websocket message recieved (onmessage) ---> event = ",
+          event,
+        );
+        logger.info(
+          "use-web-socket: websocket message recieved (onmessage) ---> event.data = ",
+          event.data,
         );
         try {
           const msg = convertJSONtoObject(event.data);
@@ -102,12 +115,14 @@ export function useWebSocket({
             }),
           );
         } catch (err) {
-          logger.error(`Failed to process message: ${err}`);
+          logger.error("use-web-socket: failed to process message ---> ", err);
         }
       };
 
       ws.onclose = () => {
-        logger.info(`Websocket disconnected (ONCLOSE): WEBSOCKET CLOSED`);
+        logger.info(
+          "use-web-socket: websocket disconnected (onclose) - websocket connection closed",
+        );
         // setSocketState("close");
         dispatch(setSocketStatus("close"));
         sendCallback.current = () => false;
@@ -118,11 +133,14 @@ export function useWebSocket({
       };
 
       ws.onerror = (error) => {
-        logger.error(`Websocket error (ONERROR): ${error}`);
+        logger.error("use-web-socket: websocket error (onerror) ---> ", error);
         // The onclose handler will trigger after this
       };
     } catch (err) {
-      logger.error(`Failed to create WebSocket connection: ${err}`);
+      logger.error(
+        "use-web-socket: failed to create websocket connection ---> ",
+        err,
+      );
       // setSocketState("close");
       dispatch(setSocketStatus("close"));
     }
@@ -161,14 +179,18 @@ export function useWebSocket({
     (reconnect: () => void) => {
       if (retryCountRef.current > 0) {
         logger.warn(
-          `Websocket Reconnecting... ${retryCountRef.current} attempts remaining`,
+          "use-web-socket: websocket reconnecting... ",
+          retryCountRef.current,
+          " attempts remaining",
         );
         reconnectTimeoutRef.current = window.setTimeout(() => {
           retryCountRef.current = retryCountRef.current - 1;
           reconnect();
         }, retryInterval);
       } else {
-        logger.warn("Websocket no more retry attempts remaining");
+        logger.warn(
+          "use-web-socket: websocket no more retry attempts remaining",
+        );
       }
     },
     [retryInterval],
@@ -182,7 +204,8 @@ export function useWebSocket({
     const delay = Math.min(1000 * 2 ** attempts, 10000);
     reconnectAttemptsRef.current += 1;
     logger.warn(
-      `Websocket Reconnecting... attempt number: ${retryCountRef.current}`,
+      "use-web-socket: websocket reconnecting... attempt = ",
+      retryCountRef.current,
     );
     reconnectTimeoutRef.current = window.setTimeout(() => {
       reconnect();
@@ -205,7 +228,8 @@ function convertJSONtoObject(msg: string): unknown {
     return parsed;
   } catch (err) {
     logger.error(
-      `Failed to converts a JavaScript Object Notation (JSON) string into an object: ${err}`,
+      "use-web-socket: failed to converts a JavaScript Object Notation (JSON) string into an object ---> ",
+      err,
     );
     return msg;
   }
@@ -217,7 +241,8 @@ function convertObjecttoJSON(msg: object): string {
     return parsed;
   } catch (err) {
     logger.error(
-      `Failed to converts an object string into a JavaScript Object Notation (JSON): ${err}`,
+      "use-web-socket: failed to converts an object string into a JavaScript Object Notation (JSON) ---> ",
+      err,
     );
     return "{}";
   }

@@ -2,11 +2,15 @@ import ClickAwayListener from "react-click-away-listener";
 import { FormProvider, useForm } from "react-hook-form";
 import { Input } from "~/components/input";
 import { LoadingStatusEnum } from "~/state";
-import { clearError } from "~/state/errorSlice";
+import { clearError } from "~/state/error-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { createNewList } from "~/state/listSlice";
+import { createNewList } from "~/state/list-slice";
 import type { RootState } from "~/state/store";
 import { board_list_name_validation } from "~/utils/input/input-validations";
+import log from "~/utils/logger";
+
+const logger = log.getLogger("board-list-item-add-form logger");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 function BoardListAddForm({
   board_id,
@@ -42,7 +46,10 @@ function BoardListAddForm({
       ).unwrap();
       dispatch(clearError());
     } catch (err) {
-      console.log(err);
+      logger.error(
+        "board-list-item-add-form: dispatch error while adding a new list ---> ",
+        err,
+      );
     }
   };
 

@@ -1,4 +1,8 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import axios from "axios";
 import {
   LoadingStatusEnum,
@@ -9,9 +13,9 @@ import {
 } from "~/state";
 import { axios_base } from "~/utils/api";
 import log from "~/utils/logger";
-import { setError } from "./errorSlice";
+import { setError } from "./error-slice";
 
-const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+const logger = log.getLogger("board-slice logger");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const initialState: {
@@ -34,26 +38,22 @@ const boardSlice = createSlice({
   name: "board",
   initialState: initialState,
   reducers: {
-    resetBoards: (state) => {
-      state.boards = [];
-      state.getAllBoardsLoadingStatus = null;
-      state.getBoardByIdLoadingStatus = null;
-      state.createNewBoardLoadingStatus = null;
-      state.updateBoardLoadingStatus = null;
-      state.deleteBoardLoadingStatus = null;
-    },
-    addBoardDirect: (state, action) => {
+    resetBoards: () => initialState,
+    addBoardDirect: (state, action: PayloadAction<BoardRecievedInterface>) => {
       if (state.boards.find((board) => board.id === action.payload.id)) return;
       state.boards.push(action.payload);
     },
-    removeBoardDirect: (state, action) => {
+    removeBoardDirect: (state, action: PayloadAction<{ id: number }>) => {
       state.boards = state.boards.filter(
         (board) => board.id !== action.payload.id,
       );
     },
-    updateBoardDirect: (state, action) => {
+    updateBoardDirect: (
+      state,
+      action: PayloadAction<BoardRecievedInterface>,
+    ) => {
       logger.info(
-        `updateBoardDirect what does it recieve --> ${action.payload}`,
+        "board-slice: updateBoardDirect -> action.payload = ",
         action.payload,
       );
       const boardIndex = state.boards.findIndex(
@@ -143,7 +143,10 @@ export const getAllBoards = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        logger.error("boardSlice.ts::" + error.response?.data.detail);
+        logger.error(
+          "board-slice: getAllBoards -> error.response?.data.detail = ",
+          error.response?.data.detail,
+        );
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -170,7 +173,10 @@ export const getBoardById = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        logger.error("boardSlice.ts::" + error.response?.data.detail);
+        logger.error(
+          "board-slice: getBoardById -> error.response?.data.detail = ",
+          error.response?.data.detail,
+        );
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -187,7 +193,7 @@ export const createNewBoard = createAsyncThunk<
 >(
   "board/newboard",
   async ({ token, boardName }, { dispatch, rejectWithValue }) => {
-    logger.info("createNewBoard name", boardName);
+    logger.info("board-slice: createNewBoard -> boardName = ", boardName);
     try {
       const response = await axios_base.post(
         `/api/v1/boards`,
@@ -204,7 +210,7 @@ export const createNewBoard = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        logger.error("boardSlice.ts::" + error);
+        logger.error("board-slice: createNewBoard -> error = ", error);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -235,7 +241,10 @@ export const updateBoard = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        logger.error("boardSlice.ts::" + error.response?.data.detail);
+        logger.error(
+          "board-slice: updateBoard -> error.response?.data.detail = ",
+          error.response?.data.detail,
+        );
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }
@@ -262,7 +271,7 @@ export const deleteBoard = createAsyncThunk<
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.detail || [];
-        logger.error("boardSlice.ts::" + error);
+        logger.error("board-slice: deleteBoard -> error = ", error);
         dispatch(setError(errorMessage));
         return rejectWithValue(errorMessage);
       }

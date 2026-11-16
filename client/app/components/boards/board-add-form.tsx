@@ -1,22 +1,24 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import ClickAwayListener from "react-click-away-listener";
 import { FormProvider, useForm } from "react-hook-form";
 import { useAddNewBoardForm } from "~/providers/board-add-provider";
 import { LoadingStatusEnum } from "~/state";
-import { createNewBoard } from "~/state/boardSlice";
-import { clearError } from "~/state/errorSlice";
+import { createNewBoard } from "~/state/board-slice";
+import { clearError } from "~/state/error-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import type { RootState } from "~/state/store";
-import { getToken } from "~/utils";
 import { board_name_validation } from "~/utils/input/input-validations";
+import log from "~/utils/logger";
 import { Input } from "../input";
-import LoadingSpinner from "../loading-spinner";
+
+const logger = log.getLogger("board-add-form logger");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 interface FormValues {
   board_name: string;
 }
 
-function BoardAddForm() {
+function BoardAddForm({ token }: { token: string | null }) {
   const openedAt = useRef(Date.now());
   const createBoardLoadingStatus = useAppSelector(
     (state) => state.boardSlice.createNewBoardLoadingStatus,
@@ -24,11 +26,10 @@ function BoardAddForm() {
   const errors = useAppSelector((error: RootState) => error.errorSlice.errors);
   const dispatch = useAppDispatch();
   const { handleCancelAddNewBoardClick } = useAddNewBoardForm();
-  const token = getToken();
-
-  if (!token) return <LoadingSpinner />;
 
   const handleSubmitCallback = async (data: FormValues) => {
+    if (!token) return;
+
     try {
       const result = await dispatch(
         createNewBoard({
@@ -39,7 +40,10 @@ function BoardAddForm() {
       dispatch(clearError());
       handleCancelAddNewBoardClick();
     } catch (err) {
-      console.log(err);
+      logger.error(
+        "board-add-form: dispatch error while creating a new board ---> ",
+        err,
+      );
     }
   };
 

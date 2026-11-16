@@ -62,6 +62,16 @@ export interface BoardRecievedInterface {
   //   members: BoardMemberRecievedInterface[];
 }
 
+export interface BoardRecievedWithMembersInterface {
+  id: number;
+  uid: string;
+  user_id: number;
+  name: string;
+  updated_at: string;
+  created_at: string;
+  members: BoardMemberRecievedInterface[];
+}
+
 export interface BoardMemberRecievedInterface {
   id: number;
   uid: string;
@@ -84,6 +94,7 @@ export interface CardRecievedInterface {
   id: number;
   uid: string;
   list_id: number;
+  board_id: number;
   name: string;
   created_at: string;
   updated_at: string;
@@ -139,61 +150,64 @@ export type BroadcastResType = "broadcast_channel";
 export interface EventMemberAddedInterface {
   event: "member_added"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  data: BoardRecievedInterface;
+  board_data: BoardRecievedInterface;
+  member_data: BoardMemberRecievedInterface;
 }
 
 export interface EventMemberRemovedInterface {
   event: "member_removed"; // ✅ literal
+  board_id: number;
+  member_id: number;
   // member_data: RecievedBoardMemberInterface;
-  data: BoardRecievedInterface;
 }
 
 export interface EventBoardRemovedInterface {
   event: "board_removed"; // ✅ literal
+  board_data: BoardRecievedWithMembersInterface;
   // member_data: RecievedBoardMemberInterface;
-  data: BoardRecievedInterface;
 }
 
 export interface EventBoardUpdatedInterface {
   event: "board_updated"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  data: BoardRecievedInterface;
+  board_data: BoardRecievedInterface;
 }
 
 export interface EventListAddedInterface {
   event: "list_added"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  data: ListRecievedInterface;
+  list_data: ListRecievedInterface;
 }
 
 export interface EventListUpdatedInterface {
   event: "list_updated"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  data: ListRecievedInterface;
+  list_data: ListRecievedInterface;
 }
 
 export interface EventListRemovedInterface {
   event: "list_removed"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  data: ListRecievedInterface;
+  list_id: number;
 }
 
 export interface EventCardAddedInterface {
   event: "card_added"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  data: CardRecievedInterface;
+  card_data: CardRecievedInterface;
 }
 
 export interface EventCardUpdatedInterface {
   event: "card_updated"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  data: CardRecievedInterface;
+  card_data: CardRecievedInterface;
 }
 
 export interface EventCardRemovedInterface {
   event: "card_removed"; // ✅ literal
   // member_data: RecievedBoardMemberInterface;
-  data: CardRecievedInterface;
+  card_id: number;
+  list_id: number;
 }
 
 // Add more variants as your backend adds them, e.g.

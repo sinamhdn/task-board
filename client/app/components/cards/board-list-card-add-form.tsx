@@ -2,11 +2,15 @@ import ClickAwayListener from "react-click-away-listener";
 import { FormProvider, useForm } from "react-hook-form";
 import { Input } from "~/components/input";
 import { LoadingStatusEnum } from "~/state";
-import { createNewCard } from "~/state/cardSlice";
-import { clearError } from "~/state/errorSlice";
+import { createNewCard } from "~/state/card-slice";
+import { clearError } from "~/state/error-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import type { RootState } from "~/state/store";
 import { board_card_name_validation } from "~/utils/input/input-validations";
+import log from "~/utils/logger";
+
+const logger = log.getLogger("board-list-card-add-form logger");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 function BoardCardAddForm({
   boardId,
@@ -16,7 +20,7 @@ function BoardCardAddForm({
 }: {
   boardId: number;
   listId: number;
-  token: string;
+  token: string | null;
   handleCancelAddNewCardClick: () => void;
 }) {
   const createNewCardLoadingStatus = useAppSelector(
@@ -33,6 +37,7 @@ function BoardCardAddForm({
   });
 
   const handleSubmitCallback = async (data: { card_name: string }) => {
+    if (!token) return;
     handleCancelAddNewCardClick();
     try {
       const result = await dispatch(
@@ -45,7 +50,10 @@ function BoardCardAddForm({
       ).unwrap();
       dispatch(clearError());
     } catch (err) {
-      console.log(err);
+      logger.error(
+        "board-list-card-add-form: dispatch error while adding a new card ---> ",
+        err,
+      );
     }
   };
 

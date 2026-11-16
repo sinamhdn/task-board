@@ -1,13 +1,15 @@
 import ClickAwayListener from "react-click-away-listener";
 import { FormProvider, useForm } from "react-hook-form";
 import { Input } from "~/components/input";
-import LoadingSpinner from "~/components/loading-spinner";
-import { updateCard } from "~/state/cardSlice";
-import { clearError } from "~/state/errorSlice";
+import { updateCard } from "~/state/card-slice";
+import { clearError } from "~/state/error-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import type { RootState } from "~/state/store";
-import { getToken } from "~/utils";
 import { card_name_validation } from "~/utils/input/input-validations";
+import log from "~/utils/logger";
+
+const logger = log.getLogger("board-list-card-edit-form logger");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 interface FormValues {
   card_id: number;
@@ -17,12 +19,14 @@ interface FormValues {
 }
 
 function BoardCardEditForm({
+  token,
   cardId,
   cardName,
   listId,
   boardId,
   setEditFormActive,
 }: {
+  token: string | null;
   cardId: number;
   cardName: string;
   listId: number;
@@ -31,11 +35,9 @@ function BoardCardEditForm({
 }) {
   const errors = useAppSelector((state: RootState) => state.errorSlice.errors);
   const dispatch = useAppDispatch();
-  const token = getToken();
-
-  if (!token) return <LoadingSpinner />;
 
   const handleSubmitCallback = async (data: FormValues) => {
+    if (!token) return;
     try {
       const result = await dispatch(
         updateCard({
@@ -48,7 +50,10 @@ function BoardCardEditForm({
       ).unwrap();
       dispatch(clearError());
     } catch (err) {
-      console.log(err);
+      logger.error(
+        "board-list-card-edit-form: dispatch error while updating a card ---> ",
+        err,
+      );
     }
   };
 

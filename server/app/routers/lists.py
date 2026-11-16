@@ -17,7 +17,7 @@ from ..utils.deps import (
 )
 from ..utils.ws import manager
 
-logger = logging.getLogger(f"List router logger: Filename->{__name__}")
+logger = logging.getLogger(f"list router logger: filename -> {__name__}")
 
 router = APIRouter(prefix="", tags=["lists"])
 
@@ -98,7 +98,7 @@ async def create_new_list(
                 websocket=websocket,
                 message={
                     "event": "list_added",
-                    "data": list_data_validate,
+                    "list_data": list_data_validate,
                 },
             )
     return new_list
@@ -110,7 +110,7 @@ async def update_list(
     data: AnnotatedAuthorizedBoardForListBodyUpdate,
     db: AnnotatedAsyncDBSession,
 ):
-    logger.info(f"data recieved in list update : {data}")
+    logger.info("data recieved in list update : ", data)
     list_query = await db.execute(
         select(List).options(selectinload(List.owned_cards)).where(List.id == list_id)
     )
@@ -140,7 +140,7 @@ async def update_list(
                 websocket=websocket,
                 message={
                     "event": "list_updated",
-                    "data": list_data_validate,
+                    "list_data": list_data_validate,
                 },
             )
     return list_in_board
@@ -175,7 +175,7 @@ async def delete_list(
                 websocket=websocket,
                 message={
                     "event": "list_removed",
-                    "data": list_data_validate,
+                    "list_id": list_in_board.id,
                 },
             )
     await db.commit()

@@ -15,7 +15,7 @@ from ..utils.db import AnnotatedAsyncDBSession, AsyncSession, get_async_db_sessi
 from ..utils.ws import manager
 
 router = APIRouter(prefix="", tags=["ws"])
-logger = logging.getLogger(f"Websocket router logger: Filename->{__name__}")
+logger = logging.getLogger(f"websocket router logger: filename -> {__name__}")
 
 
 # client side message examples
@@ -36,7 +36,7 @@ async def socket(
     try:
         while True:
             logger.info(
-                f"WEBSOCKET IS CONNECTED OR NOT ====>>>> {websocket} --- ACTIVE CONNECTIONS {manager.active_connections}"
+                f"is websocket connected websocket = {websocket} --- active_connections = {manager.active_connections} --- channels = {manager.channels}"
             )
             try:
                 recieved_payload = await websocket.receive_json()
@@ -111,9 +111,9 @@ async def socket(
                 )
                 continue
     except WebSocketDisconnect as e:
-        logger.info(f"Client disconnected: {e}")
+        logger.info(f"client disconnected: {e}")
     except Exception as e:
-        logger.error(f"WebSocket exception: {e}")
+        logger.error(f"websocket exception: {e}")
     finally:
         manager.remove_connection(
             websocket=websocket,

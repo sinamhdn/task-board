@@ -11,9 +11,9 @@ import {
 import { axios_base } from "~/utils/api";
 import { fetchCurrentUser } from "~/utils/auth";
 import log from "~/utils/logger";
-import { setError } from "./errorSlice";
+import { setError } from "./error-slice";
 
-const logger = log.getLogger("BOARD MEMBER SLICE LOGGER");
+const logger = log.getLogger("session-slice logger");
 logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 const initialState: SessionStateInterface = {
@@ -50,8 +50,8 @@ const sessionSlice = createSlice({
       .addCase(signinUser.fulfilled, (state, action) => {
         state.authStatus = LoadingStatusEnum.fulfilled;
         // state.currentUser = action.payload as User;
-        console.log(
-          "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN LOGIN?",
+        logger.info(
+          "session-slice: signinUser.fulfilled -> action.payload = ",
           action.payload,
         );
       })
@@ -64,8 +64,8 @@ const sessionSlice = createSlice({
       .addCase(signupUser.fulfilled, (state, action) => {
         state.authStatus = LoadingStatusEnum.fulfilled;
         // state.currentUser = action.payload as User;
-        console.log(
-          "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN REGISTER?",
+        logger.info(
+          "session-slice: signupUser.fulfilled -> action.payload = ",
           action.payload,
         );
       })
@@ -79,12 +79,8 @@ const sessionSlice = createSlice({
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.userStatus = LoadingStatusEnum.fulfilled;
         state.currentUser = action.payload as UserRecievedInterface;
-        console.log(
-          "sessionSlice.ts:: WHAT DOES SUCCESSUFUL STATE RETURNS IN GETCURRENTUSER?",
-          action.payload,
-        );
-        console.log(
-          "sessionSlice.ts:: WHAT IS CURRENTUSER STATE AFTER SUCCESSUFUL GETCURRENTUSER?",
+        logger.info(
+          "session-slice: getCurrentUser.fulfilled -> action.payload = ",
           action.payload,
         );
       })
@@ -114,20 +110,16 @@ export const signinUser = createAsyncThunk<
     form.append("password", credentials.password);
     form.append("grant_type", "password");
 
-    const tokenResponse = await axios_base.post(
-      `/api/v1/auth/login`,
-      form,
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+    const tokenResponse = await axios_base.post(`/api/v1/auth/login`, form, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-    );
+    });
 
     return tokenResponse.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      console.log("sessionSlice.ts:: ERROR MESSAGE", err);
+      logger.error("session-slice: signinUser -> error = ", err);
       const errorMessage = err.response?.data.detail || [];
       dispatch(setError(errorMessage));
       return rejectWithValue(errorMessage);
@@ -162,7 +154,10 @@ export const signupUser = createAsyncThunk<
       //     ?.map((error: { msg: string }) => error.msg)
       //     .join("\n") || err.message;
       const errorMessage = err.response?.data.detail || [];
-      console.log("sessionSlice.ts::" + err.response?.data.detail);
+      logger.error(
+        "session-slice: signupUser -> err.response?.data.detail = ",
+        err.response?.data.detail,
+      );
 
       // return rejectWithValue(errorMessageString);
       dispatch(setError(errorMessage));
@@ -192,7 +187,10 @@ export const getCurrentUser = createAsyncThunk<
   } catch (err) {
     if (axios.isAxiosError(err)) {
       const errorMessage = err.response?.data.detail || [];
-      console.log("sessionSlice.ts::" + err.response?.data.detail);
+      logger.error(
+        "session-slice : getCurrentUser -> err.response?.data.detail = ",
+        err.response?.data.detail,
+      );
       dispatch(setError(errorMessage));
       return rejectWithValue(errorMessage);
     }

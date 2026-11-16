@@ -1,22 +1,24 @@
 // import { useSelector } from "react-redux";
 import { FormProvider, useForm } from "react-hook-form";
-import { GrMail } from "react-icons/gr";
 import { Link, useNavigate } from "react-router";
+import bg from "~/assets/log-bg.webp";
 import BackgroundImage from "~/components/background-image";
 import { Input } from "~/components/input";
 import { LoadingStatusEnum } from "~/state";
-import { clearError } from "~/state/errorSlice";
+import { clearError } from "~/state/error-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { signinUser } from "~/state/sessionSlice";
+import { signinUser } from "~/state/session-slice";
 import type { RootState } from "~/state/store";
-import { setToken } from "~/utils/auth";
+import { setTokenCookie } from "~/utils/auth";
 import {
   email_validation,
   password_validation,
 } from "~/utils/input/input-validations";
+import log from "~/utils/logger";
 import type { Route } from "./+types/signin";
 
-import bg from "~/assets/log-bg.webp";
+const logger = log.getLogger("signin logger");
+logger.setLevel(import.meta.env.DEV ? "debug" : "warn");
 
 interface FormValues {
   email: string;
@@ -60,11 +62,11 @@ function Signin() {
           password: data.password,
         }),
       ).unwrap();
-      setToken(result.access_token);
+      setTokenCookie(result.access_token);
       dispatch(clearError());
       navigate("/");
     } catch (err) {
-      console.log(err);
+      logger.error("signin: dispatch error while signing in user ---> ", err);
     }
   };
 

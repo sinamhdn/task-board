@@ -1,6 +1,6 @@
 import type { BoardRecievedInterface } from "~/state";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
-import { deleteList } from "~/state/listSlice";
+import { deleteList } from "~/state/list-slice";
 
 function BoardListDeleteButton({
   board,
