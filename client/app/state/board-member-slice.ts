@@ -30,6 +30,8 @@ const initialState: {
   boardMembers: [],
 };
 
+// because redux toolkit uses immer it is more efficient to mutate the state value instead of setting state value completely
+// NOTE:: never set whole state variable
 const boardMemberSlice = createSlice({
   name: "board-member",
   initialState: initialState,
@@ -39,48 +41,50 @@ const boardMemberSlice = createSlice({
       state,
       action: PayloadAction<BoardMemberRecievedInterface>,
     ) => {
-      if (state.boardMembers.find((member) => member.id === action.payload.id))
+      // if (state.boardMembers.find((member) => member.id === action.payload.id))
+      //   return;
+      if (state.boardMembers.some((member) => member.id === action.payload.id))
         return;
       state.boardMembers.push(action.payload);
     },
     removeBoardMemberDirect: (state, action: PayloadAction<{ id: number }>) => {
-      state.boardMembers = state.boardMembers.filter(
-        (member) => member.id !== action.payload.id,
+      // splice is better than filter if you use immer
+      // state.boardMembers = state.boardMembers.filter(
+      //   (member) => member.id !== action.payload.id,
+      // );
+      const index = state.boardMembers.findIndex(
+        (m) => m.id === action.payload.id,
       );
+      if (index === -1) return;
+      state.boardMembers.splice(index, 1);
     },
     updateBoardMemberDirect: (
       state,
       action: PayloadAction<BoardMemberRecievedInterface>,
     ) => {
-      logger.info(
-        "board-member-slice: updateBoardDirect -> action = ",
-        action.payload,
+      // if (!state.boardMembers.find((member) => member.id === action.payload.id))
+      //   return;
+      const index = state.boardMembers.findIndex(
+        (m) => m.id === action.payload.id,
       );
-      const boardMemberIndex = state.boardMembers.findIndex(
-        (member) => member.id === action.payload.id,
-      );
-      state.boardMembers[boardMemberIndex] = action.payload;
+      if (index === -1) return;
+      state.boardMembers[index] = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(getAllBoardMembers.fulfilled, (state, action) => {
         state.getAllBoardMembersLoadingStatus = LoadingStatusEnum.fulfilled;
-        logger.info("board-member-slice: getAllBoardMembers fulfilled");
-        logger.info("board-member-slice: getAllBoardMembers action = ", action);
         state.boardId = action.meta.arg.boardId;
         state.boardMembers = action.payload;
       })
       .addCase(getAllBoardMembers.pending, (state) => {
         state.getAllBoardMembersLoadingStatus = LoadingStatusEnum.pending;
-        logger.info("board-member-slice: getAllBoardMembers pending");
       })
       .addCase(getAllBoardMembers.rejected, (state) => {
         state.getAllBoardMembersLoadingStatus = LoadingStatusEnum.rejected;
-        logger.info("board-member-slice: getAllBoardMembers rejected");
       })
       .addCase(addBoardMember.fulfilled, (state, action) => {
-        state.addBoardMemberLoadingStatus = LoadingStatusEnum.fulfilled;
         /*
         const newMember = action.payload; // Assuming this is the added member
         const boardId = action.meta.arg.board_id; // every arg passed to the thunk will be here
@@ -99,16 +103,18 @@ const boardMemberSlice = createSlice({
           }
         }
           */
-        const boardId = action.meta.arg.boardId;
-        if (boardId === state.boardId) {
-          state.boardMembers.push(action.payload);
-          logger.info("board-member-slice: ✅member added successfully✅");
-        } else {
-          logger.warn(
-            "board-member-slice: board not found in state -> ",
-            boardId,
-          );
+        state.addBoardMemberLoadingStatus = LoadingStatusEnum.fulfilled;
+        const { boardId } = action.meta.arg;
+
+        if (boardId !== state.boardId) {
+          return;
         }
+
+        if (state.boardMembers.some((m) => m.id === action.payload.id)) {
+          return;
+        }
+
+        state.boardMembers.push(action.payload);
       })
       .addCase(addBoardMember.pending, (state) => {
         state.addBoardMemberLoadingStatus = LoadingStatusEnum.pending;
@@ -117,7 +123,6 @@ const boardMemberSlice = createSlice({
         state.addBoardMemberLoadingStatus = LoadingStatusEnum.rejected;
       })
       .addCase(deleteBoardMember.fulfilled, (state, action) => {
-        state.deleteBoardMemberLoadingStatus = LoadingStatusEnum.fulfilled;
         /* 
         const deletedMemberId = action.payload.id;
         const boardId = action.meta.arg.board_id;
@@ -128,18 +133,20 @@ const boardMemberSlice = createSlice({
           );
         }
           */
+        state.deleteBoardMemberLoadingStatus = LoadingStatusEnum.fulfilled;
         const { boardId, memberId } = action.meta.arg;
-        if (boardId === state.boardId) {
-          state.boardMembers = state.boardMembers.filter(
-            (member) => member.id !== memberId,
-          );
-          logger.info("board-member-slice: ❎member deleted successfully❎");
-        } else {
-          logger.warn(
-            "board-member-slice: board not found in state -> ",
-            boardId,
-          );
+
+        if (boardId !== state.boardId) {
+          return;
         }
+
+        const index = state.boardMembers.findIndex((m) => m.id === memberId);
+
+        if (index === -1) {
+          return;
+        }
+
+        state.boardMembers.splice(index, 1);
       })
       .addCase(deleteBoardMember.pending, (state) => {
         state.deleteBoardMemberLoadingStatus = LoadingStatusEnum.pending;

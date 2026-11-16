@@ -40,26 +40,21 @@ const boardSlice = createSlice({
   reducers: {
     resetBoards: () => initialState,
     addBoardDirect: (state, action: PayloadAction<BoardRecievedInterface>) => {
-      if (state.boards.find((board) => board.id === action.payload.id)) return;
+      if (state.boards.some((board) => board.id === action.payload.id)) return;
       state.boards.push(action.payload);
     },
     removeBoardDirect: (state, action: PayloadAction<{ id: number }>) => {
-      state.boards = state.boards.filter(
-        (board) => board.id !== action.payload.id,
-      );
+      const index = state.boards.findIndex((b) => b.id === action.payload.id);
+      if (index === -1) return;
+      state.boards.splice(index, 1);
     },
     updateBoardDirect: (
       state,
       action: PayloadAction<BoardRecievedInterface>,
     ) => {
-      logger.info(
-        "board-slice: updateBoardDirect -> action.payload = ",
-        action.payload,
-      );
-      const boardIndex = state.boards.findIndex(
-        (board) => board.id === action.payload.id,
-      );
-      state.boards[boardIndex] = action.payload;
+      const index = state.boards.findIndex((b) => b.id === action.payload.id);
+      if (index === -1) return;
+      state.boards[index] = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -76,6 +71,8 @@ const boardSlice = createSlice({
       })
       .addCase(getBoardById.fulfilled, (state, action) => {
         state.getBoardByIdLoadingStatus = LoadingStatusEnum.fulfilled;
+        if (state.boards.some((board) => board.id === action.payload.id))
+          return;
         state.boards.push(action.payload);
       })
       .addCase(getBoardById.pending, (state) => {
@@ -86,6 +83,8 @@ const boardSlice = createSlice({
       })
       .addCase(createNewBoard.fulfilled, (state, action) => {
         state.createNewBoardLoadingStatus = LoadingStatusEnum.fulfilled;
+        if (state.boards.some((board) => board.id === action.payload.id))
+          return;
         state.boards.push(action.payload);
       })
       .addCase(createNewBoard.pending, (state) => {
@@ -96,10 +95,9 @@ const boardSlice = createSlice({
       })
       .addCase(updateBoard.fulfilled, (state, action) => {
         state.updateBoardLoadingStatus = LoadingStatusEnum.fulfilled;
-        const boardIndex = state.boards.findIndex(
-          (board) => board.id === action.payload.id,
-        );
-        state.boards[boardIndex] = action.payload;
+        const index = state.boards.findIndex((b) => b.id === action.payload.id);
+        if (index === -1) return;
+        state.boards[index] = action.payload;
       })
       .addCase(updateBoard.pending, (state) => {
         state.updateBoardLoadingStatus = LoadingStatusEnum.pending;
@@ -109,8 +107,9 @@ const boardSlice = createSlice({
       })
       .addCase(deleteBoard.fulfilled, (state, action) => {
         state.deleteBoardLoadingStatus = LoadingStatusEnum.fulfilled;
-        const boardId = action.meta.arg.boardId; // from the original thunk call
-        state.boards = state.boards.filter((board) => board.id !== boardId);
+        const index = state.boards.findIndex((b) => b.id === action.payload.id);
+        if (index === -1) return;
+        state.boards.splice(index, 1);
       })
       .addCase(deleteBoard.pending, (state) => {
         state.deleteBoardLoadingStatus = LoadingStatusEnum.pending;

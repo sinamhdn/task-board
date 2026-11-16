@@ -104,6 +104,7 @@ const cardSlice = createSlice({
       })
       .addCase(createNewCard.fulfilled, (state, action) => {
         state.createNewCardLoadingStatus = LoadingStatusEnum.fulfilled;
+        state.boardId = action.meta.arg.boardId;
         const listId = action.meta.arg.listId;
         if (!state.cardsByList[listId]) state.cardsByList[listId] = [];
         if (
@@ -120,6 +121,7 @@ const cardSlice = createSlice({
       })
       .addCase(updateCard.fulfilled, (state, action) => {
         state.updateCardLoadingStatus = LoadingStatusEnum.fulfilled;
+        state.boardId = action.meta.arg.boardId;
         const listId = action.payload.list_id;
         const arr = state.cardsByList[listId];
         if (!arr) return;

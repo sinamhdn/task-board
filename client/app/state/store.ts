@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import boardMemberSlice from "./board-ember-slice";
+import boardMemberSlice from "./board-member-slice";
 import boardSlice from "./board-slice";
 import cardSlice from "./card-slice";
 import errorSlice from "./error-slice";

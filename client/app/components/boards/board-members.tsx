@@ -12,7 +12,7 @@ import {
   deleteBoardMember,
   getAllBoardMembers,
   resetBoardMembers,
-} from "~/state/board-ember-slice";
+} from "~/state/board-member-slice";
 import { randomGradientGenerator } from "~/utils";
 import BoardMemberAddButton from "./board-member-add-btn";
 import BoardMemberAddForm from "./board-member-add-form";

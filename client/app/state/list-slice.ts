@@ -88,6 +88,7 @@ const listSlice = createSlice({
       })
       .addCase(createNewList.fulfilled, (state, action) => {
         state.createNewListLoadingStatus = LoadingStatusEnum.fulfilled;
+        state.boardId = action.meta.arg.boardId;
         if (!state.lists.some((list) => list.id === action.payload.id)) {
           state.lists.push(action.payload);
         }
@@ -113,6 +114,7 @@ const listSlice = createSlice({
       })
       .addCase(deleteList.fulfilled, (state, action) => {
         state.deleteListLoadingStatus = LoadingStatusEnum.fulfilled;
+        state.boardId = action.meta.arg.boardId;
         const listId = action.meta.arg.listId; // from the original thunk call
         state.lists = state.lists.filter((list) => list.id !== listId);
       })

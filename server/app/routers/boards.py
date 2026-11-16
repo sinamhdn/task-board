@@ -190,28 +190,36 @@ async def delete_board(
                 "msg": "Not authorized to delete this post",
             },
         )
+    # Capture member IDs before deletion
+    member_ids = [m.id for m in board.members]
+    board_data = BoardResponseWithMembers.model_validate(board).model_dump(mode="json")
+
     await db.delete(board)
     await db.commit()
-    board_data = BoardResponseWithMembers.model_validate(board).model_dump(mode="json")
-    for member in board.members:
-        channel_name = f"users:{member.id}"
-        if member.id in manager.active_connections and channel_name in manager.channels:
-            for websocket in manager.channels[channel_name]:
-                # member_data = UserPublicResponse.model_validate(member).model_dump(
-                #     mode="json"
-                # )
+
+    # Notify board channel (all members viewing the board)
+    board_channel = f"boards:{board_id}"
+    if board_channel in manager.channels:
+        for websocket in manager.channels[board_channel]:
+            await manager.send_personal_message(
+                websocket=websocket,
+                message={"event": "board_removed", "board_data": board_data},
+            )
+
+    # Notify each member's personal channel + cleanup
+    for member_id in member_ids:
+        user_channel = f"users:{member_id}"
+        if member_id in manager.active_connections and user_channel in manager.channels:
+            for websocket in manager.channels[user_channel]:
                 await manager.send_personal_message(
                     websocket=websocket,
-                    message={
-                        "event": "board_removed",
-                        "board_data": board_data,
-                    },
+                    message={"event": "board_removed", "board_data": board_data},
                 )
-            for connection in manager.active_connections[member.id]:
-                if channel_name in manager.channels:
-                    manager.channels[channel_name].discard(connection)
-                    if not manager.channels[channel_name]:
-                        manager.channels.pop(channel_name)
+            # Cleanup: remove connections from this user's channel
+            for conn in manager.active_connections.get(member_id, set()):
+                manager.channels[user_channel].discard(conn)
+            if not manager.channels[user_channel]:
+                manager.channels.pop(user_channel)
 
 
 @router.get(

@@ -5,10 +5,10 @@ function BoardAddButton() {
   return (
     <div className="board-add-button-component">
       <button
-        className="w-full pt-2 pb-2 cursor-pointer"
+        className="w-full cursor-pointer"
         onClick={handleAddNewBoardClick}
       >
-        Add new board
+        Add board
       </button>
     </div>
   );

@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router";
 import { useAddNewBoardForm } from "~/providers/board-add-provider";
 import { useAppSelector } from "~/state/hooks";
 import type { RootState } from "~/state/store";
+import { getTokenCookie } from "~/utils";
 import BoardAddButton from "./boards/board-add-button";
 import LogoutButton from "./logout-button";
 
@@ -15,6 +16,7 @@ function UserNav() {
   const isHome = location.pathname === "/";
   const { showAddNewBoardForm, handleCancelAddNewBoardClick } =
     useAddNewBoardForm();
+  const token = getTokenCookie();
 
   return (
     <nav className="user-nav">
@@ -40,7 +42,7 @@ function UserNav() {
                     className="cursor-pointer w-full pt-2 pb-2"
                     onClick={handleCancelAddNewBoardClick}
                   >
-                    Close Form
+                    Cancel
                   </button>
                 ) : (
                   <BoardAddButton />
@@ -139,7 +141,7 @@ function UserNav() {
                         className="cursor-pointer w-full pt-2 pb-2"
                         onClick={handleCancelAddNewBoardClick}
                       >
-                        Close Form
+                        Cancel
                       </button>
                     ) : (
                       <BoardAddButton />

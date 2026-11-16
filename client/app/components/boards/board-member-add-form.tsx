@@ -5,7 +5,7 @@ import { Input } from "~/components/input";
 import SearchResultModal from "~/components/search-result-modal";
 import { useLiveSearch } from "~/hooks";
 import { LoadingStatusEnum } from "~/state";
-import { addBoardMember } from "~/state/board-ember-slice";
+import { addBoardMember } from "~/state/board-member-slice";
 import { clearError } from "~/state/error-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { clearQuery, setQuery } from "~/state/search-slice";

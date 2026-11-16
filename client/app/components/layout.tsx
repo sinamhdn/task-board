@@ -25,7 +25,7 @@ import { getTokenCookie } from "~/utils/auth";
 import {
   addBoardMemberDirect,
   removeBoardMemberDirect,
-} from "~/state/board-ember-slice";
+} from "~/state/board-member-slice";
 import log from "~/utils/logger";
 import Header from "./header";
 import ServerErrorModal from "./server-error-modal";

@@ -13,7 +13,7 @@ import BoardList from "~/components/lists/board-list";
 import BoardListAddButton from "~/components/lists/board-list-item-add-btn";
 import LoadingSpinner from "~/components/loading-spinner";
 import { useWebsocketContext } from "~/providers/websocket-provider";
-import { getAllBoardMembers } from "~/state/board-ember-slice";
+import { getAllBoardMembers } from "~/state/board-member-slice";
 import { getBoardById } from "~/state/board-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getTokenCookie } from "~/utils";

@@ -138,7 +138,7 @@ async def update_card(
     await db.commit()
     await db.refresh(card, attribute_names=["owner_board", "owner_list"])
     channel_name = f"boards:{data["card_data"].board_id}"
-    card_data_validate = ListResponse.model_validate(card).model_dump(mode="json")
+    card_data_validate = CardResponse.model_validate(card).model_dump(mode="json")
     if channel_name in manager.channels:
         for websocket in manager.channels[channel_name]:
             await manager.send_personal_message(
@@ -173,7 +173,7 @@ async def delete_board(
         )
     await db.delete(card)
     channel_name = f"boards:{blist.board_id}"
-    card_data_validate = ListResponse.model_validate(card).model_dump(mode="json")
+    card_data_validate = CardResponse.model_validate(card).model_dump(mode="json")
     if channel_name in manager.channels:
         for websocket in manager.channels[channel_name]:
             await manager.send_personal_message(
