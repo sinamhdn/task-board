@@ -42,8 +42,8 @@ const cardSlice = createSlice({
     addCardDirect: (state, action: PayloadAction<CardRecievedInterface>) => {
       const { list_id, id } = action.payload;
       if (!state.cardsByList[list_id]) state.cardsByList[list_id] = [];
-      if (!state.cardsByList[list_id].some((c) => c.id === id))
-        state.cardsByList[list_id].push(action.payload);
+      if (state.cardsByList[list_id].some((c) => c.id === id)) return;
+      state.cardsByList[list_id].push(action.payload);
     },
     removeCardDirect: (
       state,
@@ -51,21 +51,16 @@ const cardSlice = createSlice({
     ) => {
       const { listId, id } = action.payload;
       if (!state.cardsByList[listId]) return;
-      state.cardsByList[listId] = state.cardsByList[listId].filter(
-        (c) => c.id !== id,
-      );
+      const index = state.cardsByList[listId].findIndex((c) => c.id === id);
+      if (index === -1) return;
+      state.cardsByList[listId].splice(index, 1);
     },
     updateCardDirect: (state, action: PayloadAction<CardRecievedInterface>) => {
-      logger.info(
-        "card-slice: updateCardDirect -> action.payload = ",
-        action.payload,
-      );
       const { list_id, id } = action.payload;
       if (!state.cardsByList[list_id]) return;
-      const cardIndex = state.cardsByList[list_id].findIndex(
-        (c) => c.id === id,
-      );
-      state.cardsByList[list_id][cardIndex] = action.payload;
+      const index = state.cardsByList[list_id].findIndex((c) => c.id === id);
+      if (index === -1) return;
+      state.cardsByList[list_id][index] = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -87,14 +82,10 @@ const cardSlice = createSlice({
       })
       .addCase(getCardById.fulfilled, (state, action) => {
         state.getCardByIdLoadingStatus = LoadingStatusEnum.fulfilled;
-        const listId = action.meta.arg.listId;
-        if (
-          !state.cardsByList[listId].some(
-            (card) => card.id === action.payload.id,
-          )
-        ) {
-          state.cardsByList[listId].push(action.payload);
-        }
+        const { id, list_id: listId, board_id: boardId } = action.payload;
+        if (state.cardsByList[listId].some((c) => c.id === id)) return;
+        state.boardId = boardId;
+        state.cardsByList[listId].push(action.payload);
       })
       .addCase(getCardById.pending, (state) => {
         state.getCardByIdLoadingStatus = LoadingStatusEnum.pending;
@@ -104,14 +95,11 @@ const cardSlice = createSlice({
       })
       .addCase(createNewCard.fulfilled, (state, action) => {
         state.createNewCardLoadingStatus = LoadingStatusEnum.fulfilled;
-        state.boardId = action.meta.arg.boardId;
-        const listId = action.meta.arg.listId;
+        const { id, list_id: listId, board_id: boardId } = action.payload;
         if (!state.cardsByList[listId]) state.cardsByList[listId] = [];
-        if (
-          !state.cardsByList[listId].some((c) => c.id === action.payload.id)
-        ) {
-          state.cardsByList[listId].push(action.payload);
-        }
+        if (state.cardsByList[listId].some((c) => c.id === id)) return;
+        state.boardId = boardId;
+        state.cardsByList[listId].push(action.payload);
       })
       .addCase(createNewCard.pending, (state) => {
         state.createNewCardLoadingStatus = LoadingStatusEnum.pending;
@@ -121,12 +109,11 @@ const cardSlice = createSlice({
       })
       .addCase(updateCard.fulfilled, (state, action) => {
         state.updateCardLoadingStatus = LoadingStatusEnum.fulfilled;
-        state.boardId = action.meta.arg.boardId;
-        const listId = action.payload.list_id;
-        const arr = state.cardsByList[listId];
-        if (!arr) return;
-        const i = arr.findIndex((c) => c.id === action.payload.id);
-        if (i !== -1) arr[i] = action.payload;
+        const { id, list_id: listId, board_id: boardId } = action.payload;
+        const index = state.cardsByList[listId].findIndex((c) => c.id === id);
+        if (index === -1) return;
+        state.boardId = boardId;
+        state.cardsByList[listId][index] = action.payload;
       })
       .addCase(updateCard.pending, (state) => {
         state.updateCardLoadingStatus = LoadingStatusEnum.pending;
@@ -136,9 +123,10 @@ const cardSlice = createSlice({
       })
       .addCase(deleteCard.fulfilled, (state, action) => {
         state.deleteCardLoadingStatus = LoadingStatusEnum.fulfilled;
-        const { listId, cardId } = action.meta.arg; // listId is already in the thunk arg
-        const arr = state.cardsByList[listId];
-        if (arr) state.cardsByList[listId] = arr.filter((c) => c.id !== cardId);
+        const { id, list_id: listId } = action.payload;
+        const index = state.cardsByList[listId].findIndex((c) => c.id === id);
+        if (index === -1) return;
+        state.cardsByList[listId].splice(index, 1);
       })
       .addCase(deleteCard.pending, (state) => {
         state.deleteCardLoadingStatus = LoadingStatusEnum.pending;

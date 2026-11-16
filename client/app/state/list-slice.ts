@@ -40,25 +40,22 @@ const listSlice = createSlice({
   reducers: {
     resetLists: () => initialState,
     addListDirect: (state, action: PayloadAction<ListRecievedInterface>) => {
-      if (state.lists.some((list) => list.id === action.payload.id)) return;
+      const { id } = action.payload;
+      if (state.lists.some((l) => l.id === id)) return;
       state.lists.push(action.payload);
     },
     removeListDirect: (state, action: PayloadAction<{ id: number }>) => {
-      logger.info(
-        "list-slice: removeListDirect -> action.payload = ",
-        action.payload,
-      );
-      state.lists = state.lists.filter((list) => list.id !== action.payload.id);
+      // state.lists = state.lists.filter((list) => list.id !== action.payload.id);
+      const { id } = action.payload;
+      const index = state.lists.findIndex((l) => l.id === id);
+      if (index === -1) return;
+      state.lists.splice(index, 1);
     },
     updateListDirect: (state, action: PayloadAction<ListRecievedInterface>) => {
-      logger.info(
-        "list-slice: updateListDirect -> action.payload = ",
-        action.payload,
-      );
-      const listIndex = state.lists.findIndex(
-        (list) => list.id === action.payload.id,
-      );
-      state.lists[listIndex] = action.payload;
+      const { id } = action.payload;
+      const index = state.lists.findIndex((l) => l.id === id);
+      if (index === -1) return;
+      state.lists[index] = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -76,9 +73,10 @@ const listSlice = createSlice({
       })
       .addCase(getListById.fulfilled, (state, action) => {
         state.getListByIdLoadingStatus = LoadingStatusEnum.fulfilled;
-        if (!state.lists.some((list) => list.id === action.payload.id)) {
-          state.lists.push(action.payload);
-        }
+        const { id, board_id: boardId } = action.payload;
+        if (state.lists.some((l) => l.id === id)) return;
+        state.boardId = boardId;
+        state.lists.push(action.payload);
       })
       .addCase(getListById.pending, (state) => {
         state.getListByIdLoadingStatus = LoadingStatusEnum.pending;
@@ -88,10 +86,10 @@ const listSlice = createSlice({
       })
       .addCase(createNewList.fulfilled, (state, action) => {
         state.createNewListLoadingStatus = LoadingStatusEnum.fulfilled;
-        state.boardId = action.meta.arg.boardId;
-        if (!state.lists.some((list) => list.id === action.payload.id)) {
-          state.lists.push(action.payload);
-        }
+        const { id, board_id: boardId } = action.payload;
+        if (state.lists.some((l) => l.id === id)) return;
+        state.boardId = boardId;
+        state.lists.push(action.payload);
       })
       .addCase(createNewList.pending, (state) => {
         state.createNewListLoadingStatus = LoadingStatusEnum.pending;
@@ -101,10 +99,11 @@ const listSlice = createSlice({
       })
       .addCase(updateList.fulfilled, (state, action) => {
         state.updateListLoadingStatus = LoadingStatusEnum.fulfilled;
-        const listIndex = state.lists.findIndex(
-          (list) => list.id === action.payload.id,
-        );
-        state.lists[listIndex] = action.payload;
+        const { id, board_id: boardId } = action.payload;
+        const index = state.lists.findIndex((l) => l.id === id);
+        if (index === -1) return;
+        state.boardId = boardId;
+        state.lists[index] = action.payload;
       })
       .addCase(updateList.pending, (state) => {
         state.updateListLoadingStatus = LoadingStatusEnum.pending;
@@ -114,9 +113,10 @@ const listSlice = createSlice({
       })
       .addCase(deleteList.fulfilled, (state, action) => {
         state.deleteListLoadingStatus = LoadingStatusEnum.fulfilled;
-        state.boardId = action.meta.arg.boardId;
-        const listId = action.meta.arg.listId; // from the original thunk call
-        state.lists = state.lists.filter((list) => list.id !== listId);
+        const { id } = action.payload;
+        const index = state.lists.findIndex((l) => l.id === id);
+        if (index === -1) return;
+        state.lists.splice(index, 1);
       })
       .addCase(deleteList.pending, (state) => {
         state.deleteListLoadingStatus = LoadingStatusEnum.pending;

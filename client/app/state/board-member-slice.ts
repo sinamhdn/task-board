@@ -75,7 +75,9 @@ const boardMemberSlice = createSlice({
     builder
       .addCase(getAllBoardMembers.fulfilled, (state, action) => {
         state.getAllBoardMembersLoadingStatus = LoadingStatusEnum.fulfilled;
-        state.boardId = action.meta.arg.boardId;
+        // values passed to thunk better to get value from payload which are values returned from thunk in case of success case
+        const { boardId } = action.meta.arg;
+        state.boardId = boardId;
         state.boardMembers = action.payload;
       })
       .addCase(getAllBoardMembers.pending, (state) => {
@@ -105,15 +107,8 @@ const boardMemberSlice = createSlice({
           */
         state.addBoardMemberLoadingStatus = LoadingStatusEnum.fulfilled;
         const { boardId } = action.meta.arg;
-
-        if (boardId !== state.boardId) {
-          return;
-        }
-
-        if (state.boardMembers.some((m) => m.id === action.payload.id)) {
-          return;
-        }
-
+        if (boardId !== state.boardId) return;
+        if (state.boardMembers.some((m) => m.id === action.payload.id)) return;
         state.boardMembers.push(action.payload);
       })
       .addCase(addBoardMember.pending, (state) => {
@@ -134,18 +129,11 @@ const boardMemberSlice = createSlice({
         }
           */
         state.deleteBoardMemberLoadingStatus = LoadingStatusEnum.fulfilled;
-        const { boardId, memberId } = action.meta.arg;
-
-        if (boardId !== state.boardId) {
-          return;
-        }
-
+        const { boardId } = action.meta.arg;
+        const memberId = action.payload.id;
+        if (boardId !== state.boardId) return;
         const index = state.boardMembers.findIndex((m) => m.id === memberId);
-
-        if (index === -1) {
-          return;
-        }
-
+        if (index === -1) return;
         state.boardMembers.splice(index, 1);
       })
       .addCase(deleteBoardMember.pending, (state) => {
