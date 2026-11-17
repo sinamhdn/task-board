@@ -13,7 +13,10 @@ import BoardList from "~/components/lists/board-list";
 import BoardListAddButton from "~/components/lists/board-list-item-add-btn";
 import LoadingSpinner from "~/components/loading-spinner";
 import { useWebsocketContext } from "~/providers/websocket-provider";
-import { getAllBoardMembers } from "~/state/board-member-slice";
+import {
+  getAllBoardMembers,
+  resetBoardMembers,
+} from "~/state/board-member-slice";
 import { getBoardById } from "~/state/board-slice";
 import { useAppDispatch, useAppSelector } from "~/state/hooks";
 import { getTokenCookie } from "~/utils";
@@ -22,6 +25,8 @@ import type { Route } from "./+types/boardsingle";
 
 import bg from "~/assets/single-board-bg.webp";
 import { LoadingStatusEnum } from "~/state";
+import { resetCards } from "~/state/card-slice";
+import { resetLists } from "~/state/list-slice";
 import { getTokenCookieFromRequest } from "~/utils/auth";
 
 const logger = log.getLogger("board-single logger");
@@ -101,6 +106,12 @@ function BoardSingle() {
   const handleCancelCreateNewList = () => {
     setNewListFormActive(false);
   };
+
+  useEffect(() => {
+    dispatch(resetBoardMembers());
+    dispatch(resetLists());
+    dispatch(resetCards());
+  }, []);
 
   // Fetch the board (guard: only if not already in store)
   useEffect(() => {

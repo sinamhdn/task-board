@@ -52,22 +52,8 @@ async def socket(
                 message = payload.get("message")
                 if action == "subscribe":
                     await manager.subscribe(websocket=websocket, channel=channel)
-                    await manager.send_personal_message(
-                        websocket=websocket,
-                        message={
-                            "type": "ws_notif",
-                            "msg": f"Subscribed to channel: {channel}",
-                        },
-                    )
                 elif action == "unsubscribe" and channel:
                     await manager.unsubscribe(websocket=websocket, channel=channel)
-                    await manager.send_personal_message(
-                        websocket=websocket,
-                        message={
-                            "type": "ws_notif",
-                            "msg": f"Unsubscribed from channel: {channel}",
-                        },
-                    )
                 elif action == "broadcast_channel" and channel and message:
                     # Client wants to broadcast a message to a specific channel
                     await manager.broadcast_channel(

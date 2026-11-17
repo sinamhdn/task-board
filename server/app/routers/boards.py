@@ -389,6 +389,7 @@ async def add_new_board_member(
     # user_data = UserPublicResponse.model_validate(user).model_dump(mode="json")
     board_data = BoardResponse.model_validate(board).model_dump(mode="json")
     user_data = UserPublicResponse.model_validate(user).model_dump(mode="json")
+    # 1. Broadcast to board channel - all existing members see new member
     board_channel = f"boards:{board_id}"
     if board_channel in manager.channels:
         for websocket in manager.channels[board_channel]:
@@ -400,13 +401,21 @@ async def add_new_board_member(
                     "member_data": user_data,
                 },
             )
+    # 2. Add new member to board channel if they're online
+    if user.id in manager.active_connections:
         for connection in manager.active_connections[user.id]:
-            if board_channel in manager.channels:
-                manager.channels[board_channel].discard(connection)
-                if not manager.channels[board_channel]:
-                    manager.channels.pop(board_channel)
+            if board_channel not in manager.channels:
+                manager.channels[board_channel] = set()
+            manager.channels[board_channel].add(connection)
+
+    # 3. Notify new member via their personal channel
     user_channel = f"users:{user.id}"
-    if user.id in manager.active_connections and user_channel in manager.channels:
+    if user.id in manager.active_connections:
+        if user_channel not in manager.channels:
+            manager.channels[user_channel] = set()
+        for connection in manager.active_connections[user.id]:
+            manager.channels[user_channel].add(connection)
+
         for websocket in manager.channels[user_channel]:
             await manager.send_personal_message(
                 websocket=websocket,
@@ -416,11 +425,6 @@ async def add_new_board_member(
                     "member_data": user_data,
                 },
             )
-        for connection in manager.active_connections[user.id]:
-            if user_channel in manager.channels:
-                manager.channels[user_channel].discard(connection)
-                if not manager.channels[user_channel]:
-                    manager.channels.pop(user_channel)
     else:
         logger.info("member is not online")
     return user
@@ -478,36 +482,47 @@ async def delete_board_member(
     # user_data = UserPublicResponse.model_validate(user).model_dump(mode="json")
     board_data = BoardResponse.model_validate(board).model_dump(mode="json")
     board_channel = f"boards:{board_id}"
+    
+    # 1. Broadcast to board channel - all members see member removed
     if board_channel in manager.channels:
         for websocket in manager.channels[board_channel]:
             await manager.send_personal_message(
                 websocket=websocket,
                 message={
                     "event": "member_removed",
-                    "board_id": board_id,  # frontend expects board_id (number)
+                    "board_id": board_id,
                     "member_id": user.id,
                 },
             )
-        for connection in manager.active_connections[user.id]:
-            if board_channel in manager.channels:
-                manager.channels[board_channel].discard(connection)
-                if not manager.channels[board_channel]:
-                    manager.channels.pop(board_channel)
+
+    # 2. Notify removed member via their personal channel
     user_channel = f"users:{user.id}"
-    if user.id in manager.active_connections and user_channel in manager.channels:
+    if user.id in manager.active_connections:
+        if user_channel not in manager.channels:
+            manager.channels[user_channel] = set()
+        for connection in manager.active_connections[user.id]:
+            manager.channels[user_channel].add(connection)
+
         for websocket in manager.channels[user_channel]:
             await manager.send_personal_message(
                 websocket=websocket,
                 message={
                     "event": "member_removed",
-                    "board_id": board_data,
+                    "board_id": board_id,
                     "member_id": user.id,
                 },
             )
+    
+        # Cleanup: remove connections from board channel and user channel
         for connection in manager.active_connections[user.id]:
+            if board_channel in manager.channels:
+                manager.channels[board_channel].discard(connection)
+                if not manager.channels[board_channel]:
+                    manager.channels.pop(board_channel)
             if user_channel in manager.channels:
                 manager.channels[user_channel].discard(connection)
                 if not manager.channels[user_channel]:
                     manager.channels.pop(user_channel)
+
     await db.refresh(board, attribute_names=["owner"])
     return user

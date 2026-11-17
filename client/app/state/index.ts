@@ -144,7 +144,6 @@ export interface SocketStateInterface {
 }
 
 // ---- Broadcast payload (inner) ----
-
 export type BroadcastResType = "broadcast_channel";
 
 export interface EventMemberAddedInterface {

@@ -98,10 +98,10 @@ export function useWebSocket({
           "use-web-socket: websocket message recieved (onmessage) ---> event = ",
           event,
         );
-        logger.info(
-          "use-web-socket: websocket message recieved (onmessage) ---> event.data = ",
-          event.data,
-        );
+        // logger.info(
+        //   "use-web-socket: websocket message recieved (onmessage) ---> event.data = ",
+        //   event.data,
+        // );
         try {
           const msg = convertJSONtoObject(event.data);
           // setDataRecieved({

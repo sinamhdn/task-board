@@ -63,6 +63,7 @@ function MainLayout() {
     logger.info("layout: ws data recieved ---> ", wsData);
     if (!wsData) return;
     const payload: BoardChannelPayloadInterface = JSON.parse(wsData.message);
+    logger.info("layout: wsData.message = ", payload);
     if (payload.message.event === "member_added") {
       dispatch(addBoardDirect(payload.message.board_data));
       dispatch(addBoardMemberDirect(payload.message.member_data));

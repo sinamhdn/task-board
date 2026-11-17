@@ -23,11 +23,11 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         await self.send_personal_message(
-            {
-                "field": "ws_notif",
+            message={
+                "type": "ws_notif",
                 "msg": "Connection opened, subscribe to a channel.",
             },
-            websocket,
+            websocket=websocket,
         )
         # if any(websocket in connections for connections in self.channels.values()):
 
@@ -35,14 +35,28 @@ class ConnectionManager:
         self,
         websocket: WebSocket,
         close_status_code: int = status.WS_1011_INTERNAL_ERROR,
-        close_reason: str = "Internal server error",
+        close_reason: str = "Internal server error.",
     ):
         try:
             if websocket.client_state != WebSocketState.DISCONNECTED:
                 await websocket.close(code=close_status_code, reason=close_reason)
         except (RuntimeError, WebSocketDisconnect) as e:
+            await self.send_personal_message(
+                message={
+                    "type": "ws_error",
+                    "msg": f"Runtime error during disconnect: {e}.",
+                },
+                websocket=websocket,
+            )
             logger.error(f"runtime error during disconnect: {e}")
         except Exception as e:
+            await self.send_personal_message(
+                message={
+                    "type": "ws_error",
+                    "msg": f"Error during disconnect: {e}.",
+                },
+                websocket=websocket,
+            )
             logger.error(f"error during disconnect: {e}")
 
     def add_connection(self, websocket: WebSocket, user_id: int):
@@ -66,14 +80,11 @@ class ConnectionManager:
             if websocket.client_state != WebSocketState.CONNECTED:
                 logger.error("attempted to send message to disconnected client")
                 return False
-
-            await websocket.send_json(
-                {"res_type": "personal_message", "message": message}
-            )
+            await websocket.send_json({"res": "personal_message", "message": message})
             return True
         except (WebSocketDisconnect, RuntimeError) as e:
             logger.info(
-                f"Client disconnected and runtime error during sending personal message: {e}"
+                f"client disconnected and runtime error during sending personal message: {e}"
             )
             return False
         except Exception as e:
@@ -98,7 +109,7 @@ class ConnectionManager:
             try:
                 await connection.send_json(
                     {
-                        "res_type": "broadcast_channel",
+                        "res": "channel_broadcast",
                         "channel": channel,
                         "message": message,
                     }
@@ -124,7 +135,7 @@ class ConnectionManager:
         for connection in connections:
             try:
                 await connection.send_json(
-                    {"res_type": "broadcast_global", "message": message}
+                    {"res": "global_broadcast", "message": message}
                 )
             except (WebSocketDisconnect, RuntimeError) as e:
                 logger.info(
@@ -141,9 +152,14 @@ class ConnectionManager:
                 return
             self.channels[channel].add(websocket)
         except Exception as e:
+            await self.send_personal_message(
+                message={"type": "ws_notif", "msg": f"Error during subscription: {e}."},
+                websocket=websocket,
+            )
             logger.error(f"error during subscription: {e}")
         await self.send_personal_message(
-            {"type": "ws_notif", "msg": f"Subscribed to {channel}"}, websocket
+            message={"type": "ws_notif", "msg": f"Subscribed to {channel}."},
+            websocket=websocket,
         )
 
     async def unsubscribe(self, websocket: WebSocket, channel: str):
@@ -169,7 +185,8 @@ class ConnectionManager:
         if not self.channels[channel]:
             del self.channels[channel]
         await self.send_personal_message(
-            {"type": "ws_notif", "msg": f"Unsubscribed from {channel}"}, websocket
+            message={"type": "ws_notif", "msg": f"Unsubscribed from {channel}"},
+            websocket=websocket,
         )
 
     def is_subscribed(self, websocket: WebSocket, channel: str):
@@ -187,7 +204,7 @@ class ConnectionManager:
         if not token:  # handles None or empty string
             await self.send_personal_message(
                 websocket=websocket,
-                message={"type": "ws_error", "msg": "Missing access token"},
+                message={"type": "ws_error", "msg": "Missing access token."},
             )
             await self.disconnect(
                 websocket=websocket,
